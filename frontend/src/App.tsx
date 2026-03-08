@@ -1,16 +1,11 @@
 import { useState } from 'react'
 import './App.css'
-import MyButton from './components/MyButton';
+import AuthLayout from './components/templates/AuthLayout';
 
 function App() {
 
-  return (
-    <body>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
-    </body>
-  )
+    return <AuthLayout />;
+
 }
 
 export default App
