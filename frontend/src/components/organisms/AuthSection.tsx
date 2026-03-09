@@ -1,3 +1,5 @@
+import SubmitButton from "../molecules/SubmitButton";
+
 export default function AuthSection () {
   return (
       <div className="flex min-h-full justify-center px-6 py-12 lg:px-8 bg-amber-400 rounded-4xl">
@@ -44,19 +46,14 @@ export default function AuthSection () {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-              >
-                Sign in
-              </button>
+              <SubmitButton />
             </div>
           </form>
 
           <p className="mt-10 text-center text-sm/6 text-gray-400">
             Not a member?{' '}
             <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
-              Start a 14 day free trial
+              Join us now
             </a>
           </p>
         </div>
