@@ -44,9 +44,7 @@ export default function AuthPage({setToken} : Props) {
             { /* Main Zone */}
             <div className="flex items-center justify-center min-h-screen bg-amber-300">
             <AuthSection
-                email={email}
                 setEmail={setEmail}
-                password={password}
                 setPassword={setPassword}
                 error={error}
                 onSubmit={handleSubmit}

@@ -2,7 +2,11 @@ import PasswordLabel from "../atoms/PasswordLabel"
 import PasswordInput from "../atoms/PasswordInput"
 import ForgotPasswordLink from "../atoms/ForgotPasswordLink";
 
-export default function PasswordInputBlock() {
+interface Props {
+  setPassword: (value: string) => void;
+}
+
+export default function PasswordInputBlock({setPassword} : Props) {
     return (
         <div>
           <div className="flex items-center justify-between">
@@ -12,7 +16,9 @@ export default function PasswordInputBlock() {
               </div>
             </div>
             <div className="mt-2">
-              <PasswordInput />
+              <PasswordInput 
+                setPassword={setPassword}
+              />
             </div>
       </div>
     );

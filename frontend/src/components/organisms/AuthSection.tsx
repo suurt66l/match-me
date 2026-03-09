@@ -3,14 +3,12 @@ import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import SubmitButton from "../atoms/SignInButton";
 
 interface Props {
-  email: string;
   setEmail: (value: string) => void;
-  password: string;
   setPassword: (value: string) => void;
   error: string | null;
   onSubmit: (event: React.SyntheticEvent<HTMLFormElement>) => void;
 }
-export default function AuthSection ({ email, setEmail, password, setPassword, error, onSubmit }: Props) {
+export default function AuthSection ({ setEmail, setPassword, error, onSubmit }: Props) {
   
   
   return (
@@ -19,11 +17,10 @@ export default function AuthSection ({ email, setEmail, password, setPassword, e
 
           <form onSubmit={onSubmit} method="POST" className="space-y-6">
             <EmailInputBlock 
-                email={email}
-                setEmail={setEmail}
+              setEmail={setEmail}
             />
             <PasswordInputBlock 
-            
+              setPassword={setPassword}
             />
 
             <SubmitButton />
