@@ -16,7 +16,7 @@ function App() {
     <div className="wrapper">
       <BrowserRouter>
         <Routes>
-          <Route path="/1" element={<MatcherPage />} />
+          <Route path="/" element={<MatcherPage />} />
           <Route path="/test" element={<Test />} />
         </Routes>
       </BrowserRouter>
