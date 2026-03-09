@@ -15,7 +15,7 @@ export default function AuthSection () {
 
           <p className="mt-5 text-center text-sm/6 text-gray-400">
             Not a member?{' '}
-            <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
+            <a href="#" className="font-semibold text-amber-800 hover:text-amber-700">
               Join us now
             </a>
           </p>
