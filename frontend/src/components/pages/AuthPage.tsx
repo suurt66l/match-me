@@ -1,8 +1,40 @@
+import { useState } from "react";
 import Logo from "../atoms/Logo";
 import AuthSection from "../organisms/AuthSection";
 
-export default function AuthPage() {
-    
+interface Props {
+    setToken: (token: string) => void;
+}
+
+interface Credentials {
+    email: string,
+    password: string
+}
+
+async function loginUser(credentials: Credentials){
+    return fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+    })
+        .then(data => data.json())
+    }
+
+export default function AuthPage({setToken} : Props) {
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+
+    async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const token = await loginUser({
+            email,
+            password
+        });
+
+        setToken(token);
+    }
+
     return (
         <div>
             { /* Navbar */}
@@ -11,7 +43,14 @@ export default function AuthPage() {
             </div>
             { /* Main Zone */}
             <div className="flex items-center justify-center min-h-screen bg-amber-300">
-                <AuthSection />
+            <AuthSection
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                error={error}
+                onSubmit={handleSubmit}
+            />
             </div>
         </div>
     );

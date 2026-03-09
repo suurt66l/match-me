@@ -6,11 +6,12 @@ import { useState } from 'react';
 import MatcherPage from './components/pages/MatcherPage';
 
 function App() {
-    const [token, setToken] = useState();
+    const [token, setToken] = useState<string | null>(null);
 
     if(!token) {
-        return <AuthPage />
+        return <AuthPage setToken={setToken} />
     }
+    console.log(token)
   return (
     <div className="wrapper">
       <BrowserRouter>
