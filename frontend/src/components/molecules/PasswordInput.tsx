@@ -2,11 +2,11 @@ export default function PasswordInput() {
     return (
         <div>
             <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-100">
+                <label htmlFor="password" className="block text-sm font-bold text-gray-100">
                   Password
                 </label>
                 <div className="text-sm">
-                  <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
+                  <a href="#" className="font-semibold text-amber-800 hover:text-amber-700">
                     Forgot password?
                   </a>
                 </div>
@@ -18,7 +18,7 @@ export default function PasswordInput() {
                   type="password"
                   required
                   autoComplete="current-password"
-                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-700 sm:text-sm/6"
+                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-2 -outline-offset-1 outline-white/25 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-700 sm:text-sm/6"
                 />
               </div>
         </div>
