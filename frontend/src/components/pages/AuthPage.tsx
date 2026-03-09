@@ -12,6 +12,7 @@ interface Credentials {
 }
 
 async function loginUser(credentials: Credentials){
+    console.log("Credentials: " + credentials.email + credentials.password)
     return fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
