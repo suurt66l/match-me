@@ -9,7 +9,7 @@ export default function TestPage(){
             </div>
             { /* Main Zone */}
             <div className="flex items-center justify-center min-h-screen bg-amber-300">
-                <h1> MATCHER PAGE </h1>
+                <h1> TEST PAGE </h1>
             </div>
         </div>
     );
