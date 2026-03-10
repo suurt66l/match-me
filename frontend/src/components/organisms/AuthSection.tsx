@@ -1,6 +1,7 @@
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import SubmitButton from "../atoms/SignInButton";
+import ErrorParagraph from "../atoms/ErrorParagraph";
 
 interface Props {
   setEmail: (value: string) => void;
@@ -21,7 +22,10 @@ export default function AuthSection ({ setEmail, setPassword, error, onSubmit }:
             />
             <PasswordInputBlock 
               setPassword={setPassword}
-            />
+            /> 
+
+            {/* If error exist than display it */}
+            {error ? <ErrorParagraph errorMsg={error}/> : null }
 
             <SubmitButton />
           </form>
