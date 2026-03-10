@@ -11,14 +11,26 @@ interface Credentials {
     password: string
 }
 
+interface LoginResponse {
+    token? : string;
+    message? : string;
+    ok: boolean;
+}
+
 async function loginUser(credentials: Credentials){
-    console.log("Credentials: " + credentials.email + credentials.password)
-    return fetch('http://localhost:8000/api/auth/login', {
+    console.log("Credentials: " + credentials.email + " " + credentials.password)
+
+    const response = await fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)
-    })
-        .then(data => data.json())
+    });
+    
+    const data = await response.json();
+    //LOGS
+    console.log("Response Token 1: " + data.token)
+
+    return data;
     }
 
 export default function AuthPage({setToken} : Props) {
@@ -28,12 +40,19 @@ export default function AuthPage({setToken} : Props) {
 
     async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
         event.preventDefault();
-        const token = await loginUser({
-            email,
-            password
-        });
 
-        setToken(token);
+        const response = await loginUser({ email, password });
+        //LOGS
+        console.log("Response Token 2: " + response.token)
+
+        if(!response.ok) {
+            setError(response.message ?? "Something went wrong.")
+            return;
+        }
+        //LOGS
+        console.log("Response Token 3: " + response.token)
+
+        setToken(response.token);
     }
 
     return (
