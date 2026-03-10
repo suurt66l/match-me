@@ -14,10 +14,10 @@ interface Credentials {
 interface LoginResponse {
     token? : string;
     message? : string;
-    ok: boolean;
+    status: number;
 }
 
-async function loginUser(credentials: Credentials){
+async function loginUser(credentials: Credentials) : Promise<LoginResponse> {
     console.log("Credentials: " + credentials.email + " " + credentials.password)
 
     const response = await fetch('http://localhost:8000/api/auth/login', {
@@ -27,11 +27,13 @@ async function loginUser(credentials: Credentials){
     });
     
     const data = await response.json();
-    //LOGS
-    console.log("Response Token 1: " + data.token)
 
-    return data;
+    return {
+        token: data.token,
+        message: data.message,
+        status: response.status
     }
+}
 
 export default function AuthPage({setToken} : Props) {
     const [email, setEmail] = useState<string>("");
@@ -42,17 +44,18 @@ export default function AuthPage({setToken} : Props) {
         event.preventDefault();
 
         const response = await loginUser({ email, password });
+        
         //LOGS
         console.log("Response Token 2: " + response.token)
 
-        if(!response.ok) {
+        if(response.status !== 200) {
             setError(response.message ?? "Something went wrong.")
             return;
         }
         //LOGS
         console.log("Response Token 3: " + response.token)
 
-        setToken(response.token);
+        setToken(response.token!);
     }
 
     return (
