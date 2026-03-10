@@ -1,17 +1,14 @@
 import './App.css'
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Test from './components/pages/Test';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import TestPage from './components/pages/TestPage';
 import AuthPage from './components/pages/AuthPage';
 import MatcherPage from './components/pages/MatcherPage';
 import useToken from './utils/useToken';
+import ProtectedRoute from './utils/ProtectedRoute';
 
 
 function App() {
   const { token, setToken } = useToken();
-
-  if(!token) {
-    return <AuthPage setToken={setToken} />
-  }
 
   //LOGS
   console.log("Current token" + token)
@@ -20,8 +17,35 @@ function App() {
     <div className="wrapper">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MatcherPage />} />
-          <Route path="/test" element={<Test />} />
+          <Route 
+            path="/login" 
+            element={ token ? <Navigate to="/" replace /> : <AuthPage setToken={setToken} /> //Redirect authorized user to MainPage
+            }
+          />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute token={token}>
+                <MatcherPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/matcher" 
+            element={
+              <ProtectedRoute token={token}>
+                <MatcherPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/test" 
+            element={
+              <ProtectedRoute token={token}>
+                <TestPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>
