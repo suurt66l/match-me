@@ -19,7 +19,9 @@ function App() {
         <Routes>
           <Route 
             path="/login" 
-            element={ token ? <Navigate to="/" replace /> : <AuthPage setToken={setToken} /> //Redirect authorized user to MainPage
+            element={ token 
+              ? <Navigate to="/" replace />  //Redirect authorized user to the MainPage
+              : <AuthPage setToken={setToken} /> 
             }
           />
           <Route 
