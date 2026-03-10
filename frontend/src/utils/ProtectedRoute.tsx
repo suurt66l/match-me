@@ -6,6 +6,7 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, token } : Props) {
+  
   if (!token) {
     return <Navigate to="/login" replace />;
   }
