@@ -7,7 +7,7 @@ export default function SignOutButton() {
     
     function handleLogout() {
         removeToken();      // clears token from state + localStorage
-        window.location.href = '/login'; // redirect to login
+        navigate('/login');// redirect to login
     }
 
     return(
