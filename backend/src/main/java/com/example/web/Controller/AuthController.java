@@ -45,13 +45,12 @@ public class AuthController {
                     .body("Email is already taken");
         }
 
+        // findByNickname (if nickname needs to be unique)
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
-        user.setAge(request.getAge());
-        user.setGender(request.getGender());
-        user.setBio(request.getBio());
+        user.setNickname(request.getNickname());
 
         userRepository.save(user);
 
