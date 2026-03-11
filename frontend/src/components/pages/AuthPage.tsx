@@ -3,16 +3,7 @@ import Logo from "../atoms/Logo";
 import AuthSection from "../organisms/AuthSection";
 import { useAuth } from "../../utils/AuthContext";
 
-interface Props {
-    setToken: (token: string) => void;
-}
-
-interface Credentials {
-    email: string,
-    password: string
-}
-
-export default function AuthPage({setToken} : Props) {
+export default function AuthPage() {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
@@ -27,8 +18,6 @@ export default function AuthPage({setToken} : Props) {
             setError(response.message ?? "Something went wrong.")
             return;
         }
-
-        setToken(response.token!);
     }
 
     return (
