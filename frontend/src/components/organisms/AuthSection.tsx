@@ -1,8 +1,8 @@
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
-import SubmitButton from "../atoms/SignInButton";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import { Link } from 'react-router-dom';
+import SignInButton from "../atoms/SignInButton";
 
 interface Props {
   setEmail: (value: string) => void;
@@ -29,7 +29,7 @@ export default function AuthSection ({ setEmail, setPassword, onSubmit, error }:
             {/* If error exist than display it */}
             {error ? <ErrorParagraph errorMsg={error}/> : null }
 
-            <SubmitButton />
+            <SignInButton />
           </form>
 
           <p className="mt-5 text-center text-sm/6 text-gray-400">
