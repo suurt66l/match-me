@@ -1,8 +1,7 @@
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
-import SubmitButton from "../atoms/SignInButton";
+import SubmitButton from "../atoms/SubmitButton";
 import ErrorParagraph from "../atoms/ErrorParagraph";
-import { Link } from 'react-router-dom';
 import NicknameInputBlock from "../molecules/NicknameInputBlock";
 
 interface Props {
