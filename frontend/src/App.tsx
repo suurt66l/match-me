@@ -8,7 +8,7 @@ import ProtectedRoute from './utils/ProtectedRoute';
 
 
 function App() {
-  const { token, setToken } = useToken();
+  const { token, setToken, removeToken } = useToken();
 
   //LOGS
   console.log("Current token" + token)
