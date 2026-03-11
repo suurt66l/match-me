@@ -41,7 +41,7 @@ export function AuthProvider({ children } : Props) {
     });
     
     const data = await response.json();
-
+    //
     setToken(data.token);
     return {
         token: data.token,
