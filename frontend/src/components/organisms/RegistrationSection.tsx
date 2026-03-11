@@ -3,14 +3,16 @@ import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import SubmitButton from "../atoms/SignInButton";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import { Link } from 'react-router-dom';
+import NicknameInputBlock from "../molecules/NicknameInputBlock";
 
 interface Props {
+  setNickname: (value: string) => void;
   setEmail: (value: string) => void;
   setPassword: (value: string) => void;
   onSubmit: (event: React.SyntheticEvent<HTMLFormElement>) => void;
   error: string | null;
 }
-export default function AuthSection ({ setEmail, setPassword, onSubmit, error }: Props) {
+export default function RegistrationSection ({ setNickname, setEmail, setPassword, onSubmit, error }: Props) {
   
   
   return (
@@ -18,12 +20,15 @@ export default function AuthSection ({ setEmail, setPassword, onSubmit, error }:
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
           <form onSubmit={onSubmit} method="POST" className="space-y-6">
+            <NicknameInputBlock 
+              setNickname={setNickname}
+            />
             <EmailInputBlock 
               setEmail={setEmail}
             />
             <PasswordInputBlock 
               setPassword={setPassword}
-              showForgotPassword={true}
+              showForgotPassword ={ false }
             /> 
 
             {/* If error exist than display it */}
@@ -31,11 +36,6 @@ export default function AuthSection ({ setEmail, setPassword, onSubmit, error }:
 
             <SubmitButton />
           </form>
-
-          <p className="mt-5 text-center text-sm/6 text-gray-400">
-            Not a member?{' '}
-              <Link to="/registration" className="font-semibold text-amber-800 hover:text-amber-700"> Join us now </Link>
-          </p>
         </div>
       </div>
   )

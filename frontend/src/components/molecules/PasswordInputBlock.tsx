@@ -4,15 +4,16 @@ import ForgotPasswordLink from "../atoms/ForgotPasswordLink";
 
 interface Props {
   setPassword: (value: string) => void;
+  showForgotPassword?: boolean;
 }
 
-export default function PasswordInputBlock({setPassword} : Props) {
+export default function PasswordInputBlock({setPassword, showForgotPassword} : Props) {
     return (
         <div>
           <div className="flex items-center justify-between">
               <PasswordLabel />
               <div className="text-sm">
-                <ForgotPasswordLink />
+                { showForgotPassword ? <ForgotPasswordLink /> : null }
               </div>
             </div>
             <div className="mt-2">

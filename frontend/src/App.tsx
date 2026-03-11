@@ -6,6 +6,7 @@ import MatcherPage from './components/pages/MatcherPage';
 import ProtectedRoute from './utils/ProtectedRoute';
 import { AuthProvider } from './utils/AuthContext';
 import GuestRoute from './utils/GuestRoute';
+import RegistrationPage from './components/pages/RegistrationPage';
 
 
 function App() {
@@ -18,6 +19,10 @@ function App() {
                                               <AuthPage /> 
                                             </GuestRoute> 
                                           } />
+            <Route path="/registration" element={ <GuestRoute> 
+                                                    <RegistrationPage />
+                                                  </GuestRoute> 
+                                                } />
             <Route path="/" element={ <ProtectedRoute>
                                         <MatcherPage />
                                       </ProtectedRoute>
