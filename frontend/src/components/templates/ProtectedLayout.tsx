@@ -1,3 +1,4 @@
+import { Outlet } from "react-router-dom";
 import Logo from "../atoms/Logo";
 import NavMenu from "../organisms/NavMenu";
 
@@ -5,7 +6,7 @@ interface Props {
     children: React.ReactNode;
 }
 
-export default function ProtectedLayout({children} : Props) {
+export default function ProtectedLayout() {
     return (
         <div>
             { /* Neader */}
@@ -14,13 +15,13 @@ export default function ProtectedLayout({children} : Props) {
             </div>
             <div className="flex">
                 { /* SideBar */}
-                <div className="flex items-center justify-center min-h-screen bg-amber-300 w-64"> 
+                <div className="w-64 min-h-screen bg-amber-300"> 
                     <NavMenu />
                 </div>
                 
                 { /* Main Zone */}
                 <div className="flex-1 items-center justify-center min-h-screen bg-amber-300">
-                    {children}
+                    <Outlet />
                 </div>
             </div>
         </div>

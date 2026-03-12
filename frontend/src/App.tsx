@@ -7,6 +7,7 @@ import ProtectedRoute from './utils/ProtectedRoute';
 import { AuthProvider } from './utils/AuthContext';
 import GuestRoute from './utils/GuestRoute';
 import RegistrationPage from './components/pages/RegistrationPage';
+import ProtectedLayout from './components/templates/ProtectedLayout';
 
 
 function App() {
@@ -23,18 +24,12 @@ function App() {
                                                     <RegistrationPage />
                                                   </GuestRoute> 
                                                 } />
-            <Route path="/" element={ <ProtectedRoute>
-                                        <MatcherPage />
-                                      </ProtectedRoute>
-                                    } />
-            <Route path="/matcher" element={ <ProtectedRoute>
-                                                <MatcherPage />
-                                              </ProtectedRoute>
-                                            } />
-            <Route path="/test" element={ <ProtectedRoute>
-                                            <TestPage />
-                                          </ProtectedRoute>
-                                        } />
+            <Route element={ <ProtectedRoute> <ProtectedLayout /> </ProtectedRoute>}>
+              <Route path="/" element={<MatcherPage /> } />
+              <Route path="/matcher" element={<MatcherPage />} />
+              <Route path="/test" element={ <TestPage /> } />
+            </Route>
+
           </Routes>
         </BrowserRouter>
       </div>
