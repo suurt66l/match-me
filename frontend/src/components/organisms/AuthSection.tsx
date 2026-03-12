@@ -23,7 +23,7 @@ export default function AuthSection ({ setEmail, setPassword, onSubmit, error }:
             />
             <PasswordInputBlock 
               setPassword={setPassword}
-              showForgotPassword={true}
+              mode={"login"}
             /> 
 
             {/* If error exist than display it */}

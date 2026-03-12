@@ -7,13 +7,20 @@ export default function RegistrationPage() {
     const [nickname, setNickname] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const { login } = useAuth();
+    const { register } = useAuth();
 
     async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const response = await login({ email, password });
+        //Additional check for password integrity
+        if (password !== confirmPassword) {
+            setError("Passwords do not match")
+            return;
+        }
+
+        const response = await register({ nickname, email, password });
 
         if(response.status !== 200) {
             setError(response.message ?? "Something went wrong.")
@@ -33,6 +40,7 @@ export default function RegistrationPage() {
                 setNickname={setNickname}
                 setEmail={setEmail}
                 setPassword={setPassword}
+                setConfirmPassword={setConfirmPassword}
                 onSubmit={handleSubmit}
                 error={error}
             />

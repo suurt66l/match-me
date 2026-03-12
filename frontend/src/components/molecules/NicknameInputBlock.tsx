@@ -1,5 +1,3 @@
-import EmailInput from "../atoms/EmailInput"
-import EmailLabel from "../atoms/EmailLabel"
 import NicknameInput from "../atoms/NicknameInput";
 import NicknameLabel from "../atoms/NicknameLabel";
 interface Props {
