@@ -4,21 +4,28 @@ import useToken from './useToken';
 interface AuthContextProps {
     token: string | null;
     user: null;
-    login: (credentials: Credentials) => Promise<LoginResponse>;
+    login: (loginCredentials: LoginCredentials) => Promise<AuthResponse>;
     logout: () => void;
     isAuthenticated: boolean;
+    register: (regCredentials: RegCredentials) => Promise<AuthResponse>;
 }
 
 interface Props {
     children: React.ReactNode;
 }
 
-interface Credentials {
+interface LoginCredentials {
   email: string;
   password: string;
 }
 
-interface LoginResponse {
+interface RegCredentials {
+  nickname: string;
+  email: string;
+  password: string;
+}
+
+interface AuthResponse {
     token? : string;
     message? : string;
     status: number;
@@ -30,17 +37,23 @@ export function AuthProvider({ children } : Props) {
   const { token, setToken, removeToken } = useToken();
   const [user, setUser] = useState(null);
 
-  async function login( credentials : Credentials) : Promise<LoginResponse> {
-
-    console.log("Credentials: " + credentials.email + " " + credentials.password)
+  async function login( loginCredentials : LoginCredentials) : Promise<AuthResponse> {
+    //LOGS
+    console.log("Credentials: " + loginCredentials.email + " " + loginCredentials.password)
 
     const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify(loginCredentials)
     });
     
     const data = await response.json();
+    if(!response.ok){
+      return {
+        message: data.message,
+        status: response.status
+      }
+    }
 
     setToken(data.token);
     return {
@@ -49,6 +62,30 @@ export function AuthProvider({ children } : Props) {
         status: response.status
     }
   };
+
+  async function register( regCredentials : RegCredentials) : Promise<AuthResponse> {
+    const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regCredentials)
+    });
+
+    const data = await response.json();
+    if(!response.ok){
+      return {
+        message: data.message,
+        status: response.status
+      }
+    }
+
+    setToken(data.token);
+    return {
+        token: data.token,
+        message: data.message,
+        status: response.status
+    }
+
+  }
 
   const logout = () => {
     removeToken();
@@ -60,7 +97,8 @@ export function AuthProvider({ children } : Props) {
     user,
     login,
     logout,
-    isAuthenticated: !!token
+    isAuthenticated: !!token,
+    register
   };
 
   return (
