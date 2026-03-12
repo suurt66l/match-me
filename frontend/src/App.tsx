@@ -8,6 +8,9 @@ import { AuthProvider } from './utils/AuthContext';
 import GuestRoute from './utils/GuestRoute';
 import RegistrationPage from './components/pages/RegistrationPage';
 import ProtectedLayout from './components/templates/ProtectedLayout';
+import ConnectionsPage from './components/pages/ConnectionsPage';
+import ChatPage from './components/pages/ChatPage';
+import ProfilePage from './components/pages/ProfilePage';
 
 
 function App() {
@@ -27,7 +30,9 @@ function App() {
             <Route element={ <ProtectedRoute> <ProtectedLayout /> </ProtectedRoute>}>
               <Route path="/" element={<MatcherPage /> } />
               <Route path="/matcher" element={<MatcherPage />} />
-              <Route path="/test" element={ <TestPage /> } />
+              <Route path="/connections" element={ <ConnectionsPage /> } />
+              <Route path="/chat" element={ <ChatPage /> } />
+              <Route path="/profile" element={ <ProfilePage /> } />
             </Route>
 
           </Routes>
