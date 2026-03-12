@@ -1,7 +1,7 @@
 import Logo from "../atoms/Logo";
 import NavMenu from "../organisms/NavMenu";
 
-export default function AuthPage() {
+export default function MatcherPage() {
     
     return (
         <div>

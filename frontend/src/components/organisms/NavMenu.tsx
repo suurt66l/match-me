@@ -1,4 +1,4 @@
-import SignOutButton from "../atoms/SignoutButton";
+import SignOutButton from "../atoms/SignOutButton";
 
 export default function NavMenu () {
     return (
