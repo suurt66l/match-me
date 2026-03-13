@@ -19,14 +19,12 @@ function App() {
       <div className="wrapper">
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={ <GuestRoute> 
-                                              <AuthPage /> 
-                                            </GuestRoute> 
-                                          } />
-            <Route path="/registration" element={ <GuestRoute> 
-                                                    <RegistrationPage />
-                                                  </GuestRoute> 
-                                                } />
+
+            { /* Pages for Unauthorized Users */}
+            <Route element={ <GuestRoute /> }>
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/registration" element={<RegistrationPage />} />
+            </Route>
 
             { /* Pages for Authorized Users */}
             <Route element={ <ProtectedRoute /> }>
@@ -39,6 +37,10 @@ function App() {
               </Route>
             </Route>
 
+            <Route path="*" element={ <GuestRoute> 
+                                              <AuthPage /> 
+                                            </GuestRoute> 
+                                          } />
           </Routes>
         </BrowserRouter>
       </div>
