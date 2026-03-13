@@ -27,12 +27,16 @@ function App() {
                                                     <RegistrationPage />
                                                   </GuestRoute> 
                                                 } />
-            <Route element={ <ProtectedRoute> <ProtectedLayout /> </ProtectedRoute>}>
-              <Route path="/" element={<MatcherPage /> } />
-              <Route path="/matcher" element={<MatcherPage />} />
-              <Route path="/connections" element={ <ConnectionsPage /> } />
-              <Route path="/chat" element={ <ChatPage /> } />
-              <Route path="/profile" element={ <ProfilePage /> } />
+
+            { /* Pages for Authorized Users */}
+            <Route element={ <ProtectedRoute /> }>
+              <Route element={ <ProtectedLayout /> }>
+                <Route path="/" element={<MatcherPage /> } />
+                <Route path="/matcher" element={<MatcherPage />} />
+                <Route path="/connections" element={ <ConnectionsPage /> } />
+                <Route path="/chat" element={ <ChatPage /> } />
+                <Route path="/profile" element={ <ProfilePage /> } />
+              </Route>
             </Route>
 
           </Routes>
