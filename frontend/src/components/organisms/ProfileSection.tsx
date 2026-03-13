@@ -5,9 +5,13 @@ export default function ProfileSection() {
     const [activeTab, setActiveTab] = useState<"bio" | "preferences">("preferences");
     
     return(
+    <div>
         <ProfileInfoNav 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
         />
+        {/* Content below tabs */}
+        {activeTab === "bio" ? <div>Bio Form</div> : <div>Preferences Form</div>}
+    </div>
     );
 }

@@ -9,7 +9,7 @@ interface Props {
 export default function ProfileInfoNav({activeTab, setActiveTab}: Props) {
 
     return(
-        <nav>
+        <nav className="flex gap-1">
             <ProfileBioButton 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -18,7 +18,6 @@ export default function ProfileInfoNav({activeTab, setActiveTab}: Props) {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             />
-            {activeTab === "bio" ? <div>Bio Form here</div> : <div>Preferences Form here</div>}
         </nav>
     );
 }
