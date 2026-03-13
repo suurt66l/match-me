@@ -1,6 +1,5 @@
 import './App.css'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import TestPage from './components/pages/TestPage';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AuthPage from './components/pages/AuthPage';
 import MatcherPage from './components/pages/MatcherPage';
 import ProtectedRoute from './utils/ProtectedRoute';
@@ -20,13 +19,13 @@ function App() {
       <div className="wrapper">
         <BrowserRouter>
           <Routes>
-            { /* Pages for Unauthorized Users */}
+            { /* Pages for Unauthorized Users */ }
             <Route element={ <GuestRoute /> }>
               <Route path="/login" element={<AuthPage />} />
               <Route path="/registration" element={<RegistrationPage />} />
             </Route>
 
-            { /* Pages for Authorized Users */}
+            { /* Pages for Authorized Users */ }
             <Route element={ <ProtectedRoute /> }>
               <Route element={ <ProtectedLayout /> }>
                 <Route path="/" element={<MatcherPage /> } />
@@ -37,7 +36,7 @@ function App() {
               </Route>
             </Route>
 
-            { /* Pages for not existing pages */}
+            { /* Pages for not existing pages */ }
             <Route path="*" element={  <Page404 /> } />
           </Routes>
         </BrowserRouter>
