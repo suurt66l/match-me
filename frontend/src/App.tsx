@@ -11,6 +11,7 @@ import ProtectedLayout from './components/templates/ProtectedLayout';
 import ConnectionsPage from './components/pages/ConnectionsPage';
 import ChatPage from './components/pages/ChatPage';
 import ProfilePage from './components/pages/ProfilePage';
+import Page404 from './components/pages/Page404';
 
 
 function App() {
@@ -19,7 +20,6 @@ function App() {
       <div className="wrapper">
         <BrowserRouter>
           <Routes>
-
             { /* Pages for Unauthorized Users */}
             <Route element={ <GuestRoute /> }>
               <Route path="/login" element={<AuthPage />} />
@@ -37,10 +37,8 @@ function App() {
               </Route>
             </Route>
 
-            <Route path="*" element={ <GuestRoute> 
-                                              <AuthPage /> 
-                                            </GuestRoute> 
-                                          } />
+            { /* Pages for not existing pages */}
+            <Route path="*" element={  <Page404 /> } />
           </Routes>
         </BrowserRouter>
       </div>
