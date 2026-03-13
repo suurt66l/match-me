@@ -19,7 +19,7 @@ export default function ProtectedLayout() {
             <div className="relative flex">
                 { /* SideBar */}
                 <div className={`absolute w-64 max-h-screen bg-amber-500 ${isMenuOpen ? "block" : "hidden"} lg:block lg:relative `}> 
-                    <NavMenu />
+                    <NavMenu onMenuToggle = {toggleMenu} />
                 </div>
                 
                 { /* Main Zone */}

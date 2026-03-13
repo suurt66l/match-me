@@ -4,13 +4,17 @@ import MatcherLink from "../atoms/MatcherLink";
 import ProfileLink from "../atoms/ProfileLink";
 import SignOutButton from "../atoms/SignOutButton";
 
-export default function NavMenu () {
+interface Props {
+    onMenuToggle?: () => void;
+}
+
+export default function NavMenu ( {onMenuToggle} : Props) {
     return (
         <div>
-            <MatcherLink />
-            <ConnectionsLink />
-            <ChatLink />
-            <ProfileLink />
+            <MatcherLink onMenuToggle = {onMenuToggle}/>
+            <ConnectionsLink onMenuToggle = {onMenuToggle}/>
+            <ChatLink onMenuToggle = {onMenuToggle}/>
+            <ProfileLink onMenuToggle = {onMenuToggle}/>
             <SignOutButton />
         </div>
     );
