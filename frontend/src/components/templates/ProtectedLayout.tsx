@@ -1,26 +1,29 @@
 import { Outlet } from "react-router-dom";
-import Logo from "../atoms/Logo";
 import NavMenu from "../organisms/NavMenu";
-
-interface Props {
-    children: React.ReactNode;
-}
+import { useState } from "react";
+import Header from "../organisms/Header";
 
 export default function ProtectedLayout() {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    function toggleMenu() {
+        setIsMenuOpen(!isMenuOpen);
+    }
+
     return (
         <div>
-            { /* Neader */}
+            { /* Header */}
             <div className="flex items-center min-w-screen bg-amber-600"> 
-                <Logo />
+                <Header onMenuToggle = {toggleMenu} />
             </div>
-            <div className="flex">
+            <div className="relative flex">
                 { /* SideBar */}
-                <div className="w-64 min-h-screen bg-amber-300"> 
+                <div className={`absolute w-64 max-h-screen bg-amber-500 ${isMenuOpen ? "block" : "hidden"} lg:block lg:relative `}> 
                     <NavMenu />
                 </div>
                 
                 { /* Main Zone */}
-                <div className="flex-1 items-center justify-center min-h-screen bg-amber-300">
+                <div className="flex-1 min-h-screen bg-amber-300">
                     <Outlet />
                 </div>
             </div>
