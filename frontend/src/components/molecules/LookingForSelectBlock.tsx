@@ -10,7 +10,7 @@ export default function LookingForInputBlock({setLookingFor} : Props) {
               <LookingForLabel />
               <div className="mt-2">
                 <LookingForSelect 
-                  setLookingFor={setLookingFor}
+                setLookingFor={setLookingFor}
                 />
               </div>
             </div>
