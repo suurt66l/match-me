@@ -33,6 +33,7 @@ public class User {
     private String lookingFor; // e.g "just gaming, friendship, relationship, etc"
     private String platforms; // PC, Xbox, etc
     private String intensity; // gaming intensity, e.g. casual to sweaty
+    private String location;
 
     private String profilePictureUrl; 
 
