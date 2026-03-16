@@ -1,8 +1,9 @@
 import { useState } from "react";
 import ProfileInfoNav from "../molecules/ProfileInfoNav";
+import AccountForm from "./AccountForm";
 
 export default function ProfileSection() {
-    const [activeTab, setActiveTab] = useState<"bio" | "preferences">("preferences");
+    const [activeTab, setActiveTab] = useState<"acc" | "bio" | "preferences">("acc");
     
     return(
     <div>
@@ -11,7 +12,9 @@ export default function ProfileSection() {
             setActiveTab={setActiveTab}
         />
         {/* Content below tabs */}
-        {activeTab === "bio" ? <div>Bio Form</div> : <div>Preferences Form</div>}
+        {activeTab === "acc" && <AccountForm  />}
+        {activeTab === "bio" && <BioForm  />}
+        {activeTab === "preferences" && <PreferencesForm  />}
     </div>
     );
 }
