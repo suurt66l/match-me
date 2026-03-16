@@ -5,7 +5,7 @@ interface Props {
   setDateOfBirth : (value: string) => void;
 }
 
-export default function BirthDateInputBlock({setDateOfBirth} : Props) {
+export default function DateOfBirthInputBlock({setDateOfBirth} : Props) {
     return (
             <div>
               <DateOfBirthLabel />

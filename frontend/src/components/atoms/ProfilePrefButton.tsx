@@ -1,6 +1,6 @@
 interface Props {
-    activeTab : "bio" | "preferences";
-    setActiveTab: (tab: "bio" | "preferences") => void;
+    activeTab : "acc" | "bio" | "preferences";
+    setActiveTab: (tab: "acc" | "bio" | "preferences") => void;
 }
 
 export default function ProfilePrefButton({activeTab, setActiveTab}: Props) {
