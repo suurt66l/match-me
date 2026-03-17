@@ -3,14 +3,15 @@ import GamesLabel from "../atoms/GamesLabel";
 
 interface Props {
   setGames: (value: string) => void;
+  value: string;
 }
 
-export default function GamesInputBlock({ setGames} : Props) {
+export default function GamesInputBlock({ setGames, value} : Props) {
     return (
-            <div>        
+            <div>
                 <GamesLabel />
                 <div className="mt-2">
-                    <GamesInput setGames={setGames} />
+                    <GamesInput setGames={setGames} value={value} />
                 </div>
             </div>
     )

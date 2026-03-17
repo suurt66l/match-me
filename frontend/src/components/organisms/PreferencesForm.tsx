@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import SaveButton from "../atoms/SaveButton";
@@ -20,6 +20,29 @@ export default function PreferencesForm() {
   const [error, setError] = useState<string | null>(null);
 
   const { token } = useAuth();
+
+  useEffect(() => {
+    async function loadBio() {
+      try {
+        const response = await fetch("http://localhost:8080/me/bio", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGameTimeFrom(data.gameTimeFrom ?? "");
+          setGameTimeTo(data.gameTimeTo ?? "");
+          setGames(data.games ?? "");
+          setGameGenres(data.gameGenres ?? "");
+          setLookingFor(data.lookingFor ?? "");
+          setPlatform(data.platform ?? "");
+          setIntensity(data.intensity ?? "");
+        }
+      } catch {
+        // Server unreachable — form starts empty
+      }
+    }
+    loadBio();
+  }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,12 +81,17 @@ export default function PreferencesForm() {
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-          <GameTimeInputBlock setGameTimeFrom={setGameTimeFrom} setGameTimeTo={setGameTimeTo} />
-          <GamesInputBlock setGames={setGames} />
-          <GameGenresInputBlock setGameGenres={setGameGenres} />
-          <LookingForInputBlock setLookingFor={setLookingFor} />
-          <PlatformSelectBlock setPlatform={setPlatform} />
-          <IntensityInputBlock setIntensity={setIntensity} />
+          <GameTimeInputBlock
+            setGameTimeFrom={setGameTimeFrom}
+            setGameTimeTo={setGameTimeTo}
+            gameTimeFrom={gameTimeFrom}
+            gameTimeTo={gameTimeTo}
+          />
+          <GamesInputBlock setGames={setGames} value={games} />
+          <GameGenresInputBlock setGameGenres={setGameGenres} value={gameGenres} />
+          <LookingForInputBlock setLookingFor={setLookingFor} value={lookingFor} />
+          <PlatformSelectBlock setPlatform={setPlatform} value={platform} />
+          <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
           {error ? <ErrorParagraph errorMsg={error} /> : null}
 

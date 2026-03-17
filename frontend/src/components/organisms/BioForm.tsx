@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
@@ -12,12 +12,33 @@ export default function BioForm() {
   const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [country, setCountry] = useState<string>("");
-  const [city, setCity] = useState<string>("");
   const [aboutMe, setAboutMe] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { token } = useAuth();
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const response = await fetch("http://localhost:8080/me/profile", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDateOfBirth(data.dateOfBirth ?? "");
+          setGender(data.gender ?? "");
+          setCountry(data.country ?? "");
+          setAboutMe(data.aboutMe ?? "");
+          setExistingAvatarUrl(data.avatarUrl ?? null);
+        }
+      } catch {
+        // Server unreachable — form starts empty
+      }
+    }
+    loadProfile();
+  }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,7 +48,6 @@ export default function BioForm() {
     if (dateOfBirth) formData.append("dateOfBirth", dateOfBirth);
     if (gender) formData.append("gender", gender);
     if (country) formData.append("country", country);
-    if (city) formData.append("city", city);
     if (aboutMe) formData.append("aboutMe", aboutMe);
     if (profilePicture) formData.append("profilePicture", profilePicture);
 
@@ -57,11 +77,14 @@ export default function BioForm() {
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-          <ProfilePictureBlock setProfilePicture={setProfilePicture} />
-          <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} />
-          <GenderSelectBlock setGender={setGender} />
-          <LocationInputBlock setCountry={setCountry} setCity={setCity} />
-          <AboutMeInputBlock setAboutMe={setAboutMe} />
+          <ProfilePictureBlock
+            setProfilePicture={setProfilePicture}
+            existingAvatarUrl={existingAvatarUrl}
+          />
+          <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
+          <GenderSelectBlock setGender={setGender} value={gender} />
+          <LocationInputBlock setCountry={setCountry} country={country} />
+          <AboutMeInputBlock setAboutMe={setAboutMe} value={aboutMe} />
 
           {error ? <ErrorParagraph errorMsg={error} /> : null}
 

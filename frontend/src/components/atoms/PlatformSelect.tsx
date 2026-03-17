@@ -1,19 +1,18 @@
+import CustomSelect from "./CustomSelect";
+
 interface Props {
-    setPlatform: (value: string) => void;
+  setPlatform: (value: string) => void;
+  value: string;
 }
 
-export default function PlatformSelect({setPlatform} : Props) {
-    return(
-        <select id="platform"
-                name="platform"
-                className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-2 -outline-offset-1 outline-white/25 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-700 sm:text-sm/6" 
-                onChange={(event) => setPlatform(event.target.value) }>
-            <option value="">Select platform</option>
-            <option value="pc">PC</option>
-            <option value="playstation">PlayStation</option>
-            <option value="xbox">Xbox</option>
-            <option value="nintendo">Nintendo</option>
-            <option value="other">Other</option>
-        </select>
-    );
+const options = [
+  { value: "pc", label: "PC" },
+  { value: "playstation", label: "PlayStation" },
+  { value: "xbox", label: "Xbox" },
+  { value: "nintendo", label: "Nintendo" },
+  { value: "other", label: "Other" },
+];
+
+export default function PlatformSelect({ setPlatform, value }: Props) {
+  return <CustomSelect options={options} value={value} setValue={setPlatform} placeholder="Select platform" />;
 }

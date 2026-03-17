@@ -4,9 +4,10 @@ import ProfilePictureInput from "../atoms/ProfilePictureInput";
 
 interface Props {
     setProfilePicture: (file: File) => void;
+    existingAvatarUrl: string | null;
 }
 
-export default function ProfilePictureBlock({ setProfilePicture }: Props) {
+export default function ProfilePictureBlock({ setProfilePicture, existingAvatarUrl }: Props) {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     function handleFileSelect(file: File) {
@@ -14,15 +15,18 @@ export default function ProfilePictureBlock({ setProfilePicture }: Props) {
         setPreviewUrl(URL.createObjectURL(file));
     }
 
+    // Show newly selected file preview, or fall back to the saved avatar
+    const displayUrl = previewUrl ?? existingAvatarUrl;
+
     return (
         <div>
             <ProfilePictureLabel />
-            {previewUrl && (
+            {displayUrl && (
                 <div className="mt-3 flex justify-center">
                     <img
-                        src={previewUrl}
+                        src={displayUrl}
                         alt="Profile preview"
-                        className="w-24 h-24 rounded-full object-cover outline outline-2 outline-white/25"
+                        className="w-24 h-24 rounded-full object-cover outline-2 outline-white/25"
                     />
                 </div>
             )}
