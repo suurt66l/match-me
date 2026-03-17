@@ -15,21 +15,19 @@ export default function ProfilePictureBlock({ setProfilePicture, existingAvatarU
         setPreviewUrl(URL.createObjectURL(file));
     }
 
-    // Show newly selected file preview, or fall back to the saved avatar
-    const displayUrl = previewUrl ?? existingAvatarUrl;
+    // Show newly selected file preview, saved avatar, or default
+    const displayUrl = previewUrl ?? existingAvatarUrl ?? "/assets/default-avatar.svg";
 
     return (
         <div>
             <ProfilePictureLabel />
-            {displayUrl && (
-                <div className="mt-3 flex justify-center">
-                    <img
-                        src={displayUrl}
-                        alt="Profile preview"
-                        className="w-24 h-24 rounded-full object-cover outline-2 outline-white/25"
-                    />
-                </div>
-            )}
+            <div className="mt-3 flex justify-center">
+                <img
+                    src={displayUrl}
+                    alt="Profile preview"
+                    className="w-24 h-24 rounded-full object-cover outline-2 outline-white/25"
+                />
+            </div>
             <div className="mt-2">
                 <ProfilePictureInput setProfilePicture={handleFileSelect} />
             </div>

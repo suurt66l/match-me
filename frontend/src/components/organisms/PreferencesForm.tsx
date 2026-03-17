@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import ErrorParagraph from "../atoms/ErrorParagraph";
+import SuccessParagraph from "../atoms/SuccessParagraph";
 import SaveButton from "../atoms/SaveButton";
 import GameTimeInputBlock from "../molecules/GameTimeInputBlock";
 import GamesInputBlock from "../molecules/GamesInputBlock";
@@ -18,6 +19,7 @@ export default function PreferencesForm() {
   const [platform, setPlatform] = useState<string>("");
   const [intensity, setIntensity] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const { token } = useAuth();
 
@@ -46,6 +48,8 @@ export default function PreferencesForm() {
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     const body: Record<string, string> = {};
     if (gameTimeFrom) body.gameTimeFrom = gameTimeFrom;
@@ -70,6 +74,9 @@ export default function PreferencesForm() {
 
       if (!response.ok) {
         setError(data.message ?? "Something went wrong.");
+      } else {
+        setSuccess("Preferences saved successfully.");
+        setTimeout(() => setSuccess(null), 3000);
       }
     } catch {
       setError("Could not connect to the server.");
@@ -93,7 +100,8 @@ export default function PreferencesForm() {
           <PlatformSelectBlock setPlatform={setPlatform} value={platform} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
-          {error ? <ErrorParagraph errorMsg={error} /> : null}
+          {error && <ErrorParagraph errorMsg={error} />}
+          {success && <SuccessParagraph msg={success} />}
 
           <SaveButton />
         </form>
