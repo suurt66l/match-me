@@ -5,22 +5,17 @@ import CountrySelect from "../atoms/CountrySelect";
 
 interface Props {
   setCountry: (value: string) => void;
-  setCity: (value: string) => void;
+  country: string;
 }
 
-export default function LocationInputBlock({setCountry, setCity} : Props) {
+export default function LocationInputBlock({setCountry, country} : Props) {
     return (
             <div>
-            <CountryLabel />
+              <CountryLabel />
               <div className="mt-2">
-                <CountrySelect 
+                <CountrySelect
                   setCountry={setCountry}
-                />
-              </div>
-              <CityLabel />
-              <div className="mt-2">
-                <CityInput 
-                  setCity={setCity}
+                  value={country}
                 />
               </div>
             </div>

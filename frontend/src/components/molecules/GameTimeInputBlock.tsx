@@ -7,22 +7,24 @@ import GameTimeToLabel from "../atoms/GameTimeToLabel";
 interface Props {
   setGameTimeFrom: (value: string) => void;
   setGameTimeTo: (value: string) => void;
+  gameTimeFrom: string;
+  gameTimeTo: string;
 }
 
-export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom} : Props) {
+export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom, gameTimeFrom, gameTimeTo} : Props) {
     return (
             <div>
                 <GameTimeLabel />
-                <div>            
+                <div>
                     <GameTimeFromLabel />
                     <div className="mt-2">
-                        <GameTimeFromInput setGameTimeFrom={setGameTimeFrom} />
+                        <GameTimeFromInput setGameTimeFrom={setGameTimeFrom} value={gameTimeFrom} />
                     </div>
-                    </div>
+                </div>
 
                     <GameTimeToLabel />
                     <div className="mt-2">
-                        <GameTimeToInput setGameTimeTo={setGameTimeTo} />
+                        <GameTimeToInput setGameTimeTo={setGameTimeTo} value={gameTimeTo} />
                 </div>
             </div>
     )

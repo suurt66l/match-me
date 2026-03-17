@@ -1,11 +1,11 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "../../utils/AuthContext";
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import NicknameInputBlock from "../molecules/NicknameInputBlock";
 import ConfirmPasswordBlock from "../molecules/ConfirmPasswordBlock";
 import SaveButton from "../atoms/SaveButton";
-import { useState } from "react";
-import { useAuth } from "../../utils/AuthContext";
 
 export default function AccountForm () {
   const [nickname, setNickname] = useState<string>("");
@@ -15,6 +15,24 @@ export default function AccountForm () {
   const [error, setError] = useState<string | null>(null);
 
   const { token } = useAuth();
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const response = await fetch("http://localhost:8080/me/profile", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setNickname(data.nickname ?? "");
+          setEmail(data.email ?? "");
+        }
+      } catch {
+        // Server unreachable — form starts empty
+      }
+    }
+    loadProfile();
+  }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,22 +72,22 @@ export default function AccountForm () {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
           <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-            <NicknameInputBlock 
+            <NicknameInputBlock
               setNickname={setNickname}
+              value={nickname}
             />
-            <EmailInputBlock 
+            <EmailInputBlock
               setEmail={setEmail}
+              value={email}
             />
-            <PasswordInputBlock 
+            <PasswordInputBlock
               setPassword={setPassword}
-              mode = {"register"}
-            /> 
-            <ConfirmPasswordBlock 
-              setConfirmPassword = {setConfirmPassword}
+              mode={"register"}
             />
-            
+            <ConfirmPasswordBlock
+              setConfirmPassword={setConfirmPassword}
+            />
 
-            {/* If error exist than display it */}
             {error ? <ErrorParagraph errorMsg={error}/> : null }
 
             <SaveButton />
