@@ -3,6 +3,7 @@ import { useAuth } from "../../utils/AuthContext";
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import ErrorParagraph from "../atoms/ErrorParagraph";
+import SuccessParagraph from "../atoms/SuccessParagraph";
 import NicknameInputBlock from "../molecules/NicknameInputBlock";
 import ConfirmPasswordBlock from "../molecules/ConfirmPasswordBlock";
 import SaveButton from "../atoms/SaveButton";
@@ -13,6 +14,7 @@ export default function AccountForm () {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const { token } = useAuth();
 
@@ -36,6 +38,8 @@ export default function AccountForm () {
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -61,6 +65,9 @@ export default function AccountForm () {
 
       if (!response.ok) {
         setError(data.message ?? "Something went wrong.");
+      } else {
+        setSuccess("Account saved successfully.");
+        setTimeout(() => setSuccess(null), 3000);
       }
     } catch {
       setError("Could not connect to the server.");
@@ -72,23 +79,13 @@ export default function AccountForm () {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
           <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-            <NicknameInputBlock
-              setNickname={setNickname}
-              value={nickname}
-            />
-            <EmailInputBlock
-              setEmail={setEmail}
-              value={email}
-            />
-            <PasswordInputBlock
-              setPassword={setPassword}
-              mode={"register"}
-            />
-            <ConfirmPasswordBlock
-              setConfirmPassword={setConfirmPassword}
-            />
+            <NicknameInputBlock setNickname={setNickname} value={nickname} />
+            <EmailInputBlock setEmail={setEmail} value={email} />
+            <PasswordInputBlock setPassword={setPassword} mode={"register"} />
+            <ConfirmPasswordBlock setConfirmPassword={setConfirmPassword} />
 
-            {error ? <ErrorParagraph errorMsg={error}/> : null }
+            {error && <ErrorParagraph errorMsg={error} />}
+            {success && <SuccessParagraph msg={success} />}
 
             <SaveButton />
           </form>

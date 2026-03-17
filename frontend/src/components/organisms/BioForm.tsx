@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import ErrorParagraph from "../atoms/ErrorParagraph";
+import SuccessParagraph from "../atoms/SuccessParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
 import GenderSelectBlock from "../molecules/GenderSelectBlock";
 import LocationInputBlock from "../molecules/LocationInputBlock";
@@ -16,6 +17,7 @@ export default function BioForm() {
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const { token } = useAuth();
 
@@ -42,8 +44,9 @@ export default function BioForm() {
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+    setSuccess(null);
 
-    // FormData is required when sending files — can't use JSON.stringify with binary data
     const formData = new FormData();
     if (dateOfBirth) formData.append("dateOfBirth", dateOfBirth);
     if (gender) formData.append("gender", gender);
@@ -66,6 +69,9 @@ export default function BioForm() {
 
       if (!response.ok) {
         setError(data.message ?? "Something went wrong.");
+      } else {
+        setSuccess("Bio saved successfully.");
+        setTimeout(() => setSuccess(null), 3000);
       }
     } catch {
       setError("Could not connect to the server.");
@@ -77,16 +83,14 @@ export default function BioForm() {
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-          <ProfilePictureBlock
-            setProfilePicture={setProfilePicture}
-            existingAvatarUrl={existingAvatarUrl}
-          />
+          <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} />
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
           <GenderSelectBlock setGender={setGender} value={gender} />
           <LocationInputBlock setCountry={setCountry} country={country} />
           <AboutMeInputBlock setAboutMe={setAboutMe} value={aboutMe} />
 
-          {error ? <ErrorParagraph errorMsg={error} /> : null}
+          {error && <ErrorParagraph errorMsg={error} />}
+          {success && <SuccessParagraph msg={success} />}
 
           <SaveButton />
         </form>
