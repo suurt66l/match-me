@@ -24,19 +24,28 @@ export default function AccountForm () {
       return;
     }
 
-    const response = await fetch("http://localhost:8080/api/profile", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ nickname, email, password }),
-    });
+    const body: Record<string, string> = {};
+    if (nickname) body.nickname = nickname;
+    if (email) body.email = email;
+    if (password) body.password = password;
 
-    const data = await response.json();
+    try {
+      const response = await fetch("http://localhost:8080/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (!response.ok) {
-      setError(data.message ?? "Something went wrong.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message ?? "Something went wrong.");
+      }
+    } catch {
+      setError("Could not connect to the server.");
     }
   }
 

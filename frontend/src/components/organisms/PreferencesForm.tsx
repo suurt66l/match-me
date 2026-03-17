@@ -24,19 +24,32 @@ export default function PreferencesForm() {
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const response = await fetch("http://localhost:8080/api/bio", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ gameTimeFrom, gameTimeTo, games, gameGenres, lookingFor, platform, intensity }),
-    });
+    const body: Record<string, string> = {};
+    if (gameTimeFrom) body.gameTimeFrom = gameTimeFrom;
+    if (gameTimeTo) body.gameTimeTo = gameTimeTo;
+    if (games) body.games = games;
+    if (gameGenres) body.gameGenres = gameGenres;
+    if (lookingFor) body.lookingFor = lookingFor;
+    if (platform) body.platform = platform;
+    if (intensity) body.intensity = intensity;
 
-    const data = await response.json();
+    try {
+      const response = await fetch("http://localhost:8080/api/bio", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (!response.ok) {
-      setError(data.message ?? "Something went wrong.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message ?? "Something went wrong.");
+      }
+    } catch {
+      setError("Could not connect to the server.");
     }
   }
 
