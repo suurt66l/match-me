@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Logo from "../atoms/Logo";
 import RegistrationSection from "../organisms/RegistrationSection";
 import { useAuth } from "../../utils/AuthContext";
 
