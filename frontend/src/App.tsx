@@ -11,6 +11,7 @@ import ConnectionsPage from './components/pages/ConnectionsPage';
 import ChatPage from './components/pages/ChatPage';
 import ProfilePage from './components/pages/ProfilePage';
 import Page404 from './components/pages/Page404';
+import GuestLayout from './components/templates/GuestLayout';
 
 
 function App() {
@@ -20,14 +21,16 @@ function App() {
         <BrowserRouter>
           <Routes>
             { /* Pages for Unauthorized Users */ }
-            <Route element={ <GuestRoute /> }>
-              <Route path="/login" element={<AuthPage />} />
-              <Route path="/registration" element={<RegistrationPage />} />
+            <Route element={ <GuestRoute /> }> 
+              <Route element={ <GuestLayout /> }> 
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/registration" element={<RegistrationPage />} />
+              </Route>
             </Route>
 
             { /* Pages for Authorized Users */ }
             <Route element={ <ProtectedRoute /> }>
-              <Route element={ <ProtectedLayout /> }>
+              <Route element={ <ProtectedLayout /> }> 
                 <Route path="/" element={<MatcherPage /> } />
                 <Route path="/matcher" element={<MatcherPage />} />
                 <Route path="/connections" element={ <ConnectionsPage /> } />
