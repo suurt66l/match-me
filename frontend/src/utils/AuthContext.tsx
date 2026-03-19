@@ -4,14 +4,12 @@ import useToken from './useToken';
 interface AuthContextProps {
     token: string | null;
     user: null;
+    isAuthenticated: boolean;
+
     login: (loginCredentials: LoginCredentials) => Promise<AuthResponse>;
     logout: () => void;
-    isAuthenticated: boolean;
-    register: (regCredentials: RegCredentials) => Promise<AuthResponse>;
-}
 
-interface Props {
-    children: React.ReactNode;
+    register: (regCredentials: RegCredentials) => Promise<AuthResponse>;
 }
 
 interface LoginCredentials {
@@ -33,14 +31,13 @@ interface AuthResponse {
 
 const AuthContext = createContext<AuthContextProps | null>(null);
 
-export function AuthProvider({ children } : Props) {
+/* Handles authentication  */
+export function AuthProvider( children : React.ReactNode) {
   const { token, setToken, removeToken } = useToken();
   const [user, setUser] = useState(null);
 
   async function login( loginCredentials : LoginCredentials) : Promise<AuthResponse> {
-    //LOGS
-    console.log("Credentials: " + loginCredentials.email + " " + loginCredentials.password)
-
+  
     const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
