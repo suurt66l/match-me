@@ -60,6 +60,10 @@ export default function ChatPage() {
         setConnections(prev =>
           prev.map(c => c.id === msg.userId ? { ...c, isOnline: msg.isOnline } : c)
         );
+      } else if (msg.type === "dismissed") {
+        setConnections(prev => prev.filter(c => c.id !== msg.userId));
+        setMessages([]);
+        setSearchParams({});
       }
     }
 
