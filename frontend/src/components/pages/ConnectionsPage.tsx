@@ -26,6 +26,18 @@ export default function ConnectionsPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  async function handleDismiss(id: number) {
+    try {
+      await fetch(`http://localhost:8080/api/connections/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      setConnections(prev => prev.filter(c => c.id !== id));
+    } catch {
+      // Server unreachable
+    }
+  }
+
   useEffect(() => {
     async function loadConnections() {
       try {
@@ -74,6 +86,12 @@ export default function ConnectionsPage() {
                 className="rounded-md bg-amber-950 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-900"
               >
                 Message
+              </button>
+              <button
+                onClick={() => handleDismiss(user.id)}
+                className="rounded-md bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                Dismiss
               </button>
 
             </div>
