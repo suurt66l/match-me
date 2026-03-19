@@ -47,10 +47,12 @@ export function AuthProvider({ children } : Props) {
         body: JSON.stringify(loginCredentials)
     });
     
-    const data = await response.json();
+    const text = await response.text();
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
     if(!response.ok){
       return {
-        message: data.message,
+        message: typeof data === "string" ? data : (data.message ?? "Something went wrong"),
         status: response.status
       }
     }
@@ -70,10 +72,12 @@ export function AuthProvider({ children } : Props) {
         body: JSON.stringify(regCredentials)
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
     if(!response.ok){
       return {
-        message: data.message,
+        message: typeof data === "string" ? data : (data.message ?? "Something went wrong"),
         status: response.status
       }
     }
