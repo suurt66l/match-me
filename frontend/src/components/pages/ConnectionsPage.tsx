@@ -10,14 +10,19 @@ interface Connection {
   dateOfBirth: string;
 }
 
+/* Calculates age of the person user is connected to */
 function calcAge(dateOfBirth: string): number {
   const today = new Date();
   const birth = new Date(dateOfBirth);
+
   let age = today.getFullYear() - birth.getFullYear();
-  const hasHadBirthday =
-    today.getMonth() > birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-  if (!hasHadBirthday) age--;
+
+  const hasHadBirthday = (today.getMonth() > birth.getMonth()) ||
+                         (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hasHadBirthday) {
+    age--
+  };
+
   return age;
 }
 
@@ -26,6 +31,7 @@ export default function ConnectionsPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  /* Removes connection with person */
   async function handleDismiss(id: number) {
     try {
       await fetch(`http://localhost:8080/api/connections/${id}`, {

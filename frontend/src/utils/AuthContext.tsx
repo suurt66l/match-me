@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 import useToken from './useToken';
 
 interface AuthContextProps {
     token: string | null;
-    //user: null;
     isAuthenticated: boolean;
     login: (loginCredentials: LoginCredentials) => Promise<AuthResponse>;
     logout: () => void;
@@ -30,9 +29,8 @@ interface AuthResponse {
 const AuthContext = createContext<AuthContextProps | null>(null);
 
 /* Handles authentication  */
-export function AuthProvider( { children } : { children: React.ReactNode }) {
+export default function AuthProvider( { children } : { children: React.ReactNode }) {
   const { token, setToken, removeToken } = useToken();
-  //const [user, setUser] = useState(null);
 
   /* Handles login */
   async function login( loginCredentials : LoginCredentials) : Promise<AuthResponse> {
@@ -94,7 +92,6 @@ export function AuthProvider( { children } : { children: React.ReactNode }) {
 
   const value = {
     token,
-    //user,
     isAuthenticated: !!token,
     login,
     logout,
@@ -111,5 +108,11 @@ export function AuthProvider( { children } : { children: React.ReactNode }) {
 
 /* Just return context of the app */
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
+  return context;
 }

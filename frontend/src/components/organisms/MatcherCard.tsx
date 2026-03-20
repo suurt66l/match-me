@@ -70,7 +70,7 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
 
       {/* Avatar + identity */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-amber-950 overflow-hidden flex-shrink-0">
+        <div className="w-16 h-16 rounded-full bg-amber-950 overflow-hidden shrink-0">
           <img
             src={user.avatarUrl ?? "/assets/default-avatar.svg"}
             alt={user.nickname}
