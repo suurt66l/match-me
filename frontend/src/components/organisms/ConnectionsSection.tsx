@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
+import DismissButton from "../atoms/DismissButton";
+import MessageButton from "../atoms/PersonalMessageButton";
+import PersonalMessageButton from "../atoms/PersonalMessageButton";
 
 
 interface Connection {
@@ -17,18 +20,21 @@ export default function ConnectionsSection(){
   const navigate = useNavigate();
 
   /* Removes connection with person */
-  async function handleDismiss(id: number) {
+  async function removeConnection(id: number) {
     try {
-      await fetch(`http://localhost:8080/api/connections/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` },
-      });
-      setConnections(prev => prev.filter(c => c.id !== id));
+        await fetch(`http://localhost:8080/api/connections/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        const updatedConnections = connections.filter(item => item.id !== id)
+        setConnections(updatedConnections);
     } catch {
-      // Server unreachable
+      console.log("Server is unreachable!");
     }
   }
 
+  /* Load connection on connecting to the page and token changes */
   useEffect(() => {
     async function loadConnections() {
       try {
@@ -40,15 +46,17 @@ export default function ConnectionsSection(){
           setConnections(data);
         }
       } catch {
-        // Server unreachable
+        console.log("Server is unreachable!");
       }
     }
     loadConnections();
   }, [token]);
-
+  
+  /* In case if there is no connections */
   if(connections.length <= 0){
     return(<p className="text-amber-800">No connections yet. Go find some matches!</p>)
   }
+
 return    (
         <div className="flex flex-col gap-3 max-w-lg">
           {connections.map(user => (
@@ -69,19 +77,8 @@ return    (
                 </p>
               </div>
 
-              <button
-                onClick={() => navigate(`/chat?with=${user.id}`)}
-                className="rounded-md bg-amber-950 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-900"
-              >
-                Message
-              </button>
-              <button
-                onClick={() => handleDismiss(user.id)}
-                className="rounded-md bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                Dismiss
-              </button>
-
+            <PersonalMessageButton redirectToPm={() => navigate(`/chat?with=${user.id}`) }/>
+            <DismissButton handleDismiss={ () => removeConnection(user.id) }/>
             </div>
           ))}
         </div>
