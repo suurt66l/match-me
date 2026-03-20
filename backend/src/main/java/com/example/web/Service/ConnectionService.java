@@ -23,6 +23,10 @@ public class ConnectionService {
         this.userRepository = userRepository;
     }
 
+    public Optional<Connection> findBetweenUsers(User user1, User user2) {
+        return connectionRepository.findBetweenUsers(user1, user2);
+    }
+
     // send a connection request from current user to target user
     @Transactional
     public Connection sendRequest(User requester, Long targetUserId) {
