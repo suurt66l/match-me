@@ -1,4 +1,6 @@
 import CalculateAge from "../../utils/mini/CalculateAge";
+import ConnectButton from "../atoms/ConnectButton";
+import DismissButton from "../atoms/DismissButton";
 
 interface MatchUser {
   id: number;
@@ -81,6 +83,7 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
         {user.platform   && <StatRow label="Platform"    value={platformLabels[user.platform] ?? user.platform}      highlighted={matched.has("platform")} />}
         {user.lookingFor && <StatRow label="Looking for" value={lookingForLabels[user.lookingFor] ?? user.lookingFor} highlighted={matched.has("lookingFor")} />}
         {user.intensity  && <StatRow label="Intensity"   value={`${user.intensity} / 10`} highlighted={matched.has("intensity")} />}
+        
         {(user.gameTimeFrom || user.gameTimeTo) && (
           <StatRow
             label="Play time"
@@ -92,18 +95,8 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
 
       {/* Actions */}
       <div className="flex gap-3 mt-auto">
-        <button
-          onClick={() => onDismiss(user.id)}
-          className="flex-1 rounded-md bg-red-800 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
-        >
-          Dismiss
-        </button>
-        <button
-          onClick={() => onConnect(user.id)}
-          className="flex-1 rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white hover:bg-green-600"
-        >
-          Connect
-        </button>
+        <DismissButton onDismiss={() => onDismiss(user.id)}/>
+        <ConnectButton onConnect={() => onConnect(user.id)}/>
       </div>
     </div>
   );
