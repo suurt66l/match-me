@@ -1,6 +1,9 @@
 import CalculateAge from "../../utils/mini/CalculateAge";
+import Avatar from "../atoms/Avatar";
 import ConnectButton from "../atoms/ConnectButton";
 import DismissButton from "../atoms/DismissButton";
+import Identity from "../atoms/Identity";
+import MinBioBlock from "../molecules/MinBioBlock";
 
 interface MatchUser {
   id: number;
@@ -62,19 +65,12 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
     <div className="flex flex-col gap-4 bg-amber-500 rounded-xl px-6 py-6">
 
       {/* Avatar + identity */}
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-amber-950 overflow-hidden shrink-0">
-          <img
-            src={user.avatarUrl ?? "/assets/default-avatar.svg"}
-            alt={user.nickname}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div>
-          <p className="text-amber-950 font-bold text-lg">{user.nickname}</p>
-          <p className="text-amber-800 text-sm">{user.country}{age !== null ? `, ${age}` : ""}</p>
-        </div>
-      </div>
+      <MinBioBlock
+        avatarUrl={user.avatarUrl}
+        nickname={user.nickname}
+        country={user.country}
+        age={age}
+      />
 
       {/* Stats */}
       <div className="flex flex-col gap-1.5">
