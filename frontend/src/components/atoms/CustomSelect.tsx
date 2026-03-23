@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 
+// One option in the dropdown looks like: { value: "pc", label: "PC" }
 interface Option {
   value: string;
   label: string;
 }
 
+// - options: the list of choices to show
+// - value: which option is currently selected
+// - setValue: function to call when user picks something
+// - placeholder: text to show when nothing is selected yet
 interface Props {
   options: Option[];
   value: string;
@@ -13,31 +18,64 @@ interface Props {
 }
 
 export default function CustomSelect({ options, value, setValue, placeholder = "Select..." }: Props) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
+  // isOpen controls whether the dropdown list is visible or hidden
+  const [open, setOpen] = useState(false);
+
+  // boxRef is used as a "pointer"/anchor to the dropdown HTML element
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Add listeners to the page on the first render
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    // If the click is outside our dropdown box — close it
+    function closeIfClickedOutside(event: MouseEvent) {
+      const box = boxRef.current;
+      if (!box) return; // TS -- relax
+
+      //Did user clicked inside the selector
+      const userClickedInsideBox = box.contains(event.target as Node);
+      if (!userClickedInsideBox) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    // Start listening for clicks
+    document.addEventListener("mousedown", closeIfClickedOutside);
+
+    // Stop listening when the component is removed from the page
+    return () => {
+      document.removeEventListener("mousedown", closeIfClickedOutside);
+    };
   }, []);
 
-  const selected = options.find(o => o.value === value);
+  // Find the full option object that matches the current value
+  // So we can show the label (e.g. "PC") instead of the value (e.g. "pc")
+  const selectedOption = options.find(option => option.value === value);
+
+  function handleButtonClick() {
+    setOpen(!open);
+  }
+
+  function handleOptionClick(optionValue: string) {
+    setValue(optionValue);
+    setOpen(false);
+  }
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={boxRef} className="relative">
+
+      {/* The button that opens/closes the dropdown */}
       <button
         type="button"
-        onClick={() => setOpen(prev => !prev)}
+        onClick={handleButtonClick}
         className="flex w-full items-center justify-between rounded-md bg-white/5 px-3 py-1.5 text-sm/6 text-white outline-2 -outline-offset-1 outline-white/25 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-700"
       >
-        <span className={selected ? "text-white" : "text-gray-500"}>
-          {selected ? selected.label : placeholder}
+        {/* Show selected label or placeholder */}
+        <span className={selectedOption ? "text-white" : "text-gray-500"}>
+          {selectedOption ? selectedOption.label : placeholder}
         </span>
+
+        {/* Arrow icon — rotates when dropdown is open */}
         <svg
           className={`h-4 w-4 text-white/50 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
           viewBox="0 0 20 20"
@@ -47,19 +85,26 @@ export default function CustomSelect({ options, value, setValue, placeholder = "
         </svg>
       </button>
 
+      {/* Renders dropdown list */}
       {open && (
         <ul className="absolute z-10 mt-1 w-full rounded-md bg-amber-950 py-1 shadow-lg max-h-60 overflow-y-auto">
-          {options.map(option => (
-            <li
-              key={option.value}
-              onClick={() => { setValue(option.value); setOpen(false); }}
-              className={`cursor-pointer px-3 py-1.5 text-sm text-white hover:bg-amber-900 ${value === option.value ? "bg-amber-800" : ""}`}
-            >
-              {option.label}
-            </li>
-          ))}
+          {options.map(function(option) {
+            return (
+              <li
+                key={option.value}
+                onClick={() => handleOptionClick(option.value)}
+                
+                // Highlight the currently selected option with a darker background
+                className={`cursor-pointer px-3 py-1.5 text-sm text-white hover:bg-amber-900 
+                  ${value === option.value ? "bg-amber-800" : ""}`}
+              >
+                {option.label}
+              </li>
+            );
+          })}
         </ul>
       )}
+
     </div>
   );
 }

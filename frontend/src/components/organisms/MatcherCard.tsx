@@ -1,8 +1,6 @@
 import CalculateAge from "../../utils/mini/CalculateAge";
-import Avatar from "../atoms/Avatar";
 import ConnectButton from "../atoms/ConnectButton";
 import DismissButton from "../atoms/DismissButton";
-import Identity from "../atoms/Identity";
 import MinBioBlock from "../molecules/MinBioBlock";
 
 interface MatchUser {
