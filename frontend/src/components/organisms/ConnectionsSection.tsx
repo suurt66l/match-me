@@ -57,6 +57,7 @@ export default function ConnectionsSection(){
 
 return    (
         <div className="flex flex-col gap-3 max-w-lg">
+            {/* Draw all connected user cards */}
             {connections.map(user => (
                 <div key={user.id}>
                     <ConnectionCard user={user}
