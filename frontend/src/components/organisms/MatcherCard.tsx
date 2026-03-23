@@ -1,3 +1,5 @@
+import CalculateAge from "../../utils/mini/CalculateAge";
+
 interface MatchUser {
   id: number;
   nickname: string;
@@ -35,17 +37,6 @@ const platformLabels: Record<string, string> = {
   "other":       "Other",
 };
 
-function calcAge(dateOfBirth: string): number {
-  const today = new Date();
-  const birth = new Date(dateOfBirth);
-  let age = today.getFullYear() - birth.getFullYear();
-  const hasHadBirthdayThisYear =
-    today.getMonth() > birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-  if (!hasHadBirthdayThisYear) age--;
-  return age;
-}
-
 interface StatRowProps {
   label: string;
   value: string;
@@ -62,7 +53,7 @@ function StatRow({ label, value, highlighted }: StatRowProps) {
 }
 
 export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
-  const age = user.dateOfBirth ? calcAge(user.dateOfBirth) : null;
+  const age = user.dateOfBirth ? CalculateAge(user.dateOfBirth) : null;
   const matched = new Set(user.matchedFields);
 
   return (

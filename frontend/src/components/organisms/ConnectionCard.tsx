@@ -1,5 +1,6 @@
 import DismissButton from "../atoms/DismissButton";
 import PersonalMessageButton from "../atoms/PersonalMessageButton";
+import CalculateAge from "../../utils/mini/CalculateAge";
 
 interface Props {
     user: {
@@ -27,7 +28,7 @@ export function ConnectionCard({ user, onMessage, onDismiss }: Props){
               <div className="flex-1">
                 <p className="text-amber-950 font-bold">{user.nickname}</p>
                 <p className="text-amber-800 text-sm">
-                  {user.country}{user.dateOfBirth ? `, ${calcAge(user.dateOfBirth)}` : ""}
+                  {user.country}{user.dateOfBirth ? `, ${CalculateAge(user.dateOfBirth)}` : ""}
                 </p>
               </div>
 
@@ -37,18 +38,3 @@ export function ConnectionCard({ user, onMessage, onDismiss }: Props){
           )
 }
 
-/* Calculates age of the person user is connected to */
-function calcAge(dateOfBirth: string): number {
-  const today = new Date();
-  const birth = new Date(dateOfBirth);
-
-  let age = today.getFullYear() - birth.getFullYear();
-
-  const hasHadBirthday = (today.getMonth() > birth.getMonth()) ||
-                         (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-  if (!hasHadBirthday) {
-    age--
-  };
-
-  return age;
-}

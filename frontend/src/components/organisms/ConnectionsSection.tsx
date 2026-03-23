@@ -17,6 +17,24 @@ export default function ConnectionsSection(){
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  /* Load connection on connecting to the page and token changes */
+  useEffect(() => {
+    async function loadConnections() {
+      try {
+          const response = await fetch("http://localhost:8080/api/connections", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setConnections(data);
+        }
+      } catch {
+        console.log("Server is unreachable!");
+      }
+    }
+    loadConnections();
+  }, [token]);
+
   /* Removes connection with person */
   async function removeConnection(id: number) {
     try {
@@ -31,24 +49,6 @@ export default function ConnectionsSection(){
       console.log("Server is unreachable!");
     }
   }
-
-  /* Load connection on connecting to the page and token changes */
-  useEffect(() => {
-    async function loadConnections() {
-      try {
-        const response = await fetch("http://localhost:8080/api/connections", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setConnections(data);
-        }
-      } catch {
-        console.log("Server is unreachable!");
-      }
-    }
-    loadConnections();
-  }, [token]);
   
   /* In case if there is no connections */
   if(connections.length <= 0){
