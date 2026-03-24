@@ -17,19 +17,15 @@ import com.example.web.DTO.IdDto;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.MatchingService;
-import com.example.web.Service.ConnectionService;
-
 @RestController
 @RequestMapping("/api")
 public class SocialController {
     private final UserRepository userRepository;
     private final MatchingService matchingService;
-    private final ConnectionService connectionService;
 
-    public SocialController(UserRepository userRepository, MatchingService matchingService, ConnectionService connectionService) {
+    public SocialController(UserRepository userRepository, MatchingService matchingService) {
         this.userRepository = userRepository;
         this.matchingService = matchingService;
-        this.connectionService = connectionService;
     }
 
     private boolean isAuthenticated() {
@@ -56,17 +52,17 @@ public class SocialController {
         return ResponseEntity.ok(result);
     }
 
-    // GET /connections
-    @GetMapping("/connections")
-    public ResponseEntity<List<IdDto>> getConnections() {
-        if (!isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
-        }
-        User currentUser = getCurrentUser();
-        List<Long> connectedIds = connectionService.getAcceptedConnectionIds(currentUser);
-        List<IdDto> result = connectedIds.stream()
-                    .map(IdDto::new)
-                    .toList();
-        return ResponseEntity.ok(result);
-    }
+    // GET /connections — commented out, duplicate of ConnectionController#getConnections()
+    // @GetMapping("/connections")
+    // public ResponseEntity<List<IdDto>> getConnections() {
+    //     if (!isAuthenticated()) {
+    //         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
+    //     }
+    //     User currentUser = getCurrentUser();
+    //     List<Long> connectedIds = connectionService.getAcceptedConnectionIds(currentUser);
+    //     List<IdDto> result = connectedIds.stream()
+    //                 .map(IdDto::new)
+    //                 .toList();
+    //     return ResponseEntity.ok(result);
+    // }
 }

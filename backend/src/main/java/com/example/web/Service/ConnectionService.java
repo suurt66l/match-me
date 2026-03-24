@@ -12,8 +12,10 @@ import com.example.web.Entity.User;
 import com.example.web.Repository.ConnectionRepository;
 import com.example.web.Repository.UserRepository;
 
+import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+@Service
 public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
