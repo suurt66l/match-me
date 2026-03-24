@@ -1,14 +1,19 @@
 package com.example.web.Controller;
 
+import java.io.IOException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.web.DTO.UpdateBioRequest;
@@ -19,6 +24,7 @@ import com.example.web.DTO.UserSummaryDto;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Security.JwtUtil;
+import com.example.web.Service.FileStorageService;
 
 @RestController
 @RequestMapping("/api/me")
@@ -26,10 +32,12 @@ public class MeController {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;  // if needed for token extraction; not strictly required here
+    private final FileStorageService fileStorageService;
 
-    public MeController(UserRepository userRepository, JwtUtil jwtUtil) {
+    public MeController(UserRepository userRepository, JwtUtil jwtUtil, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.fileStorageService = fileStorageService;
     }
 
     // Helper to get current authenticated user from database
@@ -137,5 +145,32 @@ public class MeController {
                 user.getLocation()
         );
         return ResponseEntity.ok(bio);
+    }
+
+    @PostMapping("/picture")
+    public ResponseEntity<UserSummaryDto> uploadProfilePicture(@RequestParam("file") MultipartFile file) throws IOException {
+        User user = getCurrentUser();
+
+        //validate file
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed");
+        }
+
+        // Store the file
+        String filename = fileStorageService.storeFile(file);
+
+        // Build public URL and adjust host/port if needed
+        String fileUrl = "/uploads/" + filename;
+
+        user.setProfilePictureUrl(fileUrl);
+        userRepository.save(user);
+
+        // Return updated summary
+        String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
+        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
     }
 }

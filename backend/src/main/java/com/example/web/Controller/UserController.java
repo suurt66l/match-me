@@ -1,5 +1,7 @@
 package com.example.web.Controller;
 
+import java.util.Optional;
+
 import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +21,20 @@ import com.example.web.DTO.UpdateProfileRequest;
 import com.example.web.DTO.UserBioDto;
 import com.example.web.DTO.UserProfileDto;
 import com.example.web.DTO.UserSummaryDto;
+import com.example.web.Entity.Connection;
+import com.example.web.Entity.ConnectionStatus;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Security.JwtUtil;
+import com.example.web.Service.ConnectionService;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final ConnectionService connectionService;
+
     private boolean isAuthenticated() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return authentication != null && 
@@ -36,23 +43,43 @@ public class UserController {
              authentication.getPrincipal().equals("anonymousUser"));
 }
     
-    public UserController(UserRepository userRepository, JwtUtil jwtUtil) {
+    public UserController(UserRepository userRepository, JwtUtil jwtUtil, ConnectionService connectionService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.connectionService = connectionService;
     }
 
     // helper to get current user from email
     private User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "User not found"
-        ));
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated() ||
+            "anonymousUser".equals(authentication.getPrincipal())) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    }
+    String email = authentication.getName();
+    return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    private boolean canViewProfile(User viewer, User target) {
+        if (viewer.getId().equals(target.getId())) {
+            return true; // own profile always viewable
+        }
+        Optional<Connection> connectionOpt = connectionService.findBetweenUsers(viewer, target);
+        if (connectionOpt.isEmpty()) {
+            return true; // no connection > strangers > allowed
+        }
+        Connection conn = connectionOpt.get();
+        return conn.getStatus() != ConnectionStatus.REJECTED && conn.getStatus() != ConnectionStatus.BLOCKED;
     }
 
     // GET /users/{id}
     @GetMapping("/{id}")
     public ResponseEntity<UserSummaryDto> getUserSummary(@PathVariable Long id) {
         System.out.println("Entered getUserSummary for id: " + id); //debugging
+        User target = userRepository.findById(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
         //1. check if user exists
         User user = userRepository.findById(id).orElse(null);
         if (user == null) {
@@ -63,6 +90,12 @@ public class UserController {
         if (!isAuthenticated()) {
             // if current user is not authenticated, pretend the user doesn't exist (throw 404)
             return ResponseEntity.notFound().build();
+        }
+
+        User currentUser = getCurrentUser();
+
+        if (!canViewProfile(currentUser, target)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         
         //3. otherwise return data
@@ -75,6 +108,9 @@ public class UserController {
     @GetMapping("/{id}/profile")
     public ResponseEntity<UserProfileDto> getUserProfile(@PathVariable Long id) {
         User user = userRepository.findById(id).orElse(null);
+        User target = userRepository.findById(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
 
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -82,6 +118,12 @@ public class UserController {
 
         if (!isAuthenticated()) {
             return ResponseEntity.notFound().build();
+        }
+
+        User currentUser = getCurrentUser();
+
+        if (!canViewProfile(currentUser, target)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
         return ResponseEntity.ok(new UserProfileDto(user.getId(), user.getAboutMe()));
@@ -91,6 +133,9 @@ public class UserController {
     @GetMapping("/{id}/bio")
     public ResponseEntity<UserBioDto> getUserBio(@PathVariable Long id) {
         User user = userRepository.findById(id).orElse(null);
+        User target = userRepository.findById(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
 
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -98,6 +143,12 @@ public class UserController {
 
         if (!isAuthenticated()) {
             return ResponseEntity.notFound().build();
+        }
+        
+        User currentUser = getCurrentUser();
+
+        if (!canViewProfile(currentUser, target)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         
         UserBioDto bio = new UserBioDto(
