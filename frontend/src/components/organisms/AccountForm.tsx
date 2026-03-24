@@ -22,7 +22,7 @@ export default function AccountForm () {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch("http://localhost:8080/me/profile", {
+        const response = await fetch("http://localhost:8080/api/me/account", {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (response.ok) {
@@ -53,8 +53,8 @@ export default function AccountForm () {
     if (password) body.password = password;
 
     try {
-      const response = await fetch("http://localhost:8080/api/profile", {
-        method: "PATCH",
+      const response = await fetch("http://localhost:8080/api/me/profile", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,

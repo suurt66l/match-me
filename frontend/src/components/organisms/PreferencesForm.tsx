@@ -28,18 +28,21 @@ export default function PreferencesForm() {
   useEffect(() => {
     async function loadBio() {
       try {
-        const response = await fetch("http://localhost:8080/me/bio", {
+        const response = await fetch("http://localhost:8080/api/me/bio", {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (response.ok) {
           const data = await response.json();
-          setGameTimeFrom(data.gameTimeFrom ?? "");
-          setGameTimeTo(data.gameTimeTo ?? "");
-          setTimeZone(data.timeZone ?? "");
-          setGames(data.games ?? "");
-          setGameGenres(data.gameGenres ?? "");
+          // Backend field names differ from frontend state names — map them here
+          const timeRange: string = data.timeRange ?? "";
+          const [from, to] = timeRange.includes("-") ? timeRange.split("-") : [timeRange, ""];
+          setGameTimeFrom(from);
+          setGameTimeTo(to);
+          setTimeZone(data.timezone ?? "");
+          setGames(data.gamePreference ?? "");
+          setGameGenres(data.gameGenrePreference ?? "");
           setLookingFor(data.lookingFor ?? "");
-          setPlatform(data.platform ?? "");
+          setPlatform(data.platforms ?? "");
           setIntensity(data.intensity ?? "");
         }
       } catch {
@@ -54,19 +57,19 @@ export default function PreferencesForm() {
     setError(null);
     setSuccess(null);
 
+    // Map frontend state names back to backend field names
     const body: Record<string, string> = {};
-    if (gameTimeFrom) body.gameTimeFrom = gameTimeFrom;
-    if (gameTimeTo) body.gameTimeTo = gameTimeTo;
-    if (timeZone) body.timeZone = timeZone;
-    if (games) body.games = games;
-    if (gameGenres) body.gameGenres = gameGenres;
+    if (gameTimeFrom || gameTimeTo) body.timeRange = `${gameTimeFrom}-${gameTimeTo}`;
+    if (timeZone) body.timezone = timeZone;
+    if (games) body.gamePreference = games;
+    if (gameGenres) body.gameGenrePreference = gameGenres;
     if (lookingFor) body.lookingFor = lookingFor;
-    if (platform) body.platform = platform;
+    if (platform) body.platforms = platform;
     if (intensity) body.intensity = intensity;
 
     try {
-      const response = await fetch("http://localhost:8080/api/bio", {
-        method: "PATCH",
+      const response = await fetch("http://localhost:8080/api/me/bio", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,

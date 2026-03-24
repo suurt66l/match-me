@@ -1,7 +1,7 @@
 package com.example.web.Controller;
 
-import com.example.web.DTO.IdDto;
-import com.example.web.Entity.Connection;
+import com.example.web.DTO.ConnectionUserDto;
+import com.example.web.DTO.PendingConnectionDto;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.ConnectionService;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/connections")
@@ -71,13 +70,57 @@ public class ConnectionController {
         return ResponseEntity.ok().build();
     }
 
-    // GET /api/connections (returns list of accepted connection IDs)
+    // GET /api/connections — returns accepted connections with full user info
     @GetMapping
-    public ResponseEntity<List<IdDto>> getConnections() {
+    public ResponseEntity<List<ConnectionUserDto>> getConnections() {
         User currentUser = getCurrentUser();
-        List<Long> connectedIds = connectionService.getAcceptedConnectionIds(currentUser);
-        List<IdDto> result = connectedIds.stream()
-                .map(IdDto::new)
+        List<ConnectionUserDto> result = connectionService.getAcceptedConnections(currentUser)
+                .stream()
+                .map(conn -> {
+                    // Return the OTHER user's info (not the current user)
+                    User other = conn.getRequester().getId().equals(currentUser.getId())
+                            ? conn.getAddressee()
+                            : conn.getRequester();
+                    return new ConnectionUserDto(
+                            other.getId(),
+                            other.getNickname(),
+                            other.getProfilePictureUrl(),
+                            other.getLocation(),
+                            other.getDateOfBirth()
+                    );
+                })
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    // GET /api/connections/pending — returns incoming pending requests
+    @GetMapping("/pending")
+    public ResponseEntity<List<PendingConnectionDto>> getPendingConnections() {
+        User currentUser = getCurrentUser();
+        List<PendingConnectionDto> result = connectionService.getPendingIncomingConnections(currentUser)
+                .stream()
+                .map(conn -> new PendingConnectionDto(
+                        conn.getId(),
+                        conn.getRequester().getId(),
+                        conn.getRequester().getNickname(),
+                        conn.getRequester().getProfilePictureUrl()
+                ))
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    // GET /api/connections/pending/sent — returns outgoing pending requests
+    @GetMapping("/pending/sent")
+    public ResponseEntity<List<PendingConnectionDto>> getSentConnections() {
+        User currentUser = getCurrentUser();
+        List<PendingConnectionDto> result = connectionService.getPendingOutgoingConnections(currentUser)
+                .stream()
+                .map(conn -> new PendingConnectionDto(
+                        conn.getId(),
+                        conn.getAddressee().getId(),
+                        conn.getAddressee().getNickname(),
+                        conn.getAddressee().getProfilePictureUrl()
+                ))
                 .toList();
         return ResponseEntity.ok(result);
     }

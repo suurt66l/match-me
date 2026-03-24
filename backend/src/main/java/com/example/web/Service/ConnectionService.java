@@ -123,6 +123,11 @@ public class ConnectionService {
         return connectionRepository.save(connection);
     }
 
+    // get all accepted connections for a user, returning full Connection objects
+    public List<Connection> getAcceptedConnections(User user) {
+        return connectionRepository.findAllAcceptedByUser(user);
+    }
+
     // get all accepted connections (friends) for a user, returning list of user IDs
     public List<Long> getAcceptedConnectionIds(User user) {
         List<Connection> connections = connectionRepository.findAllAcceptedByUser(user);
@@ -143,5 +148,21 @@ public class ConnectionService {
                 .map(conn -> conn.getStatus() == ConnectionStatus.ACCEPTED)
                 .orElse(false);
     }
-    
+
+    // Get pending incoming requests (where current user is the addressee)
+    public List<Connection> getPendingIncomingConnections(User user) {
+        return connectionRepository.findAllByUserAndStatus(user, ConnectionStatus.PENDING)
+                .stream()
+                .filter(c -> c.getAddressee().getId().equals(user.getId()))
+                .toList();
+    }
+
+    // Get pending outgoing requests (where current user is the requester)
+    public List<Connection> getPendingOutgoingConnections(User user) {
+        return connectionRepository.findAllByUserAndStatus(user, ConnectionStatus.PENDING)
+                .stream()
+                .filter(c -> c.getRequester().getId().equals(user.getId()))
+                .toList();
+    }
+
 }

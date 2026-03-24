@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.web.DTO.MeSummaryDto;
 import com.example.web.DTO.UpdateBioRequest;
 import com.example.web.DTO.UpdateProfileRequest;
 import com.example.web.DTO.UserBioDto;
@@ -49,6 +50,17 @@ public class MeController {
         }
         String email = authentication.getName();
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    // GET /api/me/account — own account info including email (not exposed on /users/{id})
+    @GetMapping("/account")
+    public ResponseEntity<MeSummaryDto> getMyAccount() {
+        User user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
     }
 
     // GET /api/me
