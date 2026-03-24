@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AuthPage from './components/pages/AuthPage';
 import MatcherPage from './components/pages/MatcherPage';
 import ProtectedRoute from './utils/ProtectedRoute';
-import { AuthProvider } from './utils/AuthContext';
+import AuthProvider from './utils/AuthContext';
 import GuestRoute from './utils/GuestRoute';
 import RegistrationPage from './components/pages/RegistrationPage';
 import ProtectedLayout from './components/templates/ProtectedLayout';

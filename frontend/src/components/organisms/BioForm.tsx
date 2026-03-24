@@ -58,8 +58,6 @@ export default function BioForm() {
       const response = await fetch("http://localhost:8080/api/profile", {
         method: "PATCH",
         headers: {
-          // Note: do NOT set Content-Type manually with FormData —
-          // the browser sets it automatically with the correct multipart boundary
           "Authorization": `Bearer ${token}`,
         },
         body: formData,

@@ -18,6 +18,7 @@ export default function AccountForm () {
 
   const { token } = useAuth();
 
+  /* Loads profile on first render */
   useEffect(() => {
     async function loadProfile() {
       try {

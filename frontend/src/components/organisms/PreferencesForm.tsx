@@ -13,6 +13,7 @@ import IntensityInputBlock from "../molecules/IntensityInputBlock";
 export default function PreferencesForm() {
   const [gameTimeFrom, setGameTimeFrom] = useState<string>("");
   const [gameTimeTo, setGameTimeTo] = useState<string>("");
+  const [timeZone, setTimeZone] = useState<string>("");
   const [games, setGames] = useState<string>("");
   const [gameGenres, setGameGenres] = useState<string>("");
   const [lookingFor, setLookingFor] = useState<string>("");
@@ -23,6 +24,7 @@ export default function PreferencesForm() {
 
   const { token } = useAuth();
 
+  /* Load profile data on the start */
   useEffect(() => {
     async function loadBio() {
       try {
@@ -33,6 +35,7 @@ export default function PreferencesForm() {
           const data = await response.json();
           setGameTimeFrom(data.gameTimeFrom ?? "");
           setGameTimeTo(data.gameTimeTo ?? "");
+          setTimeZone(data.timeZone ?? "");
           setGames(data.games ?? "");
           setGameGenres(data.gameGenres ?? "");
           setLookingFor(data.lookingFor ?? "");
@@ -54,6 +57,7 @@ export default function PreferencesForm() {
     const body: Record<string, string> = {};
     if (gameTimeFrom) body.gameTimeFrom = gameTimeFrom;
     if (gameTimeTo) body.gameTimeTo = gameTimeTo;
+    if (timeZone) body.timeZone = timeZone;
     if (games) body.games = games;
     if (gameGenres) body.gameGenres = gameGenres;
     if (lookingFor) body.lookingFor = lookingFor;
@@ -76,7 +80,7 @@ export default function PreferencesForm() {
         setError(data.message ?? "Something went wrong.");
       } else {
         setSuccess("Preferences saved successfully.");
-        setTimeout(() => setSuccess(null), 3000);
+        setTimeout(() => setSuccess(null), 3000); //Cleans Success message after 3s
       }
     } catch {
       setError("Could not connect to the server.");
@@ -91,8 +95,10 @@ export default function PreferencesForm() {
           <GameTimeInputBlock
             setGameTimeFrom={setGameTimeFrom}
             setGameTimeTo={setGameTimeTo}
+            setTimeZone={setTimeZone}
             gameTimeFrom={gameTimeFrom}
             gameTimeTo={gameTimeTo}
+            timeZone={timeZone}
           />
           <GamesInputBlock setGames={setGames} value={games} />
           <GameGenresInputBlock setGameGenres={setGameGenres} value={gameGenres} />
