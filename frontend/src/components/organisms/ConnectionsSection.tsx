@@ -1,0 +1,70 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../utils/AuthContext";
+import { ConnectionCard } from "./ConnectionCard";
+
+
+interface Connection {
+  id: number;
+  nickname: string;
+  avatarUrl: string | null;
+  country: string;
+  dateOfBirth: string;
+}
+
+export default function ConnectionsSection(){
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const { token } = useAuth();
+  const navigate = useNavigate();
+
+  /* Load connection on connecting to the page and token changes */
+  useEffect(() => {
+    async function loadConnections() {
+      try {
+          const response = await fetch("http://localhost:8080/api/connections", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setConnections(data);
+        }
+      } catch {
+        console.log("Server is unreachable!");
+      }
+    }
+    loadConnections();
+  }, [token]);
+
+  /* Removes connection with person */
+  async function removeConnection(id: number) {
+    try {
+        await fetch(`http://localhost:8080/api/connections/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        const updatedConnections = connections.filter(item => item.id !== id)
+        setConnections(updatedConnections);
+    } catch {
+      console.log("Server is unreachable!");
+    }
+  }
+  
+  /* In case if there is no connections */
+  if(connections.length <= 0){
+    return(<p className="text-amber-800">No connections yet. Go find some matches!</p>)
+  }
+
+return    (
+        <div className="flex flex-col gap-3 max-w-lg">
+            {/* Draw all connected user cards */}
+            {connections.map(user => (
+                <div key={user.id}>
+                    <ConnectionCard user={user}
+                                    onMessage={() => navigate(`/chat?with=${user.id}`)}
+                                    onDismiss={() => removeConnection(user.id)}/>
+                </div>
+            ))}
+        </div>
+      )
+}
