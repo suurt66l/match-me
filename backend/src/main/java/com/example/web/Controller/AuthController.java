@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.web.DTO.AuthResponse;
+import com.example.web.DTO.ErrorResponse;
 import com.example.web.DTO.LoginRequest;
 import com.example.web.DTO.RegisterRequest;
 import com.example.web.Entity.User;
@@ -42,7 +43,7 @@ public class AuthController {
         //check if email exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Email is already taken");
+                    .body(new ErrorResponse("Email is already taken"));
         }
 
         // findByNickname (if nickname needs to be unique)
@@ -70,7 +71,7 @@ public class AuthController {
             String token = jwtUtil.generateToken(request.getEmail());
             return ResponseEntity.ok(new AuthResponse(token));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Invalid email or password"));
         }
     }
 }

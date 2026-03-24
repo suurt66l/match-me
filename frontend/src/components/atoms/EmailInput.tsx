@@ -1,9 +1,9 @@
 interface Props {
-    setEmail: (value: string) => void;
     value: string;
+    setEmail: (value: string) => void;
 }
 
-export default function EmailInput({setEmail, value} : Props) {
+export default function EmailInput({value, setEmail} : Props) {
     return(
         <input
             id="email"

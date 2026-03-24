@@ -3,7 +3,7 @@ interface Props {
     value: string;
 }
 
-export default function NicknameInput({setNickname, value} : Props) {
+export default function NicknameInput({value, setNickname} : Props) {
     return(
         <input
             id="nickname"

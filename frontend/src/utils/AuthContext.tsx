@@ -1,17 +1,12 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 import useToken from './useToken';
 
 interface AuthContextProps {
     token: string | null;
-    user: null;
+    isAuthenticated: boolean;
     login: (loginCredentials: LoginCredentials) => Promise<AuthResponse>;
     logout: () => void;
-    isAuthenticated: boolean;
     register: (regCredentials: RegCredentials) => Promise<AuthResponse>;
-}
-
-interface Props {
-    children: React.ReactNode;
 }
 
 interface LoginCredentials {
@@ -33,38 +28,37 @@ interface AuthResponse {
 
 const AuthContext = createContext<AuthContextProps | null>(null);
 
-export function AuthProvider({ children } : Props) {
+/* Handles authentication  */
+export default function AuthProvider( { children } : { children: React.ReactNode }) {
   const { token, setToken, removeToken } = useToken();
-  const [user, setUser] = useState(null);
 
+  /* Handles login */
   async function login( loginCredentials : LoginCredentials) : Promise<AuthResponse> {
-    //LOGS
-    console.log("Credentials: " + loginCredentials.email + " " + loginCredentials.password)
-
+  
     const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginCredentials)
     });
     
-    const text = await response.text();
-    let data: any = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
+    let data = await response.json();
+
     if(!response.ok){
       return {
-        message: typeof data === "string" ? data : (data.message ?? "Something went wrong"),
-        status: response.status
+        status: response.status,
+        message: data.message
       }
     }
 
     setToken(data.token);
     return {
+        status: response.status,
         token: data.token,
-        message: data.message,
-        status: response.status
+        //message: data.message,
     }
   };
 
+  /* Handles registration */
   async function register( regCredentials : RegCredentials) : Promise<AuthResponse> {
     const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
@@ -72,50 +66,53 @@ export function AuthProvider({ children } : Props) {
         body: JSON.stringify(regCredentials)
     });
 
-    const text = await response.text();
-    let data: any = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
+    let data = await response.json();
+
     if(!response.ok){
       return {
-        message: typeof data === "string" ? data : (data.message ?? "Something went wrong"),
-        status: response.status
+        status: response.status,
+        message: data.message
       }
     }
 
     setToken(data.token);
     return {
+        status: response.status,
         token: data.token,
-        message: data.message,
-        status: response.status
+        //message: data.message,
     }
 
   }
 
-  const logout = () => {
+  /* Handles log out */
+  function logout () {
     removeToken();
-    setUser(null);
+    //setUser(null);
   };
 
   const value = {
     token,
-    user,
+    isAuthenticated: !!token,
     login,
     logout,
-    isAuthenticated: !!token,
     register
   };
-
+  
+  //Returns context to the User
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext value={value}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   );
 }
 
+/* Just return context of the app */
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  
   return context;
 }

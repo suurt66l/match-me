@@ -1,5 +1,3 @@
-import CityInput from "../atoms/CityInput";
-import CityLabel from "../atoms/CityLabel";
 import CountryLabel from "../atoms/CountryLabel";
 import CountrySelect from "../atoms/CountrySelect";
 
