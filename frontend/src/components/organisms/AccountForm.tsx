@@ -53,7 +53,7 @@ export default function AccountForm () {
     if (password) body.password = password;
 
     try {
-      const response = await fetch("http://localhost:8080/api/me/profile", {
+      const response = await fetch("http://localhost:8080/api/me/account", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

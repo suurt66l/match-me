@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.web.DTO.MeSummaryDto;
+import com.example.web.DTO.UpdateAccountRequest;
 import com.example.web.DTO.UpdateBioRequest;
 import com.example.web.DTO.UpdateProfileRequest;
 import com.example.web.DTO.UserBioDto;
@@ -26,19 +27,22 @@ import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Security.JwtUtil;
 import com.example.web.Service.FileStorageService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @RequestMapping("/api/me")
 public class MeController {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;  // if needed for token extraction; not strictly required here
+    private final JwtUtil jwtUtil;
     private final FileStorageService fileStorageService;
+    private final PasswordEncoder passwordEncoder;
 
-    public MeController(UserRepository userRepository, JwtUtil jwtUtil, FileStorageService fileStorageService) {
+    public MeController(UserRepository userRepository, JwtUtil jwtUtil, FileStorageService fileStorageService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.fileStorageService = fileStorageService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Helper to get current authenticated user from database
@@ -59,6 +63,27 @@ public class MeController {
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
+        String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
+    }
+
+    // PUT /api/me/account — update nickname, email, password (only fields that are provided)
+    @PutMapping("/account")
+    public ResponseEntity<MeSummaryDto> updateMyAccount(@RequestBody UpdateAccountRequest request) {
+        User user = getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            user.setNickname(request.getNickname());
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        userRepository.save(user);
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
         return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
     }
