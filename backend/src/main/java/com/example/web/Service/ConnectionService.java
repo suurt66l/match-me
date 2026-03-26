@@ -165,4 +165,19 @@ public class ConnectionService {
                 .toList();
     }
 
+    // Remove an accepted connection
+    @Transactional
+    public void dismissAccepted(User currentUser, Long connectionId) {
+        Connection connection = connectionRepository.findById(connectionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Connection not found"));
+
+        boolean isParticipant = connection.getRequester().getId().equals(currentUser.getId()) ||
+                                connection.getAddressee().getId().equals(currentUser.getId());
+        if (!isParticipant) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not part of this connection");
+        }
+
+        connectionRepository.delete(connection);
+    }
+
 }

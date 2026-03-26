@@ -1,7 +1,7 @@
 interface Props {
     nickname: string;
     country: string;
-    age: number | null;
+    age: string | null;
 }
 
 export default function Identity({nickname, country, age} : Props){

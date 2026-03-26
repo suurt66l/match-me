@@ -54,6 +54,9 @@ export default function MatcherSection() {
       }
     }
     loadMatches();
+
+    const interval = setInterval(loadMatches, 2000);
+    return () => clearInterval(interval);
   }, [token]);
 
   // Send a connection request to the user

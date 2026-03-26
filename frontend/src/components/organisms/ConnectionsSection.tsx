@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
 import { ConnectionCard } from "./ConnectionCard";
+import PendingCard from "./PendingCard";
+import SentCard from "./SentCard";
 
 interface Connection {
+  connectionId: number;
   id: number;
   nickname: string;
   avatarUrl: string | null;
   country: string;
-  dateOfBirth: string;
+  dateOfBirth: number[];
 }
 
 interface PendingRequest {
@@ -16,7 +19,10 @@ interface PendingRequest {
   requesterId: number;
   nickname: string;
   avatarUrl: string | null;
+  country: string;
+  dateOfBirth: number[];
 }
+
 
 export default function ConnectionsSection() {
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -30,16 +36,13 @@ export default function ConnectionsSection() {
     loadPending();
     loadSent();
 
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
-        loadConnections();
-        loadPending();
-        loadSent();
-      }
-    }
+    const interval = setInterval(() => {
+      loadConnections();
+      loadPending();
+      loadSent();
+    }, 2000);
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    return () => clearInterval(interval);
   }, [token]);
 
   async function loadConnections() {
@@ -85,49 +88,48 @@ export default function ConnectionsSection() {
   }
 
   async function cancelRequest(connectionId: number) {
+    setSent(sent.filter(item => item.connectionId !== connectionId));
     try {
       await fetch(`http://localhost:8080/api/connections/reject/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
-      setSent(sent.filter(item => item.connectionId !== connectionId));
     } catch {
       console.log("Server is unreachable!");
     }
   }
 
-  async function removeConnection(id: number) {
+  async function removeConnection(connectionId: number) {
+    setConnections(connections.filter(item => item.connectionId !== connectionId));
     try {
-      await fetch(`http://localhost:8080/api/connections/${id}`, {
+      await fetch(`http://localhost:8080/api/connections/dismiss/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
-      setConnections(connections.filter(item => item.id !== id));
     } catch {
       console.log("Server is unreachable!");
     }
   }
 
   async function acceptRequest(connectionId: number) {
+    setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
       await fetch(`http://localhost:8080/api/connections/accept/${connectionId}`, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}` },
       });
-      setPending(pending.filter(item => item.connectionId !== connectionId));
-      loadConnections(); // reload accepted connections
     } catch {
       console.log("Server is unreachable!");
     }
   }
 
   async function rejectRequest(connectionId: number) {
+    setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
       await fetch(`http://localhost:8080/api/connections/reject/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
-      setPending(pending.filter(item => item.connectionId !== connectionId));
     } catch {
       console.log("Server is unreachable!");
     }
@@ -142,29 +144,12 @@ export default function ConnectionsSection() {
           <h2 className="text-amber-950 font-bold text-lg mb-3">Pending requests</h2>
           <div className="flex flex-col gap-3">
             {pending.map(request => (
-              <div key={request.connectionId} className="bg-amber-500 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={request.avatarUrl ?? "/assets/default-avatar.svg"}
-                    className="w-10 h-10 rounded-full object-cover bg-amber-950"
-                  />
-                  <span className="text-amber-950 font-semibold">{request.nickname}</span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => acceptRequest(request.connectionId)}
-                    className="bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => rejectRequest(request.connectionId)}
-                    className="bg-red-800 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-red-900 transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
+              <PendingCard
+                key={request.connectionId}
+                user={request}
+                onAccept={() => acceptRequest(request.connectionId)}
+                onDismiss={() => rejectRequest(request.connectionId)}
+              />
             ))}
           </div>
         </div>
@@ -176,21 +161,11 @@ export default function ConnectionsSection() {
           <h2 className="text-amber-950 font-bold text-lg mb-3">Sent requests</h2>
           <div className="flex flex-col gap-3">
             {sent.map(request => (
-              <div key={request.connectionId} className="bg-amber-400 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={request.avatarUrl ?? "/assets/default-avatar.svg"}
-                    className="w-10 h-10 rounded-full object-cover bg-amber-950"
-                  />
-                  <span className="text-amber-950 font-semibold">{request.nickname}</span>
-                </div>
-                <button
-                  onClick={() => cancelRequest(request.connectionId)}
-                  className="bg-amber-950 text-amber-300 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-amber-900 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+              <SentCard
+                key={request.connectionId}
+                user={request}
+                onCancel={() => cancelRequest(request.connectionId)}
+              />
             ))}
           </div>
         </div>
@@ -206,7 +181,7 @@ export default function ConnectionsSection() {
                 <ConnectionCard
                   user={user}
                   onMessage={() => navigate(`/chat?with=${user.id}`)}
-                  onDismiss={() => removeConnection(user.id)}
+                  onDismiss={() => removeConnection(user.connectionId)}
                 />
               </div>
             ))}

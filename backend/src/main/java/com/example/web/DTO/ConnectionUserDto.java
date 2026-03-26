@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 public class ConnectionUserDto {
+    private Long connectionId;
     private Long id;
     private String nickname;
     private String avatarUrl;

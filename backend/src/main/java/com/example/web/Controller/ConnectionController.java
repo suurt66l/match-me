@@ -70,6 +70,14 @@ public class ConnectionController {
         return ResponseEntity.ok().build();
     }
 
+    // DELETE /api/connections/dismiss/{connectionId}
+    @DeleteMapping("/dismiss/{connectionId}")
+    public ResponseEntity<Void> dismissConnection(@PathVariable Long connectionId) {
+        User currentUser = getCurrentUser();
+        connectionService.dismissAccepted(currentUser, connectionId);
+        return ResponseEntity.noContent().build();
+    }
+
     // GET /api/connections — returns accepted connections with full user info
     @GetMapping
     public ResponseEntity<List<ConnectionUserDto>> getConnections() {
@@ -82,6 +90,7 @@ public class ConnectionController {
                             ? conn.getAddressee()
                             : conn.getRequester();
                     return new ConnectionUserDto(
+                            conn.getId(),
                             other.getId(),
                             other.getNickname(),
                             other.getProfilePictureUrl(),
@@ -103,7 +112,9 @@ public class ConnectionController {
                         conn.getId(),
                         conn.getRequester().getId(),
                         conn.getRequester().getNickname(),
-                        conn.getRequester().getProfilePictureUrl()
+                        conn.getRequester().getProfilePictureUrl(),
+                        conn.getRequester().getLocation(),
+                        conn.getRequester().getDateOfBirth()
                 ))
                 .toList();
         return ResponseEntity.ok(result);
@@ -119,7 +130,9 @@ public class ConnectionController {
                         conn.getId(),
                         conn.getAddressee().getId(),
                         conn.getAddressee().getNickname(),
-                        conn.getAddressee().getProfilePictureUrl()
+                        conn.getAddressee().getProfilePictureUrl(),
+                        conn.getAddressee().getLocation(),
+                        conn.getAddressee().getDateOfBirth()
                 ))
                 .toList();
         return ResponseEntity.ok(result);

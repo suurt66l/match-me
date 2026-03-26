@@ -80,7 +80,8 @@ public class SocialController {
                         u.getLookingFor() != null && !u.getLookingFor().isBlank() &&
                         u.getIntensity() != null && !u.getIntensity().isBlank() &&
                         u.getCountry() != null && !u.getCountry().isBlank() &&
-                        u.getDateOfBirth() != null
+                        u.getDateOfBirth() != null &&
+                        u.getScore() > 0
                 )
                 .collect(java.util.stream.Collectors.toList());
         response.setComplete(true);
