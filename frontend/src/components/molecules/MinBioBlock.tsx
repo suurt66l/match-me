@@ -5,7 +5,7 @@ interface Props {
     avatarUrl: string | null
     nickname: string;
     country: string;
-    age: number | null;
+    age: string | null;
 }
 
 export default function MinBioBlock({avatarUrl, nickname, country, age}: Props){

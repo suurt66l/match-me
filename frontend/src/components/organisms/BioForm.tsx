@@ -24,16 +24,32 @@ export default function BioForm() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch("http://localhost:8080/me/profile", {
+        // Bio fields (gender, dateOfBirth, location) come from /api/me/bio
+        const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
           headers: { "Authorization": `Bearer ${token}` },
         });
-        if (response.ok) {
-          const data = await response.json();
-          setDateOfBirth(data.dateOfBirth ?? "");
-          setGender(data.gender ?? "");
-          setCountry(data.country ?? "");
-          setAboutMe(data.aboutMe ?? "");
-          setExistingAvatarUrl(data.avatarUrl ?? null);
+        if (bioResponse.ok) {
+          const bio = await bioResponse.json();
+          setDateOfBirth(bio.dateOfBirth ?? "");
+          setGender(bio.gender ?? "");
+          setCountry(bio.location ?? "");
+        }
+
+        // aboutMe and avatar come from separate endpoints
+        const profileResponse = await fetch("http://localhost:8080/api/me/profile", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json();
+          setAboutMe(profile.aboutMe ?? "");
+        }
+
+        const summaryResponse = await fetch("http://localhost:8080/api/me", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (summaryResponse.ok) {
+          const summary = await summaryResponse.json();
+          setExistingAvatarUrl(summary.profilePictureUrl || null);
         }
       } catch {
         // Server unreachable — form starts empty
@@ -47,26 +63,45 @@ export default function BioForm() {
     setError(null);
     setSuccess(null);
 
-    const formData = new FormData();
-    if (dateOfBirth) formData.append("dateOfBirth", dateOfBirth);
-    if (gender) formData.append("gender", gender);
-    if (country) formData.append("country", country);
-    if (aboutMe) formData.append("aboutMe", aboutMe);
-    if (profilePicture) formData.append("profilePicture", profilePicture);
-
     try {
-      const response = await fetch("http://localhost:8080/api/profile", {
-        method: "PATCH",
+      // Save bio fields (gender, dateOfBirth, location)
+      const bioBody: Record<string, string> = {};
+      if (gender) bioBody.gender = gender;
+      if (dateOfBirth) bioBody.dateOfBirth = dateOfBirth;
+      if (country) bioBody.location = country;
+
+      const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify(bioBody),
       });
 
-      const data = await response.json();
+      // Save aboutMe separately
+      const profileResponse = await fetch("http://localhost:8080/api/me/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ aboutMe }),
+      });
 
-      if (!response.ok) {
-        setError(data.message ?? "Something went wrong.");
+      // Upload picture if a new one was selected
+      if (profilePicture) {
+        const formData = new FormData();
+        formData.append("file", profilePicture);
+        await fetch("http://localhost:8080/api/me/picture", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}` },
+          body: formData,
+        });
+      }
+
+      if (!bioResponse.ok || !profileResponse.ok) {
+        setError("Something went wrong while saving.");
       } else {
         setSuccess("Bio saved successfully.");
         setTimeout(() => setSuccess(null), 3000);

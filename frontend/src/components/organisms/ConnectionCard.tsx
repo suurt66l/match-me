@@ -5,11 +5,12 @@ import MinBioBlock from "../molecules/MinBioBlock";
 
 interface Props {
     user: {
+        connectionId: number;
         id: number;
         nickname: string;
         avatarUrl: string | null;
         country: string;
-        dateOfBirth: string;
+        dateOfBirth: number[];
         }
     onMessage: () => void;
     onDismiss: () => void;
@@ -31,4 +32,3 @@ export function ConnectionCard({ user, onMessage, onDismiss }: Props){
             </div>
           )
 }
-

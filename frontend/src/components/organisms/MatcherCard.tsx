@@ -14,8 +14,7 @@ interface MatchUser {
   platform: string;
   lookingFor: string;
   intensity: string;
-  gameTimeFrom: string;
-  gameTimeTo: string;
+  timeRange: string;
   matchedFields: string[];
 }
 
@@ -78,13 +77,7 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
         {user.lookingFor && <StatRow label="Looking for" value={lookingForLabels[user.lookingFor] ?? user.lookingFor} highlighted={matched.has("lookingFor")} />}
         {user.intensity  && <StatRow label="Intensity"   value={`${user.intensity} / 10`} highlighted={matched.has("intensity")} />}
         
-        {(user.gameTimeFrom || user.gameTimeTo) && (
-          <StatRow
-            label="Play time"
-            value={`${user.gameTimeFrom} – ${user.gameTimeTo}`}
-            highlighted={matched.has("gameTimeFrom") || matched.has("gameTimeTo")}
-          />
-        )}
+        {user.timeRange && <StatRow label="Play time" value={user.timeRange} highlighted={matched.has("timeRange")} />}
       </div>
 
       {/* Actions */}
