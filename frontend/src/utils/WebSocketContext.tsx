@@ -1,36 +1,45 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import { useAuth } from "./AuthContext";
 
-interface WsContextValue {
-  ws: WebSocket | null;
+interface StompContextValue {
+  client: Client | null;
 }
 
-const WebSocketContext = createContext<WsContextValue>({ ws: null });
+const WebSocketContext = createContext<StompContextValue>({ client: null });
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const { token, isAuthenticated } = useAuth();
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [client, setClient] = useState<Client | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !token) return;
 
-    const socket = new WebSocket("ws://localhost:8080");
+    const stompClient = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      onConnect: () => {
+        setClient(stompClient);
+      },
+      onDisconnect: () => {
+        setClient(null);
+      },
+    });
 
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "auth", token }));
-      setWs(socket);
-    };
-
-    socket.onclose = () => setWs(null);
+    stompClient.activate();
 
     return () => {
-      socket.close();
-      setWs(null);
+      stompClient.deactivate();
+      setClient(null);
     };
   }, [token, isAuthenticated]);
 
   return (
-    <WebSocketContext.Provider value={{ ws }}>
+    <WebSocketContext.Provider value={{ client }}>
       {children}
     </WebSocketContext.Provider>
   );
