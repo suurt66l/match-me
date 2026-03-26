@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.web.DTO.MessageDto;
+import com.example.web.DTO.TypingNotificationDto;
 import com.example.web.Entity.Message;
 import com.example.web.Entity.User;
 import com.example.web.Repository.MessageRepository;
@@ -69,6 +70,18 @@ public class ChatService {
             dto);
         
             return saved;
+    }
+
+    public void sendTypingNotification(String senderEmail, Long recipientId, boolean typing) {
+        User sender = userRepository.findByEmail(senderEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sender not found"));
+        User recipient = userRepository.findById(recipientId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient not found"));
+        messagingTemplate.convertAndSendToUser(
+            recipient.getEmail(),
+            "/queue/typing",
+            new TypingNotificationDto(sender.getId(), typing)
+        );
     }
 
     public Page<Message> getConversation(User currentUser, Long otherUserId, int page, int size) {

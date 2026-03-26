@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import com.example.web.DTO.ChatMessageDto;
+import com.example.web.DTO.TypingDto;
 import com.example.web.Service.ChatService;
 
 @Controller
@@ -25,6 +26,14 @@ public class ChatController { // websocket controller for sending messages
         String senderEmail = auth.getName();
         chatService.sendMessage(senderEmail, messageDto.getRecipientId(), messageDto.getContent());
     }
-    
+
+    @MessageMapping("/chat.typing")
+    public void typing(@Payload TypingDto typingDto,
+                       SimpMessageHeaderAccessor headerAccessor) {
+        Authentication auth = (Authentication) headerAccessor.getUser();
+        if (auth == null) return;
+        String senderEmail = auth.getName();
+        chatService.sendTypingNotification(senderEmail, typingDto.getRecipientId(), typingDto.isTyping());
+    }
 
 }
