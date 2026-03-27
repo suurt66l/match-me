@@ -38,30 +38,19 @@ export default function MatcherSection() {
 
   useEffect(() => {
     async function loadMatches() {
-      console.log("Started loading matches...")
       try {
         const response = await fetch("http://localhost:8080/api/recommendations", {
           headers: { "Authorization": `Bearer ${token}` },
         });
-        console.log("Matches are loaded...")
+
         if (response.ok) {
-          console.log("Response: ")
-          console.log(response.body)
           const data = await response.json();
-          console.log("Data: ")
-          console.log(data)
           if (!data.complete) {
-            console.log("Data isn't complete.")
             setMissingFields(data.missingFields ?? []);
             setMatches([]);
           } else {
-            console.log("Data is complete. Setting missing fields...")
             setMissingFields([]);
-            console.log("Data is complete. Setting matches...")
             setMatches(data.matches);
-            console.log("Data is complete. Matches are set. ")
-            console.log("AAAA: " + data.matches.length)
-            console.log("BBBB: " + data.missingFields.length)
           }
         }
       } catch {
@@ -73,11 +62,6 @@ export default function MatcherSection() {
     const interval = setInterval(loadMatches, 2000);
     return () => clearInterval(interval);
   }, [token]);
-
-
-  function handleExtend() {
-
-  }
 
   // Send a connection request to the user
   async function handleConnect(id: number) {
