@@ -49,7 +49,8 @@ export default function BioForm() {
         });
         if (summaryResponse.ok) {
           const summary = await summaryResponse.json();
-          setExistingAvatarUrl(summary.profilePictureUrl || null);
+          const pic = summary.profilePictureUrl;
+          setExistingAvatarUrl(pic ? `http://localhost:8080${pic}` : null);
         }
       } catch {
         // Server unreachable — form starts empty

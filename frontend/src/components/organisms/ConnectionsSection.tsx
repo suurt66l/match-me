@@ -11,7 +11,7 @@ interface Connection {
   nickname: string;
   avatarUrl: string | null;
   country: string;
-  dateOfBirth: number[];
+  dateOfBirth: string;
 }
 
 interface PendingRequest {
@@ -20,7 +20,7 @@ interface PendingRequest {
   nickname: string;
   avatarUrl: string | null;
   country: string;
-  dateOfBirth: number[];
+  dateOfBirth: string;
 }
 
 
@@ -111,6 +111,19 @@ export default function ConnectionsSection() {
     }
   }
 
+  // Block the user so they never appear in recommendations again
+  async function blockConnection(id: number) {
+    setConnections(connections.filter(item => item.id !== id));
+    try {
+      await fetch(`http://localhost:8080/api/connections/block/${id}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+    } catch {
+      console.log("Server is unreachable!");
+    }
+  }
+
   async function acceptRequest(connectionId: number) {
     setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
@@ -180,8 +193,8 @@ export default function ConnectionsSection() {
               <div key={user.id}>
                 <ConnectionCard
                   user={user}
-                  onMessage={() => navigate(`/chat?with=${user.id}`)}
                   onDismiss={() => removeConnection(user.connectionId)}
+                  onBlock={() => blockConnection(user.id)}
                 />
               </div>
             ))}

@@ -9,7 +9,7 @@ interface Props {
         nickname: string;
         avatarUrl: string | null;
         country: string;
-        dateOfBirth: number[];
+        dateOfBirth: string;
     }
     onAccept: () => void;
     onDismiss: () => void;

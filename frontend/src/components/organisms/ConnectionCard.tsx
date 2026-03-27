@@ -2,6 +2,7 @@ import DismissButton from "../atoms/DismissButton";
 import PersonalMessageButton from "../atoms/PersonalMessageButton";
 import CalculateAge from "../../utils/mini/CalculateAge";
 import MinBioBlock from "../molecules/MinBioBlock";
+import BlockButton from "../atoms/BlockButton";
 
 interface Props {
     user: {
@@ -10,13 +11,13 @@ interface Props {
         nickname: string;
         avatarUrl: string | null;
         country: string;
-        dateOfBirth: number[];
+        dateOfBirth: string;
         }
-    onMessage: () => void;
     onDismiss: () => void;
+    onBlock: () => void;
 }
 
-export function ConnectionCard({ user, onMessage, onDismiss }: Props){
+export function ConnectionCard({ user, onDismiss, onBlock }: Props){
   const age = user.dateOfBirth ? CalculateAge(user.dateOfBirth) : null;
     return(
             <div className="flex items-center gap-4 bg-amber-500 rounded-xl px-5 py-4">
@@ -27,8 +28,8 @@ export function ConnectionCard({ user, onMessage, onDismiss }: Props){
                 age={age}
               />
 
-            <PersonalMessageButton onMessage={onMessage}/>
             <DismissButton onDismiss={onDismiss}/>
+            <BlockButton onBlock={onBlock}/>
             </div>
           )
 }

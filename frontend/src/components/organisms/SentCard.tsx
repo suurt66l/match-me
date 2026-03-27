@@ -8,7 +8,7 @@ interface Props {
         nickname: string;
         avatarUrl: string | null;
         country: string;
-        dateOfBirth: number[];
+        dateOfBirth: string;
     }
     onCancel: () => void;
 }
