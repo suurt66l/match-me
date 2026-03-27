@@ -71,6 +71,7 @@ public class MatchingService {
             item.setLookingFor(candidate.getLookingFor());
             item.setIntensity(candidate.getIntensity());
             item.setTimeRange(candidate.getTimeRange());
+            item.setAboutMe(candidate.getAboutMe());
             item.setMatchedFields(matchedFields);
             item.setScore(score);
 
@@ -79,7 +80,7 @@ public class MatchingService {
 
         // Sort by score (highest first) and return top 10
         results.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
-        return results.stream().limit(10).collect(Collectors.toList());
+        return results.stream().limit(15).collect(Collectors.toList());
     }
 
     // Compute a number score for how well two users match

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import CalculateAge from "../../utils/mini/CalculateAge";
 import ConnectButton from "../atoms/ConnectButton";
 import DismissButton from "../atoms/DismissButton";
@@ -15,6 +16,7 @@ interface MatchUser {
   lookingFor: string;
   intensity: string;
   timeRange: string;
+  aboutMe: string;
   matchedFields: string[];
 }
 
@@ -55,6 +57,8 @@ function StatRow({ label, value, highlighted }: StatRowProps) {
 }
 
 export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
+  const [expanded, setExpand] = useState<boolean>(false);
+  
   const age = user.dateOfBirth ? CalculateAge(user.dateOfBirth) : null;
   const matched = new Set(user.matchedFields);
 
@@ -76,8 +80,33 @@ export default function MatcherCard({ user, onConnect, onDismiss }: Props) {
         {user.platform   && <StatRow label="Platform"    value={platformLabels[user.platform] ?? user.platform}      highlighted={matched.has("platform")} />}
         {user.lookingFor && <StatRow label="Looking for" value={lookingForLabels[user.lookingFor] ?? user.lookingFor} highlighted={matched.has("lookingFor")} />}
         {user.intensity  && <StatRow label="Intensity"   value={`${user.intensity} / 10`} highlighted={matched.has("intensity")} />}
-        
         {user.timeRange && <StatRow label="Play time" value={user.timeRange} highlighted={matched.has("timeRange")} />}
+        {user.aboutMe && (
+          <div title={user.aboutMe} className="rounded-lg text-sm text-amber-950">
+            <div className="rounded-t-lg text-sm px-3 py-2 bg-amber-400">About Me</div>
+              {user.aboutMe.length > 50 
+                ? <>
+                    <div className="rounded-b-lg px-3 py-2 bg-amber-300 cursor-pointer" onClick={() => setExpand(true)}>
+                      {user.aboutMe.slice(0, 50)}
+                      <span className="font-bold text-amber-700 cursor-pointer hover:text-amber-900"> . . . read more → </span>
+                    </div>
+                  </>
+                : <>
+                    <div className="rounded-b-lg px-3 py-2 bg-amber-300">
+                      {user.aboutMe}
+                    </div>
+                  </>
+              }
+
+              {expanded && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setExpand(false)}>
+                <div className="bg-amber-300 rounded-xl px-6 py-5 max-w-sm mx-4">
+                  <p className="text-amber-950 text-sm">{user.aboutMe}</p>
+                </div>
+              </div>
+              )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}

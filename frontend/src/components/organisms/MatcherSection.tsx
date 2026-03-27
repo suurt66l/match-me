@@ -14,6 +14,7 @@ interface MatchUser {
   lookingFor: string;
   intensity: string;
   timeRange: string;
+  aboutMe: string;
   matchedFields: string[];
 }
 
@@ -26,6 +27,8 @@ const fieldLabels: Record<string, string> = {
   platform: "Platform",
   lookingFor: "Looking for",
   intensity: "Intensity",
+  timeRange: "Tiem range",
+  aboutMe: "About me"
 };
 
 export default function MatcherSection() {
@@ -35,22 +38,34 @@ export default function MatcherSection() {
 
   useEffect(() => {
     async function loadMatches() {
+      console.log("Started loading matches...")
       try {
         const response = await fetch("http://localhost:8080/api/recommendations", {
           headers: { "Authorization": `Bearer ${token}` },
         });
+        console.log("Matches are loaded...")
         if (response.ok) {
+          console.log("Response: ")
+          console.log(response.body)
           const data = await response.json();
+          console.log("Data: ")
+          console.log(data)
           if (!data.complete) {
+            console.log("Data isn't complete.")
             setMissingFields(data.missingFields ?? []);
             setMatches([]);
           } else {
+            console.log("Data is complete. Setting missing fields...")
             setMissingFields([]);
+            console.log("Data is complete. Setting matches...")
             setMatches(data.matches);
+            console.log("Data is complete. Matches are set. ")
+            console.log("AAAA: " + data.matches.length)
+            console.log("BBBB: " + data.missingFields.length)
           }
         }
       } catch {
-        console.log("Server is unreachable!");
+        console.log("Can't load matches. Server is unreachable!");
       }
     }
     loadMatches();
@@ -58,6 +73,11 @@ export default function MatcherSection() {
     const interval = setInterval(loadMatches, 2000);
     return () => clearInterval(interval);
   }, [token]);
+
+
+  function handleExtend() {
+
+  }
 
   // Send a connection request to the user
   async function handleConnect(id: number) {
@@ -68,7 +88,7 @@ export default function MatcherSection() {
         headers: { "Authorization": `Bearer ${token}` },
       });
     } catch {
-      console.log("Server is unreachable!");
+      console.log("Can't connect to user. Server is unreachable!");
     }
   }
 
@@ -81,7 +101,7 @@ export default function MatcherSection() {
         headers: { "Authorization": `Bearer ${token}` },
       });
     } catch {
-      console.log("Server is unreachable!");
+      console.log("Can't dismiss user. Server is unreachable!");
     }
   }
 
@@ -105,7 +125,6 @@ export default function MatcherSection() {
   if (matches.length === 0) {
     return <p className="text-amber-800">No matches found. Try updating your preferences.</p>;
   }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {matches.map(user => (
