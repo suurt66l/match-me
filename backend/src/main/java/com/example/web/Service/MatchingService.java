@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import com.example.web.Entity.Connection;
 import com.example.web.Entity.User;
 import com.example.web.Repository.ConnectionRepository;
 import com.example.web.Repository.UserRepository;
+import com.example.web.utils.TimeUtils;
 
 @Service
 public class MatchingService {
@@ -46,133 +48,131 @@ public class MatchingService {
                 .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
 
         Set<Long> connectedIds = getConnectedUserIds(currentUser);
+        List<User> allUsers = userRepository.findAll();
+        List<User> candidates = allUsers.stream()
+            .filter(user -> !user.getId().equals(currentUserId))
+            .filter(user -> !connectedIds.contains(user.getId()))
+            .collect(Collectors.toList());
 
-        // Get all users except current user and already connected users
-        List<User> candidates = userRepository.findAll().stream()
-                .filter(user -> !user.getId().equals(currentUserId))
-                .filter(user -> !connectedIds.contains(user.getId()))
+        List<ScoredUser> scoredUsers = new ArrayList<>();
+        for (User candidate : candidates) {
+            Optional<Double> scoreOpt = computeScore(currentUser, candidate);
+            if (scoreOpt.isPresent()) {
+                scoredUsers.add(new ScoredUser(candidate, scoreOpt.get()));
+            }
+        }
+
+    // Sort descending by score and take top 10
+        List<ScoredUser> topScored = scoredUsers.stream()
+                .sorted((a, b) -> Double.compare(b.score, a.score))
+                .limit(10)
                 .collect(Collectors.toList());
 
-        // Score each candidate
-        List<RecommendationItemDto> results = new ArrayList<>();
-        for (User candidate : candidates) {
-            double score = computeMatchScore(currentUser, candidate);
-            List<String> matchedFields = computeMatchedFields(currentUser, candidate);
+    // Convert to RecommendationItemDto
+        return topScored.stream()
+            .map(su -> new RecommendationItemDto(
+                    su.user.getId(),
+                    su.user.getGamePreference(),
+                    su.user.getGameGenrePreference(),
+                    su.user.getPlatforms(),
+                    su.user.getLookingFor(),
+                    su.user.getIntensity(),
+                    su.user.getLocation(),
+                    su.user.getDateOfBirth(),
+                    su.score
+            ))
+            .collect(Collectors.toList());
+}
 
-            RecommendationItemDto item = new RecommendationItemDto();
-            item.setId(candidate.getId());
-            item.setNickname(candidate.getNickname());
-            item.setAvatarUrl(candidate.getProfilePictureUrl());
-            item.setCountry(candidate.getLocation());
-            item.setDateOfBirth(candidate.getDateOfBirth());
-            item.setGames(candidate.getGamePreference());
-            item.setGameGenres(candidate.getGameGenrePreference());
-            item.setPlatform(candidate.getPlatforms());
-            item.setLookingFor(candidate.getLookingFor());
-            item.setIntensity(candidate.getIntensity());
-            item.setTimeRange(candidate.getTimeRange());
-            item.setMatchedFields(matchedFields);
-            item.setScore(score);
-
-            results.add(item);
+    private Optional<Double> computeScore(User current, User other) {
+        // 1. Location filter (exact match)
+        if (current.getLocation() == null || other.getLocation() == null ||
+                !current.getLocation().equalsIgnoreCase(other.getLocation())) {
+            return Optional.empty();
         }
 
-        // Sort by score (highest first) and return top 10
-        results.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
-        return results.stream().limit(10).collect(Collectors.toList());
-    }
+        // 2. Time availability – primary filter
+        if (!hasTimeOverlap(current, other)) {
+            return Optional.empty();
+        }
 
-    // Compute a number score for how well two users match
-    private double computeMatchScore(User current, User other) {
-        double score = 0.0;
+        // 3. Compute overlap minutes for scoring
+        long overlapMinutes = getTimeOverlapMinutes(current, other);
+        if (overlapMinutes <= 0) {
+            return Optional.empty();
+        }
 
-        // Games (high weight - 3 points per common game)
+        // 4. Score calculation: overlap minutes as base, plus other factors
+        double score = overlapMinutes;  // each minute is 1 point
+
+        // Game preferences
         Set<String> currentGames = parseCommaSeparated(current.getGamePreference());
         Set<String> otherGames = parseCommaSeparated(other.getGamePreference());
-        score += intersectionSize(currentGames, otherGames) * 3.0;
+        int commonGames = intersectionSize(currentGames, otherGames);
+        score += commonGames * 30.0;  // each common game adds 30 minutes
 
-        // Game genres (2 points per common genre)
+        // Game genres
         Set<String> currentGenres = parseCommaSeparated(current.getGameGenrePreference());
         Set<String> otherGenres = parseCommaSeparated(other.getGameGenrePreference());
-        score += intersectionSize(currentGenres, otherGenres) * 2.0;
+        int commonGenres = intersectionSize(currentGenres, otherGenres);
+        score += commonGenres * 20.0;
 
-        // Platforms (2 points per common platform)
+        // Platforms
         Set<String> currentPlatforms = parseCommaSeparated(current.getPlatforms());
         Set<String> otherPlatforms = parseCommaSeparated(other.getPlatforms());
-        score += intersectionSize(currentPlatforms, otherPlatforms) * 2.0;
+        int commonPlatforms = intersectionSize(currentPlatforms, otherPlatforms);
+        score += commonPlatforms * 20.0;
 
-        // Intensity (5 points for exact match)
-        if (current.getIntensity() != null && other.getIntensity() != null) {
-            if (current.getIntensity().equalsIgnoreCase(other.getIntensity())) {
-                score += 5.0;
-            }
+        // Looking for
+        Set<String> currentLooking = parseCommaSeparated(current.getLookingFor());
+        Set<String> otherLooking = parseCommaSeparated(other.getLookingFor());
+        int commonLooking = intersectionSize(currentLooking, otherLooking);
+        score += commonLooking * 15.0;
+
+        // Intensity match (exact)
+        if (current.getIntensity() != null && other.getIntensity() != null &&
+                current.getIntensity().equalsIgnoreCase(other.getIntensity())) {
+            score += 50.0;
         }
 
-        // Timezone (3 points for same timezone)
-        if (current.getTimezone() != null && other.getTimezone() != null) {
-            if (current.getTimezone().equals(other.getTimezone())) {
-                score += 3.0;
-            }
+        // Timezone similarity – already used in overlap, but we can add bonus if same
+        if (current.getTimezone() != null && other.getTimezone() != null &&
+                current.getTimezone().equals(other.getTimezone())) {
+            score += 30.0;
         }
 
-        // Time range (2 points for same time range)
-        if (current.getTimeRange() != null && other.getTimeRange() != null) {
-            if (current.getTimeRange().equals(other.getTimeRange())) {
-                score += 2.0;
-            }
-        }
-
-        return score;
+        return Optional.of(score);
     }
 
-    // Returns a list of field names that matched between two users
-    private List<String> computeMatchedFields(User current, User other) {
-        List<String> matched = new ArrayList<>();
-
-        Set<String> currentGames = parseCommaSeparated(current.getGamePreference());
-        Set<String> otherGames = parseCommaSeparated(other.getGamePreference());
-        if (intersectionSize(currentGames, otherGames) > 0) {
-            matched.add("games");
-        }
-
-        Set<String> currentGenres = parseCommaSeparated(current.getGameGenrePreference());
-        Set<String> otherGenres = parseCommaSeparated(other.getGameGenrePreference());
-        if (intersectionSize(currentGenres, otherGenres) > 0) {
-            matched.add("gameGenres");
-        }
-
-        Set<String> currentPlatforms = parseCommaSeparated(current.getPlatforms());
-        Set<String> otherPlatforms = parseCommaSeparated(other.getPlatforms());
-        if (intersectionSize(currentPlatforms, otherPlatforms) > 0) {
-            matched.add("platform");
-        }
-
-        if (current.getLookingFor() != null && other.getLookingFor() != null) {
-            if (current.getLookingFor().equalsIgnoreCase(other.getLookingFor())) {
-                matched.add("lookingFor");
-            }
-        }
-
-        if (current.getIntensity() != null && other.getIntensity() != null) {
-            if (current.getIntensity().equalsIgnoreCase(other.getIntensity())) {
-                matched.add("intensity");
-            }
-        }
-
-        if (current.getTimezone() != null && other.getTimezone() != null) {
-            if (current.getTimezone().equals(other.getTimezone())) {
-                matched.add("timezone");
-            }
-        }
-
-        if (current.getTimeRange() != null && other.getTimeRange() != null) {
-            if (current.getTimeRange().equals(other.getTimeRange())) {
-                matched.add("timeRange");
-            }
-        }
-
-        return matched;
+    private boolean hasTimeOverlap(User current, User other) {
+        return getTimeOverlapMinutes(current, other) > 0;
     }
+
+    private long getTimeOverlapMinutes(User current, User other) {
+        // If either user lacks timezone or timeRange, no overlap
+        if (current.getTimezone() == null || current.getTimeRange() == null ||
+                other.getTimezone() == null || other.getTimeRange() == null) {
+            return 0;
+        }
+        try {
+            int[] currentUtc = TimeUtils.convertTimeRangeToUtcMinutes(current.getTimeRange(), current.getTimezone());
+            int[] otherUtc = TimeUtils.convertTimeRangeToUtcMinutes(other.getTimeRange(), other.getTimezone());
+            return TimeUtils.computeOverlapMinutes(currentUtc, otherUtc);
+        } catch (Exception e) {
+            // If parsing fails, treat as no overlap
+            return 0;
+        }
+    }
+
+    // Helper record for scoring
+    private static class ScoredUser {
+        User user;
+        double score;
+        ScoredUser(User user, double score) {
+            this.user = user;
+            this.score = score;
+    }
+}
 
     // Splits "Valorant, CS2" into a set: ["valorant", "cs2"]
     private Set<String> parseCommaSeparated(String input) {
