@@ -4,18 +4,25 @@ import GameTimeFromLabel from "../atoms/GameTimeFromLabel";
 import GameTimeToInput from "../atoms/GameTimeToInput";
 import GameTimeToLabel from "../atoms/GameTimeToLabel";
 import TimeZoneLabel from "../atoms/TimeZoneLabel";
-import TimeZoneSelect from "../atoms/TimeZoneSelect";
+import SingleSelect from "../atoms/SingleSelect";
+
+interface Option {
+  readonly label: string;
+  readonly value: string;
+}
 
 interface Props {
   setGameTimeFrom: (value: string) => void;
   setGameTimeTo: (value: string) => void;
-  setTimeZone: (value: string) => void;
+  setTimeZone: (value: Option) => void;
   gameTimeFrom: string;
   gameTimeTo: string;
-  timeZone: string;
+  timeZone: Option | null;
+  timeZoneOptions: Option[];
 }
 
-export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom, setTimeZone, gameTimeFrom, gameTimeTo, timeZone} : Props) {
+export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom, gameTimeFrom, gameTimeTo, setTimeZone, timeZone, timeZoneOptions} : Props) {
+
     return (
             <div>
                 <GameTimeLabel />
@@ -31,7 +38,7 @@ export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom, set
 
                     <TimeZoneLabel />
                     <div className="mt-2">
-                        <TimeZoneSelect setTimeZone={setTimeZone} value={timeZone} />
+                        <SingleSelect onChange={setTimeZone} options={timeZoneOptions} value={timeZone}/>
                     </div>
             </div>
     )

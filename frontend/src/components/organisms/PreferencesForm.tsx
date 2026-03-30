@@ -4,14 +4,13 @@ import ErrorParagraph from "../atoms/ErrorParagraph";
 import SuccessParagraph from "../atoms/SuccessParagraph";
 import SaveButton from "../atoms/SaveButton";
 import GameTimeInputBlock from "../molecules/GameTimeInputBlock";
-import GamesInputBlock from "../molecules/GamesSelectorBlock";
 import GameGenresSelectorBlock from "../molecules/GameGenresSelectorBlock";
 import LookingForInputBlock from "../molecules/LookingForSelectBlock";
 import PlatformSelectBlock from "../molecules/PlatfromSelectorBlock";
 import IntensityInputBlock from "../molecules/IntensityInputBlock";
 
-import CreatableSelect from "react-select/creatable";
 import GamesSelectorBlock from "../molecules/GamesSelectorBlock";
+import { timeZones } from "../../data/timezones";
 
 interface Option {
   readonly label: string;
@@ -52,6 +51,7 @@ const GameOptions: Option[] = DEFAULT_GAMES.map(createOption)
 const GenreOptions: Option[] = DEFAULT_GENRES.map(createOption)
 const PlatformOptions: Option[] = DEFAULT_PLATFORMS.map(createOption)
 
+const TimeZoneOptions: Option[] = timeZones.map(createOption) 
 
 function optionsFromDatabase(options: string): Option[]{
   return options ? options.split(",").map(createOption) : [];
@@ -65,7 +65,7 @@ function optionsToDatabase(options: readonly Option[]): string{
 export default function PreferencesForm() {
   const [gameTimeFrom, setGameTimeFrom] = useState<string>("");
   const [gameTimeTo, setGameTimeTo] = useState<string>("");
-  const [timeZone, setTimeZone] = useState<string>("");
+  const [timeZone, setTimeZone] = useState<Option | null>(null);
   const [games, setGames] = useState<Option[]>([]);
   const [gameGenres, setGameGenres] = useState<Option[]>([]);
   const [lookingFor, setLookingFor] = useState<string>("");
@@ -91,7 +91,7 @@ export default function PreferencesForm() {
           
           setGameTimeFrom(from);
           setGameTimeTo(to);
-          setTimeZone(data.timezone ?? "");
+          setTimeZone(data.timezone ? createOption(data.timezone) : null);
           setGames(optionsFromDatabase(data.gamePreference));
           setGameGenres(optionsFromDatabase(data.gameGenrePreference));
           setLookingFor(data.lookingFor ?? "");
@@ -114,7 +114,7 @@ export default function PreferencesForm() {
     // Map frontend state names back to backend field names
     const body: Record<string, string> = {};
     if (gameTimeFrom || gameTimeTo) body.timeRange = `${gameTimeFrom}-${gameTimeTo}`;
-    if (timeZone) body.timezone = timeZone;
+    if (timeZone) body.timezone = timeZone.value; 
     if (games) body.gamePreference = optionsToDatabase(games);
     if (gameGenres) body.gameGenrePreference = optionsToDatabase(gameGenres);
     if (lookingFor) body.lookingFor = lookingFor;
@@ -152,15 +152,17 @@ export default function PreferencesForm() {
           <GameTimeInputBlock
             setGameTimeFrom={setGameTimeFrom}
             setGameTimeTo={setGameTimeTo}
-            setTimeZone={setTimeZone}
             gameTimeFrom={gameTimeFrom}
             gameTimeTo={gameTimeTo}
+
+            setTimeZone={setTimeZone}
             timeZone={timeZone}
+            timeZoneOptions={TimeZoneOptions}
           />
           <GamesSelectorBlock setGames={setGames} gameOptions={GameOptions} value={games} />
           <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={GenreOptions} value={gameGenres} />
-          <LookingForInputBlock setLookingFor={setLookingFor} value={lookingFor} />
           <PlatformSelectBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
+          <LookingForInputBlock setLookingFor={setLookingFor} value={lookingFor} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
           {error && <ErrorParagraph errorMsg={error} />}

@@ -1,6 +1,6 @@
 import CreatableSelect from "react-select/creatable";
 import PlatformLabel from "../atoms/PlatformLabel";
-import PlatformSelect from "../atoms/PlatformSelect";
+import MultiSelect from "../atoms/MultiSelect";
 
 interface Option {
   readonly label: string;
@@ -18,8 +18,7 @@ export default function PlatformSelectBlock({ setPlatforms, platformOptions, val
             <div>
               <PlatformLabel />
                 <div className="mt-2">
-                    <CreatableSelect
-                        isMulti
+                    <MultiSelect 
                         options={platformOptions}
                         value={value}
                         onChange={(newValue) => setPlatforms(newValue as Option[])}

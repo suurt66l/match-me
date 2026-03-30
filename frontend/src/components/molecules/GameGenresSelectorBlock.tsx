@@ -1,5 +1,6 @@
 import CreatableSelect from "react-select/creatable";
 import GameGenresLabel from "../atoms/GameGenresLabel";
+import MultiSelect from "../atoms/MultiSelect";
 
 interface Option {
   readonly label: string;
@@ -17,8 +18,7 @@ export default function GameGenresInputBlock({ setGameGenres, genreOptions, valu
             <div>
                 <GameGenresLabel />
                 <div className="mt-2">
-                    <CreatableSelect
-                        isMulti
+                    <MultiSelect 
                         options={genreOptions}
                         value={value}
                         onChange={(newValue) => setGameGenres(newValue as Option[])}
