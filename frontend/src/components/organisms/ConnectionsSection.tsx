@@ -1,33 +1,33 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
-import { ConnectionCard } from "./ConnectionCard";
 import PendingCard from "./PendingCard";
 import SentCard from "./SentCard";
+import ConnectionCard from "./ConnectionCard";
 
-interface Connection {
+interface UserData {
   connectionId: number;
+  requesterId: number;
   id: number;
   nickname: string;
   avatarUrl: string | null;
   country: string;
   dateOfBirth: string;
-}
-
-interface PendingRequest {
-  connectionId: number;
-  requesterId: number;
-  nickname: string;
-  avatarUrl: string | null;
-  country: string;
-  dateOfBirth: string;
+  games: string;
+  gameGenres: string;
+  platform: string;
+  lookingFor: string;
+  intensity: string;
+  timeRange: string;
+  aboutMe: string;
+  matchedFields: string[];
 }
 
 
 export default function ConnectionsSection() {
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [pending, setPending] = useState<PendingRequest[]>([]);
-  const [sent, setSent] = useState<PendingRequest[]>([]);
+  const [connections, setConnections] = useState<UserData[]>([]);
+  const [pending, setPending] = useState<UserData[]>([]);
+  const [sent, setSent] = useState<UserData[]>([]);
   const { token } = useAuth();
   const navigate = useNavigate();
 
@@ -156,13 +156,14 @@ export default function ConnectionsSection() {
         <div>
           <h2 className="text-amber-950 font-bold text-lg mb-3">Pending requests</h2>
           <div className="flex flex-col gap-3">
-            {pending.map(request => (
-              <PendingCard
-                key={request.connectionId}
-                user={request}
-                onAccept={() => acceptRequest(request.connectionId)}
-                onDismiss={() => rejectRequest(request.connectionId)}
-              />
+            {pending.map(user => (
+              <div key={user.connectionId}>
+                <PendingCard
+                  user={user}
+                  onAccept={() => acceptRequest(user.connectionId)}
+                  onDismiss={() => rejectRequest(user.connectionId)}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -173,12 +174,13 @@ export default function ConnectionsSection() {
         <div>
           <h2 className="text-amber-950 font-bold text-lg mb-3">Sent requests</h2>
           <div className="flex flex-col gap-3">
-            {sent.map(request => (
-              <SentCard
-                key={request.connectionId}
-                user={request}
-                onCancel={() => cancelRequest(request.connectionId)}
-              />
+            {sent.map(user => (
+              <div key={user.id}>
+                <SentCard
+                  user={user}
+                  onCancel={() => cancelRequest(user.connectionId)}
+                />
+              </div>
             ))}
           </div>
         </div>

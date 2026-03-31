@@ -1,35 +1,34 @@
 import DismissButton from "../atoms/DismissButton";
-import PersonalMessageButton from "../atoms/PersonalMessageButton";
-import CalculateAge from "../../utils/mini/CalculateAge";
-import MinBioBlock from "../molecules/MinBioBlock";
+import UserCard from "./UserCard";
 import BlockButton from "../atoms/BlockButton";
 
-interface Props {
-    user: {
-        connectionId: number;
-        id: number;
-        nickname: string;
-        avatarUrl: string | null;
-        country: string;
-        dateOfBirth: string;
-        }
-    onDismiss: () => void;
-    onBlock: () => void;
+interface UserData {
+  id: number;
+  nickname: string;
+  avatarUrl: string | null;
+  country: string;
+  dateOfBirth: string;
+  games: string;
+  gameGenres: string;
+  platform: string;
+  lookingFor: string;
+  intensity: string;
+  timeRange: string;
+  aboutMe: string;
+  matchedFields: string[];
 }
 
-export function ConnectionCard({ user, onDismiss, onBlock }: Props){
-  const age = user.dateOfBirth ? CalculateAge(user.dateOfBirth) : null;
-    return(
-            <div className="flex items-center gap-4 bg-amber-500 rounded-xl px-5 py-4">
-              <MinBioBlock
-                avatarUrl={user.avatarUrl}
-                nickname={user.nickname}
-                country={user.country}
-                age={age}
-              />
+interface Props {
+  user: UserData;
+  onDismiss: (id: number) => void;
+  onBlock: (id: number) => void;
+}
 
-            <DismissButton onDismiss={onDismiss}/>
-            <BlockButton onBlock={onBlock}/>
-            </div>
-          )
+export default function ConnectionCard({ user, onDismiss, onBlock }: Props) {
+  return (
+    <UserCard user={user}>
+      <DismissButton onDismiss={() => onDismiss(user.id)} />
+      <BlockButton onBlock={() => onBlock(user.id)} />
+    </UserCard>
+  );
 }

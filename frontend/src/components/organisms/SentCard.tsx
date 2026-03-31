@@ -1,29 +1,33 @@
-import MinBioBlock from "../molecules/MinBioBlock";
-import CalculateAge from "../../utils/mini/CalculateAge";
 import CancelButton from "../atoms/CancelButton";
+import UserCard from "./UserCard";
+
+interface UserData {
+  connectionId: number;
+  id: number;
+  nickname: string;
+  avatarUrl: string | null;
+  country: string;
+  dateOfBirth: string;
+  games: string;
+  gameGenres: string;
+  platform: string;
+  lookingFor: string;
+  intensity: string;
+  timeRange: string;
+  aboutMe: string;
+  matchedFields: string[];
+}
 
 interface Props {
-    user: {
-        connectionId: number;
-        nickname: string;
-        avatarUrl: string | null;
-        country: string;
-        dateOfBirth: string;
-    }
-    onCancel: () => void;
+  user: UserData;
+  onCancel: (id: number) => void;
 }
 
 export default function SentCard({ user, onCancel }: Props) {
-  const age = CalculateAge(user.dateOfBirth);
     return(
-        <div className="flex items-center gap-4 bg-amber-400 rounded-xl px-5 py-4">
-          <MinBioBlock
-            avatarUrl={user.avatarUrl}
-            nickname={user.nickname}
-            country={user.country}
-            age={age}
-          />
-          <CancelButton onCancel={onCancel} />
-        </div>
+        <UserCard user={user}>
+          <CancelButton onCancel={() => onCancel(user.connectionId)} />
+        </UserCard>
+
     )
 }

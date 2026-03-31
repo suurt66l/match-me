@@ -13,4 +13,11 @@ public class ConnectionUserDto {
     private String avatarUrl;
     private String country;
     private LocalDate dateOfBirth;
+    private String games;
+    private String gameGenres;
+    private String platform;
+    private String lookingFor;
+    private String intensity;
+    private String timeRange;
+    private String aboutMe;
 }
