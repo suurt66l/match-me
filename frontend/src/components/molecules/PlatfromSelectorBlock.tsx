@@ -13,7 +13,7 @@ interface Props {
   value: Option[]
 }
 
-export default function PlatformSelectBlock({ setPlatforms, platformOptions, value} : Props) {
+export default function PlatformSelectorBlock({ setPlatforms, platformOptions, value} : Props) {
     return (
             <div>
               <PlatformLabel />

@@ -5,8 +5,8 @@ import SuccessParagraph from "../atoms/SuccessParagraph";
 import SaveButton from "../atoms/SaveButton";
 import GameTimeInputBlock from "../molecules/GameTimeInputBlock";
 import GameGenresSelectorBlock from "../molecules/GameGenresSelectorBlock";
-import LookingForInputBlock from "../molecules/LookingForSelectBlock";
-import PlatformSelectBlock from "../molecules/PlatfromSelectorBlock";
+import LookingForSelectorBlock from "../molecules/LookingForSelectorBlock";
+import PlatformSelectorBlock from "../molecules/PlatfromSelectorBlock";
 import IntensityInputBlock from "../molecules/IntensityInputBlock";
 
 import GamesSelectorBlock from "../molecules/GamesSelectorBlock";
@@ -24,34 +24,41 @@ function createOption (label: string): Option {
   });
 }
 
-
-//Tepmorary Dataset
+// Tepmorary Dataset
+/*//////////////////////////////////////////////////////////////////// */
 const DEFAULT_GENRES = [
   "MOBA",
   "FPS",
   "Strategy",
   "RPG"
 ]
-//Tepmorary Dataset
 const DEFAULT_GAMES = [
   "CS:GO",
   "DOTA 2",
   "Warhamer",
   "Snake"
 ]
-//Tepmorary Dataset
 const DEFAULT_PLATFORMS = [
   "PC",
   "PlayStation 5",
   "XBox One",
   "Nintendo Switch"
 ]
-//Tepmorary Datasets
 const GameOptions: Option[] = DEFAULT_GAMES.map(createOption)
 const GenreOptions: Option[] = DEFAULT_GENRES.map(createOption)
 const PlatformOptions: Option[] = DEFAULT_PLATFORMS.map(createOption)
+/*//////////////////////////////////////////////////////////////////// */
+
+
+const DEFAULT_LOOKING_FOR = [
+  "Play together",
+  "Friendship",
+  "Just to chat",
+  "Relationships IRL"
+]
 
 const TimeZoneOptions: Option[] = timeZones.map(createOption) 
+const LookingForOptions: Option[] = DEFAULT_LOOKING_FOR.map(createOption) 
 
 function optionsFromDatabase(options: string): Option[]{
   return options ? options.split(",").map(createOption) : [];
@@ -68,7 +75,7 @@ export default function PreferencesForm() {
   const [timeZone, setTimeZone] = useState<Option | null>(null);
   const [games, setGames] = useState<Option[]>([]);
   const [gameGenres, setGameGenres] = useState<Option[]>([]);
-  const [lookingFor, setLookingFor] = useState<string>("");
+  const [lookingFor, setLookingFor] = useState<Option[]>([]);
   const [platforms, setPlatforms] = useState<Option[]>([]);
   const [intensity, setIntensity] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +101,7 @@ export default function PreferencesForm() {
           setTimeZone(data.timezone ? createOption(data.timezone) : null);
           setGames(optionsFromDatabase(data.gamePreference));
           setGameGenres(optionsFromDatabase(data.gameGenrePreference));
-          setLookingFor(data.lookingFor ?? "");
+          setLookingFor(optionsFromDatabase(data.lookingFor));
           setPlatforms(optionsFromDatabase(data.platforms));
           setIntensity(data.intensity ?? "");
         }
@@ -117,7 +124,7 @@ export default function PreferencesForm() {
     if (timeZone) body.timezone = timeZone.value; 
     if (games) body.gamePreference = optionsToDatabase(games);
     if (gameGenres) body.gameGenrePreference = optionsToDatabase(gameGenres);
-    if (lookingFor) body.lookingFor = lookingFor;
+    if (lookingFor) body.lookingFor = optionsToDatabase(lookingFor);
     if (platforms) body.platforms = optionsToDatabase(platforms);
     if (intensity) body.intensity = intensity;
 
@@ -161,8 +168,8 @@ export default function PreferencesForm() {
           />
           <GamesSelectorBlock setGames={setGames} gameOptions={GameOptions} value={games} />
           <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={GenreOptions} value={gameGenres} />
-          <PlatformSelectBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
-          <LookingForInputBlock setLookingFor={setLookingFor} value={lookingFor} />
+          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
+          <LookingForSelectorBlock setLookingFor={setLookingFor} lookingForOptions={LookingForOptions} value={lookingFor} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
           {error && <ErrorParagraph errorMsg={error} />}

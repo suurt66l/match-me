@@ -1,6 +1,5 @@
 import Select from "react-select";
 
-
 interface Option {
   readonly label: string;
   readonly value: string;
@@ -13,7 +12,7 @@ interface Props {
   onChange: (value: Option[]) => void;
 }
 
-export default function MultiSelect({ options, value, placeholder = "Select...", onChange }: Props) {
+export default function MultiSelectFixed({ options, value, placeholder = "Select...", onChange }: Props) {
   return (
     <Select
         isMulti
