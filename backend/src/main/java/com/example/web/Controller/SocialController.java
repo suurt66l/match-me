@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.web.DTO.IdDto;
 import com.example.web.DTO.RecommendationItemDto;
 import com.example.web.DTO.RecommendationsResponseDto;
 import com.example.web.Entity.User;
@@ -76,7 +77,7 @@ public class SocialController {
             return ResponseEntity.ok(response);
         }
 
-        // Profile is complete — get recommendations, filtering out users with incomplete profiles
+        // Profile is complete - get recommendations, filtering out users with incomplete profiles
         List<RecommendationItemDto> matches = matchingService.getRecommendations(currentUser.getId())
                 .stream()
                 .filter(u ->

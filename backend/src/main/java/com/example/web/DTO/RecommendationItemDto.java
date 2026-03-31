@@ -3,9 +3,12 @@ package com.example.web.DTO;
 import java.time.LocalDate;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
 public class RecommendationItemDto {
     private Long id;
     private String nickname;
@@ -20,5 +23,5 @@ public class RecommendationItemDto {
     private String timeRange;
     private String aboutMe;
     private List<String> matchedFields;
-    private double score; // used for sorting, not sent to frontend ideally but harmless
+    private double score;
 }
