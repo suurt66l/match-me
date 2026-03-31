@@ -1,7 +1,7 @@
 import EmailInput from "../atoms/EmailInput"
 import EmailLabel from "../atoms/EmailLabel"
 interface Props {
-  value: string;
+  value?: string;
   setEmail: (value: string) => void;
 }
 

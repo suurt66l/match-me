@@ -77,7 +77,7 @@ export default function PreferencesForm() {
   const [gameGenres, setGameGenres] = useState<Option[]>([]);
   const [lookingFor, setLookingFor] = useState<Option[]>([]);
   const [platforms, setPlatforms] = useState<Option[]>([]);
-  const [intensity, setIntensity] = useState<string>("");
+  const [intensity, setIntensity] = useState<string>("5");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -103,7 +103,7 @@ export default function PreferencesForm() {
           setGameGenres(optionsFromDatabase(data.gameGenrePreference));
           setLookingFor(optionsFromDatabase(data.lookingFor));
           setPlatforms(optionsFromDatabase(data.platforms));
-          setIntensity(data.intensity ?? "");
+          setIntensity(data.intensity ?? "5");
         }
       } catch {
         console.log("Can't load preferences. Server isn't available! ")

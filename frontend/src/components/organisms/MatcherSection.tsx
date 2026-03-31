@@ -27,7 +27,7 @@ const fieldLabels: Record<string, string> = {
   platform: "Platform",
   lookingFor: "Looking for",
   intensity: "Intensity",
-  timeRange: "Tiem range",
+  timeRange: "Time range",
   aboutMe: "About me"
 };
 
