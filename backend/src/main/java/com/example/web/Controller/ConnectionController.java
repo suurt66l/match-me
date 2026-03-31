@@ -95,7 +95,14 @@ public class ConnectionController {
                             other.getNickname(),
                             other.getProfilePictureUrl(),
                             other.getLocation(),
-                            other.getDateOfBirth()
+                            other.getDateOfBirth(),
+                            other.getGamePreference(),
+                            other.getGameGenrePreference(),
+                            other.getPlatforms(),
+                            other.getLookingFor(),
+                            other.getIntensity(),
+                            other.getTimeRange(),
+                            other.getAboutMe()
                     );
                 })
                 .toList();
@@ -114,7 +121,14 @@ public class ConnectionController {
                         conn.getRequester().getNickname(),
                         conn.getRequester().getProfilePictureUrl(),
                         conn.getRequester().getLocation(),
-                        conn.getRequester().getDateOfBirth()
+                        conn.getRequester().getDateOfBirth(),
+                        conn.getRequester().getGamePreference(),
+                        conn.getRequester().getGameGenrePreference(),
+                        conn.getRequester().getPlatforms(),
+                        conn.getRequester().getLookingFor(),
+                        conn.getRequester().getIntensity(),
+                        conn.getRequester().getTimeRange(),
+                        conn.getRequester().getAboutMe()
                 ))
                 .toList();
         return ResponseEntity.ok(result);
@@ -132,7 +146,14 @@ public class ConnectionController {
                         conn.getAddressee().getNickname(),
                         conn.getAddressee().getProfilePictureUrl(),
                         conn.getAddressee().getLocation(),
-                        conn.getAddressee().getDateOfBirth()
+                        conn.getAddressee().getDateOfBirth(),
+                        conn.getAddressee().getGamePreference(),
+                        conn.getAddressee().getGameGenrePreference(),
+                        conn.getAddressee().getPlatforms(),
+                        conn.getAddressee().getLookingFor(),
+                        conn.getAddressee().getIntensity(),
+                        conn.getAddressee().getTimeRange(),
+                        conn.getAddressee().getAboutMe()
                 ))
                 .toList();
         return ResponseEntity.ok(result);

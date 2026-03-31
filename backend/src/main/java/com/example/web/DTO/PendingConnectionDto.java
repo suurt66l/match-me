@@ -7,10 +7,17 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 public class PendingConnectionDto {
-    private Long connectionId;   // needed to accept or reject
-    private Long requesterId;    // who sent the request
+    private Long connectionId;
+    private Long requesterId;
     private String nickname;
     private String avatarUrl;
     private String country;
     private LocalDate dateOfBirth;
+    private String games;
+    private String gameGenres;
+    private String platform;
+    private String lookingFor;
+    private String intensity;
+    private String timeRange;
+    private String aboutMe;
 }

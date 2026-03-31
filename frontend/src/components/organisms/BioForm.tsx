@@ -3,16 +3,47 @@ import { useAuth } from "../../utils/AuthContext";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import SuccessParagraph from "../atoms/SuccessParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
-import GenderSelectBlock from "../molecules/GenderSelectBlock";
-import LocationInputBlock from "../molecules/LocationInputBlock";
+import GenderSelectorBlock from "../molecules/GenderSelectorBlock";
+import LocationSelectorBlock from "../molecules/LocationSelectorBlock";
 import AboutMeInputBlock from "../molecules/AboutMeInputBlock";
 import ProfilePictureBlock from "../molecules/ProfilePictureBlock";
 import SaveButton from "../atoms/SaveButton";
 
+interface Option {
+  readonly label: string;
+  readonly value: string;
+}
+
+function createOption (label: string): Option {
+  return ({
+    label,
+    value: label
+  });
+}
+
+const DEFAULT_GENDERS = [
+  "Non-binary",
+  "Female",
+  "Male"
+]
+
+const DEFAULT_CONTINENTS= [
+  "Africa",
+  "Antarctica",
+  "Asia",
+  "Europe",
+  "North America",
+  "Oceania",
+  "South America"
+];
+
+const GenderOptions: Option[] = DEFAULT_GENDERS.map(createOption) 
+const ContinentsOptions: Option[] = DEFAULT_CONTINENTS.map(createOption) 
+
 export default function BioForm() {
   const [dateOfBirth, setDateOfBirth] = useState<string>("");
-  const [gender, setGender] = useState<string>("");
-  const [country, setCountry] = useState<string>("");
+  const [gender, setGender] = useState<Option | null>(null);
+  const [continent, setContinent] = useState<Option | null>(null);
   const [aboutMe, setAboutMe] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
@@ -31,8 +62,8 @@ export default function BioForm() {
         if (bioResponse.ok) {
           const bio = await bioResponse.json();
           setDateOfBirth(bio.dateOfBirth ?? "");
-          setGender(bio.gender ?? "");
-          setCountry(bio.location ?? "");
+          setGender(bio.gender ? createOption(bio.gender) : null);
+          setContinent(bio.location ? createOption(bio.location) : null);
         }
 
         // aboutMe and avatar come from separate endpoints
@@ -49,7 +80,8 @@ export default function BioForm() {
         });
         if (summaryResponse.ok) {
           const summary = await summaryResponse.json();
-          setExistingAvatarUrl(summary.profilePictureUrl || null);
+          const pic = summary.profilePictureUrl;
+          setExistingAvatarUrl(pic ? `http://localhost:8080${pic}` : null);
         }
       } catch {
         // Server unreachable — form starts empty
@@ -66,9 +98,9 @@ export default function BioForm() {
     try {
       // Save bio fields (gender, dateOfBirth, location)
       const bioBody: Record<string, string> = {};
-      if (gender) bioBody.gender = gender;
+      if (gender) bioBody.gender = gender.value;
       if (dateOfBirth) bioBody.dateOfBirth = dateOfBirth;
-      if (country) bioBody.location = country;
+      if (continent) bioBody.location = continent.value;
 
       const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
         method: "PUT",
@@ -118,8 +150,8 @@ export default function BioForm() {
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
           <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} />
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
-          <GenderSelectBlock setGender={setGender} value={gender} />
-          <LocationInputBlock setCountry={setCountry} country={country} />
+          <GenderSelectorBlock setGender={setGender} options={GenderOptions} value={gender} />
+          <LocationSelectorBlock setContinent={setContinent} options={ContinentsOptions} value={continent} />
           <AboutMeInputBlock setAboutMe={setAboutMe} value={aboutMe} />
 
           {error && <ErrorParagraph errorMsg={error} />}

@@ -50,7 +50,10 @@ public class SocialController {
         if (user.getPlatforms() == null || user.getPlatforms().isBlank()) missing.add("platform");
         if (user.getLookingFor() == null || user.getLookingFor().isBlank()) missing.add("lookingFor");
         if (user.getIntensity() == null || user.getIntensity().isBlank()) missing.add("intensity");
+        if (user.getTimeRange() == null || user.getTimeRange().isBlank()) missing.add("timeRange");
+        if (user.getAboutMe() == null || user.getAboutMe().isBlank()) missing.add("aboutMe");
 
+        
         return missing;
     }
 
@@ -63,6 +66,9 @@ public class SocialController {
 
         // Check if profile is complete — if not, tell frontend which fields are missing
         List<String> missingFields = getMissingFields(currentUser);
+
+        System.out.println("Missing fields: " + response.getMissingFields());
+
         if (!missingFields.isEmpty()) {
             response.setComplete(false);
             response.setMissingFields(missingFields);
@@ -81,12 +87,18 @@ public class SocialController {
                         u.getIntensity() != null && !u.getIntensity().isBlank() &&
                         u.getCountry() != null && !u.getCountry().isBlank() &&
                         u.getDateOfBirth() != null &&
+                        u.getTimeRange() != null &&
+                        u.getAboutMe() != null && !u.getAboutMe().isBlank() &&
                         u.getScore() > 0
                 )
                 .collect(java.util.stream.Collectors.toList());
         response.setComplete(true);
         response.setMissingFields(new ArrayList<>());
         response.setMatches(matches);
+
+        System.out.println("I'm sending request");
+        System.out.println("Matches: " + response.getMatches().size());
+
         return ResponseEntity.ok(response);
     }
 }

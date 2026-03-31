@@ -18,6 +18,7 @@ public class RecommendationItemDto {
     private String lookingFor;
     private String intensity;
     private String timeRange;
+    private String aboutMe;
     private List<String> matchedFields;
     private double score; // used for sorting, not sent to frontend ideally but harmless
 }

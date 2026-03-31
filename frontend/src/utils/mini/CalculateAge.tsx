@@ -1,8 +1,9 @@
-/* Calculates age from a date of birth, returns it as a string */
-export default function CalculateAge(dateOfBirth: number[]): string {
+/* Calculates age from a date of birth "YYYY-MM-DD", returns it as a string */
+export default function CalculateAge(dateOfBirth: string): string {
   const today = new Date();
-  // Backend sends LocalDate as [year, month, day], month is 1-based so we subtract 1
-  const birth = new Date(dateOfBirth[0], dateOfBirth[1] - 1, dateOfBirth[2]);
+  // Backend sends LocalDate as "YYYY-MM-DD" string (Spring Boot Jackson default)
+  const [year, month, day] = dateOfBirth.split("-").map(Number);
+  const birth = new Date(year, month - 1, day);
 
   let age = today.getFullYear() - birth.getFullYear();
 

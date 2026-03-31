@@ -14,6 +14,7 @@ interface MatchUser {
   lookingFor: string;
   intensity: string;
   timeRange: string;
+  aboutMe: string;
   matchedFields: string[];
 }
 
@@ -26,6 +27,8 @@ const fieldLabels: Record<string, string> = {
   platform: "Platform",
   lookingFor: "Looking for",
   intensity: "Intensity",
+  timeRange: "Time range",
+  aboutMe: "About me"
 };
 
 export default function MatcherSection() {
@@ -39,6 +42,7 @@ export default function MatcherSection() {
         const response = await fetch("http://localhost:8080/api/recommendations", {
           headers: { "Authorization": `Bearer ${token}` },
         });
+
         if (response.ok) {
           const data = await response.json();
           if (!data.complete) {
@@ -50,7 +54,7 @@ export default function MatcherSection() {
           }
         }
       } catch {
-        console.log("Server is unreachable!");
+        console.log("Can't load matches. Server is unreachable!");
       }
     }
     loadMatches();
@@ -68,7 +72,7 @@ export default function MatcherSection() {
         headers: { "Authorization": `Bearer ${token}` },
       });
     } catch {
-      console.log("Server is unreachable!");
+      console.log("Can't connect to user. Server is unreachable!");
     }
   }
 
@@ -81,7 +85,7 @@ export default function MatcherSection() {
         headers: { "Authorization": `Bearer ${token}` },
       });
     } catch {
-      console.log("Server is unreachable!");
+      console.log("Can't dismiss user. Server is unreachable!");
     }
   }
 
@@ -105,7 +109,6 @@ export default function MatcherSection() {
   if (matches.length === 0) {
     return <p className="text-amber-800">No matches found. Try updating your preferences.</p>;
   }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {matches.map(user => (

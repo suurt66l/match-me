@@ -4,21 +4,80 @@ import ErrorParagraph from "../atoms/ErrorParagraph";
 import SuccessParagraph from "../atoms/SuccessParagraph";
 import SaveButton from "../atoms/SaveButton";
 import GameTimeInputBlock from "../molecules/GameTimeInputBlock";
-import GamesInputBlock from "../molecules/GamesInputBlock";
-import GameGenresInputBlock from "../molecules/GameGenresInput";
-import LookingForInputBlock from "../molecules/LookingForSelectBlock";
-import PlatformSelectBlock from "../molecules/PlatfromSelectBlock";
+import GameGenresSelectorBlock from "../molecules/GameGenresSelectorBlock";
+import LookingForSelectorBlock from "../molecules/LookingForSelectorBlock";
+import PlatformSelectorBlock from "../molecules/PlatfromSelectorBlock";
 import IntensityInputBlock from "../molecules/IntensityInputBlock";
+
+import GamesSelectorBlock from "../molecules/GamesSelectorBlock";
+import { timeZones } from "../../data/timezones";
+
+interface Option {
+  readonly label: string;
+  readonly value: string;
+}
+
+function createOption (label: string): Option {
+  return ({
+    label,
+    value: label
+  });
+}
+
+// Tepmorary Dataset
+/*//////////////////////////////////////////////////////////////////// */
+const DEFAULT_GENRES = [
+  "MOBA",
+  "FPS",
+  "Strategy",
+  "RPG"
+]
+const DEFAULT_GAMES = [
+  "CS:GO",
+  "DOTA 2",
+  "Warhamer",
+  "Snake"
+]
+const DEFAULT_PLATFORMS = [
+  "PC",
+  "PlayStation 5",
+  "XBox One",
+  "Nintendo Switch"
+]
+const GameOptions: Option[] = DEFAULT_GAMES.map(createOption)
+const GenreOptions: Option[] = DEFAULT_GENRES.map(createOption)
+const PlatformOptions: Option[] = DEFAULT_PLATFORMS.map(createOption)
+/*//////////////////////////////////////////////////////////////////// */
+
+
+const DEFAULT_LOOKING_FOR = [
+  "Play together",
+  "Friendship",
+  "Just to chat",
+  "Relationships IRL"
+]
+
+const TimeZoneOptions: Option[] = timeZones.map(createOption) 
+const LookingForOptions: Option[] = DEFAULT_LOOKING_FOR.map(createOption) 
+
+function optionsFromDatabase(options: string): Option[]{
+  return options ? options.split(",").map(createOption) : [];
+}
+
+function optionsToDatabase(options: readonly Option[]): string{
+  return options.map(option => option.value).join(",");
+}
+
 
 export default function PreferencesForm() {
   const [gameTimeFrom, setGameTimeFrom] = useState<string>("");
   const [gameTimeTo, setGameTimeTo] = useState<string>("");
-  const [timeZone, setTimeZone] = useState<string>("");
-  const [games, setGames] = useState<string>("");
-  const [gameGenres, setGameGenres] = useState<string>("");
-  const [lookingFor, setLookingFor] = useState<string>("");
-  const [platform, setPlatform] = useState<string>("");
-  const [intensity, setIntensity] = useState<string>("");
+  const [timeZone, setTimeZone] = useState<Option | null>(null);
+  const [games, setGames] = useState<Option[]>([]);
+  const [gameGenres, setGameGenres] = useState<Option[]>([]);
+  const [lookingFor, setLookingFor] = useState<Option[]>([]);
+  const [platforms, setPlatforms] = useState<Option[]>([]);
+  const [intensity, setIntensity] = useState<string>("5");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -26,7 +85,7 @@ export default function PreferencesForm() {
 
   /* Load profile data on the start */
   useEffect(() => {
-    async function loadBio() {
+    async function loadPreferences() {
       try {
         const response = await fetch("http://localhost:8080/api/me/bio", {
           headers: { "Authorization": `Bearer ${token}` },
@@ -36,20 +95,21 @@ export default function PreferencesForm() {
           // Backend field names differ from frontend state names — map them here
           const timeRange: string = data.timeRange ?? "";
           const [from, to] = timeRange.includes("-") ? timeRange.split("-") : [timeRange, ""];
+          
           setGameTimeFrom(from);
           setGameTimeTo(to);
-          setTimeZone(data.timezone ?? "");
-          setGames(data.gamePreference ?? "");
-          setGameGenres(data.gameGenrePreference ?? "");
-          setLookingFor(data.lookingFor ?? "");
-          setPlatform(data.platforms ?? "");
-          setIntensity(data.intensity ?? "");
+          setTimeZone(data.timezone ? createOption(data.timezone) : null);
+          setGames(optionsFromDatabase(data.gamePreference));
+          setGameGenres(optionsFromDatabase(data.gameGenrePreference));
+          setLookingFor(optionsFromDatabase(data.lookingFor));
+          setPlatforms(optionsFromDatabase(data.platforms));
+          setIntensity(data.intensity ?? "5");
         }
       } catch {
-        // Server unreachable — form starts empty
+        console.log("Can't load preferences. Server isn't available! ")
       }
     }
-    loadBio();
+    loadPreferences();
   }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
@@ -57,14 +117,15 @@ export default function PreferencesForm() {
     setError(null);
     setSuccess(null);
 
+    // Prepare data for sending to Backend
     // Map frontend state names back to backend field names
     const body: Record<string, string> = {};
     if (gameTimeFrom || gameTimeTo) body.timeRange = `${gameTimeFrom}-${gameTimeTo}`;
-    if (timeZone) body.timezone = timeZone;
-    if (games) body.gamePreference = games;
-    if (gameGenres) body.gameGenrePreference = gameGenres;
-    if (lookingFor) body.lookingFor = lookingFor;
-    if (platform) body.platforms = platform;
+    if (timeZone) body.timezone = timeZone.value; 
+    if (games) body.gamePreference = optionsToDatabase(games);
+    if (gameGenres) body.gameGenrePreference = optionsToDatabase(gameGenres);
+    if (lookingFor) body.lookingFor = optionsToDatabase(lookingFor);
+    if (platforms) body.platforms = optionsToDatabase(platforms);
     if (intensity) body.intensity = intensity;
 
     try {
@@ -98,15 +159,17 @@ export default function PreferencesForm() {
           <GameTimeInputBlock
             setGameTimeFrom={setGameTimeFrom}
             setGameTimeTo={setGameTimeTo}
-            setTimeZone={setTimeZone}
             gameTimeFrom={gameTimeFrom}
             gameTimeTo={gameTimeTo}
+
+            setTimeZone={setTimeZone}
             timeZone={timeZone}
+            timeZoneOptions={TimeZoneOptions}
           />
-          <GamesInputBlock setGames={setGames} value={games} />
-          <GameGenresInputBlock setGameGenres={setGameGenres} value={gameGenres} />
-          <LookingForInputBlock setLookingFor={setLookingFor} value={lookingFor} />
-          <PlatformSelectBlock setPlatform={setPlatform} value={platform} />
+          <GamesSelectorBlock setGames={setGames} gameOptions={GameOptions} value={games} />
+          <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={GenreOptions} value={gameGenres} />
+          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
+          <LookingForSelectorBlock setLookingFor={setLookingFor} lookingForOptions={LookingForOptions} value={lookingFor} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
           {error && <ErrorParagraph errorMsg={error} />}
