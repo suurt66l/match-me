@@ -24,31 +24,6 @@ function createOption (label: string): Option {
   });
 }
 
-// Tepmorary Dataset
-/*//////////////////////////////////////////////////////////////////// */
-const DEFAULT_GENRES = [
-  "MOBA",
-  "FPS",
-  "Strategy",
-  "RPG"
-]
-const DEFAULT_GAMES = [
-  "CS:GO",
-  "DOTA 2",
-  "Warhamer",
-  "Snake"
-]
-const DEFAULT_PLATFORMS = [
-  "PC",
-  "PlayStation 5",
-  "XBox One",
-  "Nintendo Switch"
-]
-const GameOptions: Option[] = DEFAULT_GAMES.map(createOption)
-const GenreOptions: Option[] = DEFAULT_GENRES.map(createOption)
-const PlatformOptions: Option[] = DEFAULT_PLATFORMS.map(createOption)
-/*//////////////////////////////////////////////////////////////////// */
-
 
 const DEFAULT_LOOKING_FOR = [
   "Play together",
@@ -81,6 +56,10 @@ export default function PreferencesForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [gameOptions, setGameOptions] = useState<Option[]>([]);
+  const [genreOptions, setGenreOptions] = useState<Option[]>([]);
+  const [platformOptions, setPlatformOptions] = useState<Option[]>([]);
+
   const { token } = useAuth();
 
   /* Load profile data on the start */
@@ -109,7 +88,33 @@ export default function PreferencesForm() {
         console.log("Can't load preferences. Server isn't available! ")
       }
     }
+
+    async function loadOptions() {
+      try{
+        // Games Options
+        const resGameOpts = await fetch("http://localhost:8080/api/lookup/games", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataGameOpts: string[] = await resGameOpts.json();
+        setGameOptions(dataGameOpts.map(createOption));
+        // Genre Options
+        const resGenreOpts = await fetch("http://localhost:8080/api/lookup/genres", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataGenreOpts: string[] = await resGenreOpts.json();
+        setGenreOptions(dataGenreOpts.map(createOption));
+        // Platform Options
+        const resPlatfromOpts = await fetch("http://localhost:8080/api/lookup/platforms", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataPlatfromOpts: string[] = await resPlatfromOpts.json();
+        setPlatformOptions(dataPlatfromOpts.map(createOption));
+      } catch {
+        console.log("Server is unreachable! Can't retrieve data from the server.")
+      }
+    }
     loadPreferences();
+    loadOptions();
   }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
@@ -166,9 +171,9 @@ export default function PreferencesForm() {
             timeZone={timeZone}
             timeZoneOptions={TimeZoneOptions}
           />
-          <GamesSelectorBlock setGames={setGames} gameOptions={GameOptions} value={games} />
-          <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={GenreOptions} value={gameGenres} />
-          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
+          <GamesSelectorBlock setGames={setGames} gameOptions={gameOptions} value={games} />
+          <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={genreOptions} value={gameGenres} />
+          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={platformOptions}  value={platforms} />
           <LookingForSelectorBlock setLookingFor={setLookingFor} lookingForOptions={LookingForOptions} value={lookingFor} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
 
