@@ -5,6 +5,7 @@ interface Message {
   recipientId: number;
   content: string;
   timestamp: string;
+  read: boolean;
 }
 
 interface Props {

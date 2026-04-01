@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.web.DTO.MessageDto;
+import com.example.web.DTO.ReadReceiptDto;
 import com.example.web.DTO.TypingNotificationDto;
 import com.example.web.Entity.Message;
 import com.example.web.Entity.User;
@@ -81,6 +82,20 @@ public class ChatService {
             recipient.getEmail(),
             "/queue/typing",
             new TypingNotificationDto(sender.getId(), typing)
+        );
+    }
+
+    @Transactional
+    public void markMessagesAsRead(String readerEmail, Long senderId) {
+        User reader = userRepository.findByEmail(readerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        messageRepository.markAsRead(reader, sender);
+        messagingTemplate.convertAndSendToUser(
+            sender.getEmail(),
+            "/queue/read-receipts",
+            new ReadReceiptDto(reader.getId())
         );
     }
 

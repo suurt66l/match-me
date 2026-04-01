@@ -33,6 +33,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     stompClient.activate();
 
     return () => {
+      if (stompClient.connected) {
+        stompClient.publish({ destination: "/app/chat.offline", body: "{}" });
+      }
       stompClient.deactivate();
       setClient(null);
     };

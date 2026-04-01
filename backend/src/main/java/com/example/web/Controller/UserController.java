@@ -67,10 +67,10 @@ public class UserController {
         }
         Optional<Connection> connectionOpt = connectionService.findBetweenUsers(viewer, target);
         if (connectionOpt.isEmpty()) {
-            return true; // no connection > strangers > allowed
+            return false; // no connection — strangers cannot view profiles
         }
         Connection conn = connectionOpt.get();
-        return conn.getStatus() != ConnectionStatus.REJECTED && conn.getStatus() != ConnectionStatus.BLOCKED;
+        return conn.getStatus() == ConnectionStatus.ACCEPTED || conn.getStatus() == ConnectionStatus.PENDING;
     }
 
     // GET /users/{id}

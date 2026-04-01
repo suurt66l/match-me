@@ -47,6 +47,7 @@ export default function BioForm() {
   const [aboutMe, setAboutMe] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
+  const [removePicture, setRemovePicture] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -121,8 +122,14 @@ export default function BioForm() {
         body: JSON.stringify({ aboutMe }),
       });
 
-      // Upload picture if a new one was selected
-      if (profilePicture) {
+      // Remove picture if flagged, otherwise upload new one if selected
+      if (removePicture) {
+        await fetch("http://localhost:8080/api/me/picture", {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        setRemovePicture(false);
+      } else if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
         await fetch("http://localhost:8080/api/me/picture", {
@@ -131,6 +138,7 @@ export default function BioForm() {
           body: formData,
         });
       }
+
 
       if (!bioResponse.ok || !profileResponse.ok) {
         setError("Something went wrong while saving.");
@@ -143,12 +151,18 @@ export default function BioForm() {
     }
   }
 
+  function handleRemovePicture() {
+    setRemovePicture(true);
+    setExistingAvatarUrl(null);
+    setProfilePicture(null);
+  }
+
   return (
     <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-          <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} />
+          <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} onRemove={handleRemovePicture} />
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
           <GenderSelectorBlock setGender={setGender} options={GenderOptions} value={gender} />
           <LocationSelectorBlock setContinent={setContinent} options={ContinentsOptions} value={continent} />
