@@ -67,10 +67,13 @@ public class UserController {
         }
         Optional<Connection> connectionOpt = connectionService.findBetweenUsers(viewer, target);
         if (connectionOpt.isEmpty()) {
-            return false; // no connection — strangers cannot view profiles
+            // No connection record at all — user may be recommended. Allow viewing.
+            // Only BLOCKED status should prevent access.
+            return true;
         }
         Connection conn = connectionOpt.get();
-        return conn.getStatus() == ConnectionStatus.ACCEPTED || conn.getStatus() == ConnectionStatus.PENDING;
+        // BLOCKED means one user explicitly blocked the other — deny access
+        return conn.getStatus() != ConnectionStatus.BLOCKED;
     }
 
     // GET /users/{id}
@@ -99,9 +102,12 @@ public class UserController {
         }
         
         //3. otherwise return data
-        //placeholder profile picture if null
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        return ResponseEntity.ok(new UserSummaryDto(
+            user.getId(), user.getNickname(), picUrl,
+            "/api/users/" + id + "/profile",
+            "/api/users/" + id + "/bio"
+        ));
     }
 
     // GET /users/{id}/profile

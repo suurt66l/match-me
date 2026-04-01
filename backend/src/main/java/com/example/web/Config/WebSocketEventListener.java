@@ -8,7 +8,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.example.web.DTO.StatusDto;
-import com.example.web.Entity.Connection;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.ConnectionService;
@@ -59,16 +58,15 @@ public class WebSocketEventListener {
     // Sends a status update to each of the user's accepted connections via their private queue.
     // This ensures strangers never learn about this user's online/offline status.
     private void notifyConnections(User user, boolean online) {
-        for (Connection conn : connectionService.getAcceptedConnections(user)) {
-            // Get the other person in this connection (not the user who changed status)
-            User other = conn.getRequester().getId().equals(user.getId())
-                    ? conn.getAddressee()
-                    : conn.getRequester();
-            messagingTemplate.convertAndSendToUser(
+        // Get IDs of all accepted connections, then look up each one to send the notification
+        connectionService.getAcceptedConnectionIds(user).forEach(connId ->
+            userRepository.findById(connId).ifPresent(other ->
+                messagingTemplate.convertAndSendToUser(
                     other.getEmail(),
                     "/queue/status",
                     new StatusDto(user.getId(), online)
-            );
-        }
+                )
+            )
+        );
     }
 }

@@ -32,4 +32,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Transactional
     @Query("UPDATE Message m SET m.read = true WHERE m.recipient = :recipient AND m.sender = :sender AND m.read = false")
     void markAsRead(@Param("recipient") User recipient, @Param("sender") User sender);
+
+    // Returns the timestamp of the latest message between the given user and each of their conversation partners.
+    // Used to sort the chat sidebar by most recently active conversation.
+    @Query("SELECT CASE WHEN m.sender = :user THEN m.recipient.id ELSE m.sender.id END, MAX(m.timestamp) " +
+           "FROM Message m WHERE m.sender = :user OR m.recipient = :user " +
+           "GROUP BY CASE WHEN m.sender = :user THEN m.recipient.id ELSE m.sender.id END")
+    List<Object[]> findLastMessageTimePerConversation(@Param("user") User user);
 }

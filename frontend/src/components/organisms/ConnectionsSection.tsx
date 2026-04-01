@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
 import PendingCard from "./PendingCard";
 import SentCard from "./SentCard";
@@ -29,7 +28,6 @@ export default function ConnectionsSection() {
   const [pending, setPending] = useState<UserData[]>([]);
   const [sent, setSent] = useState<UserData[]>([]);
   const { token } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     loadConnections();
@@ -45,14 +43,49 @@ export default function ConnectionsSection() {
     return () => clearInterval(interval);
   }, [token]);
 
+  async function fetchUserDetails(id: number): Promise<UserData | null> {
+    try {
+      const [summaryRes, bioRes, profileRes] = await Promise.all([
+        fetch(`http://localhost:8080/api/users/${id}`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { "Authorization": `Bearer ${token}` } }),
+      ]);
+      if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
+      const summary = await summaryRes.json();
+      const bio = await bioRes.json();
+      const profile = await profileRes.json();
+      return {
+        connectionId: 0,
+        requesterId: 0,
+        id: summary.id,
+        nickname: summary.nickname,
+        avatarUrl: summary.profilePictureUrl || null,
+        country: bio.location ?? "",
+        dateOfBirth: bio.dateOfBirth ?? "",
+        games: bio.gamePreference ?? "",
+        gameGenres: bio.gameGenrePreference ?? "",
+        platform: bio.platforms ?? "",
+        lookingFor: bio.lookingFor ?? "",
+        intensity: bio.intensity ?? "",
+        timeRange: bio.timeRange ?? "",
+        aboutMe: profile.aboutMe ?? "",
+        matchedFields: [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
   async function loadConnections() {
     try {
+      // Fetch IDs only, then load details for each
       const response = await fetch("http://localhost:8080/api/connections", {
         headers: { "Authorization": `Bearer ${token}` },
       });
       if (response.ok) {
-        const data = await response.json();
-        setConnections(data);
+        const ids: number[] = await response.json();
+        const users = await Promise.all(ids.map(id => fetchUserDetails(id)));
+        setConnections(users.filter((u): u is UserData => u !== null));
       }
     } catch {
       console.log("Server is unreachable!");
@@ -99,10 +132,10 @@ export default function ConnectionsSection() {
     }
   }
 
-  async function removeConnection(connectionId: number) {
-    setConnections(connections.filter(item => item.connectionId !== connectionId));
+  async function removeConnection(userId: number) {
+    setConnections(connections.filter(item => item.id !== userId));
     try {
-      await fetch(`http://localhost:8080/api/connections/dismiss/${connectionId}`, {
+      await fetch(`http://localhost:8080/api/connections/with/${userId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -195,7 +228,7 @@ export default function ConnectionsSection() {
               <div key={user.id}>
                 <ConnectionCard
                   user={user}
-                  onDismiss={() => removeConnection(user.connectionId)}
+                  onDismiss={() => removeConnection(user.id)}
                   onBlock={() => blockConnection(user.id)}
                 />
               </div>

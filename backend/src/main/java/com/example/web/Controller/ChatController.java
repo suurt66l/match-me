@@ -93,16 +93,15 @@ public class ChatController {
         userRepository.findByEmail(auth.getName()).ifPresent(user -> {
             onlineStatusRegistry.setOffline(user.getId());
             // Notify only accepted connections — same targeted approach as the event listener
-            for (var conn : connectionService.getAcceptedConnections(user)) {
-                var other = conn.getRequester().getId().equals(user.getId())
-                        ? conn.getAddressee()
-                        : conn.getRequester();
-                messagingTemplate.convertAndSendToUser(
+            connectionService.getAcceptedConnectionIds(user).forEach(connId ->
+                userRepository.findById(connId).ifPresent(other ->
+                    messagingTemplate.convertAndSendToUser(
                         other.getEmail(),
                         "/queue/status",
                         new StatusDto(user.getId(), false)
-                );
-            }
+                    )
+                )
+            );
         });
     }
 }

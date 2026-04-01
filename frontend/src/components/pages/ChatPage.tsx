@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [onlineIds, setOnlineIds] = useState<Set<number>>(new Set());
   const [messages, setMessages] = useState<Message[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<number, number>>({});
+  const [lastActive, setLastActive] = useState<Record<number, string>>({});
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [myId, setMyId] = useState<number | null>(null);
@@ -54,14 +55,34 @@ export default function ChatPage() {
   }, [token]);
 
   useEffect(() => {
+    async function fetchConnectionDetails(id: number): Promise<Connection | null> {
+      try {
+        const res = await fetch(`http://localhost:8080/api/users/${id}`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return {
+          connectionId: 0,
+          id: data.id,
+          nickname: data.nickname,
+          avatarUrl: data.profilePictureUrl || null,
+          isOnline: false,
+        };
+      } catch {
+        return null;
+      }
+    }
+
     async function loadConnections() {
       try {
         const res = await fetch("http://localhost:8080/api/connections", {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (res.ok) {
-          const data = await res.json();
-          setConnections(data.map((c: Connection) => ({ ...c, isOnline: false })));
+          const ids: number[] = await res.json();
+          const users = await Promise.all(ids.map(id => fetchConnectionDetails(id)));
+          setConnections(users.filter((u): u is Connection => u !== null));
         }
         const unreadRes = await fetch("http://localhost:8080/api/chat/unread", {
           headers: { "Authorization": `Bearer ${token}` },
@@ -79,6 +100,14 @@ export default function ChatPage() {
           const data: number[] = await onlineRes.json();
           setOnlineIds(new Set(data));
         }
+        // Load last message timestamp per conversation for sidebar sorting
+        const lastActiveRes = await fetch("http://localhost:8080/api/chat/last-active", {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (lastActiveRes.ok) {
+          const data: Record<number, string> = await lastActiveRes.json();
+          setLastActive(data);
+        }
       } catch { /* unreachable */ }
     }
     loadConnections();
@@ -92,6 +121,8 @@ export default function ChatPage() {
     const subMessages = client.subscribe("/user/queue/messages", (frame) => {
       const msg: Message = JSON.parse(frame.body);
       setMessages(prev => [...prev, msg]);
+      // Update last active time so sidebar re-sorts to put this conversation first
+      setLastActive(prev => ({ ...prev, [msg.senderId]: msg.timestamp }));
       if (msg.senderId !== activeId) {
         // Message is from someone other than the open chat — increment their unread badge
         setUnreadCounts(prev => ({ ...prev, [msg.senderId]: (prev[msg.senderId] ?? 0) + 1 }));
@@ -110,8 +141,8 @@ export default function ChatPage() {
       if (data.senderId === activeId) setIsTyping(data.typing);
     });
 
-    // Shared handler for both status channels below
-    function handleStatusUpdate(frame: { body: string }) {
+    // /user/queue/status — backend pushes status changes only for this user's accepted connections
+    const subStatus = client.subscribe("/user/queue/status", (frame) => {
       const data = JSON.parse(frame.body);
       // Update the Set without touching the connections array — avoids overwriting online state on re-render
       setOnlineIds(prev => {
@@ -120,14 +151,7 @@ export default function ChatPage() {
         else next.delete(data.userId);
         return next;
       });
-    }
-
-    // /topic/status — broadcasts to everyone when any user goes online/offline
-    const subStatus = client.subscribe("/topic/status", handleStatusUpdate);
-    // /user/queue/status — backend replies here with the initial status of this user's connections
-    const subMyStatus = client.subscribe("/user/queue/status", handleStatusUpdate);
-    // Request initial statuses after subscribing (backend can't push before we're subscribed)
-    client.publish({ destination: "/app/status.request", body: "{}" });
+    });
 
     // Read receipts — backend sends this when the recipient reads our messages (triggers ✓✓)
     const subReceipts = client.subscribe("/user/queue/read-receipts", (frame) => {
@@ -143,7 +167,6 @@ export default function ChatPage() {
       subMessages.unsubscribe();
       subTyping.unsubscribe();
       subStatus.unsubscribe();
-      subMyStatus.unsubscribe();
       subReceipts.unsubscribe();
     };
   }, [client, activeId]);
@@ -204,13 +227,15 @@ export default function ChatPage() {
       destination: "/app/chat.typing",
       body: JSON.stringify({ recipientId: activeId, typing: false }),
     });
+    const now = new Date().toISOString();
     setMessages(prev => [...prev, {
       senderId: myId,
       recipientId: activeId,
       content: text,
-      timestamp: new Date().toISOString(),
+      timestamp: now,
       read: false,
     }]);
+    setLastActive(prev => ({ ...prev, [activeId]: now }));
     setInput("");
   }
 
@@ -221,7 +246,13 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen bg-amber-300">
       <ChatSidebar
-        connections={connections.map(c => ({ ...c, isOnline: onlineIds.has(c.id) }))}
+        connections={connections
+          .map(c => ({ ...c, isOnline: onlineIds.has(c.id) }))
+          .sort((a, b) => {
+            const ta = lastActive[a.id] ?? "";
+            const tb = lastActive[b.id] ?? "";
+            return tb.localeCompare(ta); // most recent first
+          })}
         activeId={activeId}
         unreadCounts={unreadCounts}
         onSelect={(id) => setSearchParams({ with: String(id) })}

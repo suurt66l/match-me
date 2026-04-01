@@ -65,7 +65,10 @@ public class MeController {
             return ResponseEntity.notFound().build();
         }
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail(),
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
     // PUT /api/me/account — update nickname, email, password (only fields that are provided)
@@ -86,7 +89,10 @@ public class MeController {
         }
         userRepository.save(user);
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail(),
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
     // GET /api/me
@@ -97,7 +103,11 @@ public class MeController {
             return ResponseEntity.notFound().build();
         }
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        return ResponseEntity.ok(new UserSummaryDto(
+            user.getId(), user.getNickname(), picUrl,
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
     // GET /api/me/profile
@@ -209,7 +219,10 @@ public class MeController {
 
         // Return updated summary
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl,
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
     @DeleteMapping("/picture")

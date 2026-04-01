@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+
 import com.example.web.DTO.MessageDto;
 import com.example.web.DTO.ReadReceiptDto;
 import com.example.web.Entity.Message;
@@ -71,6 +73,19 @@ public class ChatHistoryController {
         Page<MessageDto> dtoPage = messagePage.map(this::convertToDto);
         return ResponseEntity.ok(dtoPage);
         }
+
+    // Returns a map of userId -> ISO timestamp of the last message exchanged with that user.
+    // The frontend uses this to sort the chat sidebar by most recently active conversation.
+    @GetMapping("/last-active")
+    public ResponseEntity<Map<Long, String>> getLastActive() {
+        User currentUser = getCurrentUser();
+        List<Object[]> rows = messageRepository.findLastMessageTimePerConversation(currentUser);
+        Map<Long, String> result = new HashMap<>();
+        for (Object[] row : rows) {
+            result.put((Long) row[0], row[1].toString());
+        }
+        return ResponseEntity.ok(result);
+    }
 
     @GetMapping("/online")
     public ResponseEntity<Set<Long>> getOnlineUsers() {
