@@ -7,11 +7,11 @@ interface Props {
 
 export default function Header( { onMenuToggle } : Props ) {
     return(
-        <div>
+        <div className="flex items-center w-full px-4 py-2 gap-3">
             <Logo />
-            <HamburgerButton
-            onMenuToggle = {onMenuToggle} 
-            />
+            <div className="flex-1 flex justify-end">
+                <HamburgerButton onMenuToggle={onMenuToggle} />
+            </div>
         </div>
     );
 }

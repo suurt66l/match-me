@@ -244,7 +244,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen bg-amber-300">
+    <div className="flex h-dvh bg-amber-300">
       <ChatSidebar
         connections={connections
           .map(c => ({ ...c, isOnline: onlineIds.has(c.id) }))

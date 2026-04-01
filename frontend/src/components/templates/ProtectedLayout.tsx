@@ -20,8 +20,13 @@ export default function ProtectedLayout() {
             </div>
             <div className="relative flex flex-1">
                 { /* SideBar */}
-                <div className={`absolute z-50 w-64 bg-amber-500 ${isMenuOpen ? "block" : "hidden"} lg:block lg:relative`}>
-                    <NavMenu onMenuToggle = {toggleMenu} />
+                <div className={`absolute right-0 z-50 w-64 ${isMenuOpen ? "block" : "hidden"} lg:block lg:relative lg:right-auto`}>
+                    <div className="lg:hidden bg-amber-500/90 rounded-bl-xl shadow-xl px-2 py-2">
+                        <NavMenu onMenuToggle={toggleMenu} />
+                    </div>
+                    <div className="hidden lg:block bg-amber-500 h-full">
+                        <NavMenu onMenuToggle={toggleMenu} />
+                    </div>
                 </div>
 
                 { /* Main Zone */}
