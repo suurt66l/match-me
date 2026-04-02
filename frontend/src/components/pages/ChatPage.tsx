@@ -30,6 +30,9 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [myId, setMyId] = useState<number | null>(null);
+  // Pagination state for chat history
+  const [historyPage, setHistoryPage] = useState(0);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeId = searchParams.get("with") ? Number(searchParams.get("with")) : null;
   const activeUser = connections.find(c => c.id === activeId) ?? null;
@@ -38,6 +41,8 @@ export default function ChatPage() {
   const { client } = useWebSocket();
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // When true, the next messages state update is a history load — skip auto-scroll to bottom
+  const skipScrollRef = useRef(false);
 
   useEffect(() => {
     async function loadMe() {
@@ -188,7 +193,7 @@ export default function ChatPage() {
   // Loads the last 50 messages and marks all unread messages from that user as read.
   useEffect(() => {
     // No conversation selected — clear the message list and stop showing typing indicator
-    if (!activeId) { setMessages([]); setIsTyping(false); return; }
+    if (!activeId) { setMessages([]); setIsTyping(false); setHasMoreHistory(false); setHistoryPage(0); return; }
     async function loadHistory() {
       try {
         // page=0&size=50 means "give me the first page of 50 messages" (newest 50)
@@ -200,6 +205,9 @@ export default function ChatPage() {
           // The API returns messages newest-first (for efficient pagination).
           // We reverse them so the oldest message appears at the top of the chat window.
           setMessages([...data.content].reverse());
+          // `last` is false when there are more pages of older messages to load
+          setHasMoreHistory(!data.last);
+          setHistoryPage(0);
         }
         if (client) {
           // Tell the server these messages have been read — triggers a read receipt
@@ -217,8 +225,29 @@ export default function ChatPage() {
     setIsTyping(false);
   }, [activeId, token]);
 
-  // Scroll to the bottom of the message list whenever a new message arrives
+  // Loads the next page of older messages and prepends them to the top of the list.
+  // The scroll position is preserved so the user stays at the same place.
+  async function loadMoreHistory() {
+    if (!activeId || !token) return;
+    const nextPage = historyPage + 1;
+    try {
+      const res = await fetch(`http://localhost:8080/api/chat/history/${activeId}?page=${nextPage}&size=50`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Prepend older messages to the top — reverse because API returns newest-first
+        skipScrollRef.current = true;
+        setMessages(prev => [...[...data.content].reverse(), ...prev]);
+        setHasMoreHistory(!data.last);
+        setHistoryPage(nextPage);
+      }
+    } catch { /* unreachable */ }
+  }
+
+  // Scroll to the bottom when a new message arrives, but not when loading older history
   useEffect(() => {
+    if (skipScrollRef.current) { skipScrollRef.current = false; return; }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -299,7 +328,8 @@ export default function ChatPage() {
         myId={myId}
         isTyping={isTyping}
         input={input}
-
+        hasMoreHistory={hasMoreHistory}
+        onLoadMore={loadMoreHistory}
         onInputChange={handleInputChange}
         onSend={sendMessage}
         onKeyDown={handleKeyDown}
