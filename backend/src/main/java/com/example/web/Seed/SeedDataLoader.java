@@ -1,6 +1,7 @@
 package com.example.web.Seed;
 
 import com.example.web.Entity.User;
+import com.example.web.Repository.ConnectionRepository;
 import com.example.web.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,10 +23,12 @@ import java.util.List;
 public class SeedDataLoader {
 
     private final UserRepository userRepository;
+    private final ConnectionRepository connectionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public SeedDataLoader(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public SeedDataLoader(UserRepository userRepository, ConnectionRepository connectionRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.connectionRepository = connectionRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -117,6 +120,13 @@ public class SeedDataLoader {
             "New to competitive gaming but learning fast. Patient teammates welcome.",
         };
 
+        // Other-region options per home continent — all continents except own
+        String[][] openToByLocation = {
+            {"North America", "Asia"},           // Europe users can expand to these
+            {"Europe", "Asia"},                  // North America users can expand to these
+            {"Europe", "North America", "Antarctica"},         // Asia users can expand to these
+        };
+
         for (int i = 0; i < 120; i++) {
             int emailNum = i + 10;
             String email = "test" + emailNum + "@test.com";
@@ -128,13 +138,21 @@ public class SeedDataLoader {
             int locIdx   = i % locationTimezone.length;
             int timeIdx  = i % timeRanges.length;
 
-            // Use 1 or 2 games from the same group — creates matching clusters
+            // Use 1 or 2 games from the same group — creates natural matching clusters
             String userGames  = (i % 3 == 0)
                 ? gameGroups[groupIdx][0]
                 : gameGroups[groupIdx][0] + ", " + gameGroups[groupIdx][1];
 
             String userGenres = genreGroups[groupIdx][0] + ", " + genreGroups[groupIdx][1];
             String userPlats  = platformGroups[groupIdx];
+
+            // Vary cross-region openness: 1/4 same-region-only, 1/4 one other, 1/2 all other
+            String[] otherRegions = openToByLocation[locIdx];
+            String openToOtherRegions = switch (i % 4) {
+                case 0 -> null;                                          // same region only
+                case 1 -> otherRegions[0];                              // one other region
+                default -> otherRegions[0] + ", " + otherRegions[1];   // both other regions
+            };
 
             User user = new User();
             user.setEmail(email);
@@ -151,6 +169,7 @@ public class SeedDataLoader {
             user.setLookingFor(lookingFor[i % lookingFor.length]);
             user.setIntensity(intensities[i % intensities.length]);
             user.setAboutMe(aboutMeTexts[i % aboutMeTexts.length]);
+            user.setOpenToOtherRegions(openToOtherRegions);
 
             userRepository.save(user);
         }
@@ -173,6 +192,8 @@ public class SeedDataLoader {
                     }
                 })
                 .toList();
+        // Delete connections first to avoid foreign key violations
+        seeded.forEach(u -> connectionRepository.deleteAll(connectionRepository.findAllByUser(u)));
         userRepository.deleteAll(seeded);
         return ResponseEntity.ok("Deleted " + seeded.size() + " seeded users.");
     }

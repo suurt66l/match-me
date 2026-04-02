@@ -16,4 +16,8 @@ public class UpdateBioRequest {
     private String platforms; 
     private String intensity;
     private String location;
+    private String openToOtherRegions;
+    private String preferredGenders;
+    private Integer preferredAgeMin;
+    private Integer preferredAgeMax;
 }

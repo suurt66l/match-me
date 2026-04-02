@@ -33,14 +33,6 @@ export default function ConnectionsSection() {
     loadConnections();
     loadPending();
     loadSent();
-
-    const interval = setInterval(() => {
-      loadConnections();
-      loadPending();
-      loadSent();
-    }, 2000);
-
-    return () => clearInterval(interval);
   }, [token]);
 
   async function fetchUserDetails(id: number): Promise<UserData | null> {

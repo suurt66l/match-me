@@ -24,7 +24,7 @@ export default function ProtectedLayout() {
                     <div className="lg:hidden bg-amber-500/90 rounded-bl-xl shadow-xl px-2 py-2">
                         <NavMenu onMenuToggle={toggleMenu} />
                     </div>
-                    <div className="hidden lg:block bg-amber-500 h-full">
+                    <div className="hidden lg:block bg-amber-500 h-full px-2 pt-1">
                         <NavMenu onMenuToggle={toggleMenu} />
                     </div>
                 </div>

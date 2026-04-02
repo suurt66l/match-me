@@ -27,6 +27,7 @@ import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Security.JwtUtil;
 import com.example.web.Service.ConnectionService;
+import com.example.web.Service.MatchingService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -34,6 +35,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final ConnectionService connectionService;
+    private final MatchingService matchingService;
 
     private boolean isAuthenticated() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -43,10 +45,11 @@ public class UserController {
              authentication.getPrincipal().equals("anonymousUser"));
 }
     
-    public UserController(UserRepository userRepository, JwtUtil jwtUtil, ConnectionService connectionService) {
+    public UserController(UserRepository userRepository, JwtUtil jwtUtil, ConnectionService connectionService, MatchingService matchingService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.connectionService = connectionService;
+        this.matchingService = matchingService;
     }
 
     // helper to get current user from email
@@ -67,9 +70,9 @@ public class UserController {
         }
         Optional<Connection> connectionOpt = connectionService.findBetweenUsers(viewer, target);
         if (connectionOpt.isEmpty()) {
-            // No connection record at all — user may be recommended. Allow viewing.
-            // Only BLOCKED status should prevent access.
-            return true;
+            // No connection record — allow only if they have a positive compatibility score
+            // (i.e., they would appear in each other's recommendations)
+            return matchingService.hasPositiveScore(viewer, target);
         }
         Connection conn = connectionOpt.get();
         // BLOCKED means one user explicitly blocked the other — deny access
@@ -168,7 +171,11 @@ public class UserController {
             user.getLookingFor(),
             user.getPlatforms(),
             user.getIntensity(),
-            user.getLocation()
+            user.getLocation(),
+            user.getOpenToOtherRegions(),
+            user.getPreferredGenders(),
+            user.getPreferredAgeMin(),
+            user.getPreferredAgeMax()
         );
         return ResponseEntity.ok(bio);
     }

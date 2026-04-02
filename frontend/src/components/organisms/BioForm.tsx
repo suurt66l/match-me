@@ -5,6 +5,7 @@ import SuccessParagraph from "../atoms/SuccessParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
 import GenderSelectorBlock from "../molecules/GenderSelectorBlock";
 import LocationSelectorBlock from "../molecules/LocationSelectorBlock";
+import OtherRegionsSelectorBlock from "../molecules/OtherRegionsSelectorBlock";
 import AboutMeInputBlock from "../molecules/AboutMeInputBlock";
 import ProfilePictureBlock from "../molecules/ProfilePictureBlock";
 import SaveButton from "../atoms/SaveButton";
@@ -44,6 +45,7 @@ export default function BioForm() {
   const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [gender, setGender] = useState<Option | null>(null);
   const [continent, setContinent] = useState<Option | null>(null);
+  const [openToOtherRegions, setOpenToOtherRegions] = useState<Option[]>([]);
   const [aboutMe, setAboutMe] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
@@ -65,6 +67,11 @@ export default function BioForm() {
           setDateOfBirth(bio.dateOfBirth ?? "");
           setGender(bio.gender ? createOption(bio.gender) : null);
           setContinent(bio.location ? createOption(bio.location) : null);
+          setOpenToOtherRegions(
+            bio.openToOtherRegions
+              ? bio.openToOtherRegions.split(",").map((s: string) => s.trim()).filter(Boolean).map(createOption)
+              : []
+          );
         }
 
         // aboutMe and avatar come from separate endpoints
@@ -102,6 +109,7 @@ export default function BioForm() {
       if (gender) bioBody.gender = gender.value;
       if (dateOfBirth) bioBody.dateOfBirth = dateOfBirth;
       if (continent) bioBody.location = continent.value;
+      bioBody.openToOtherRegions = openToOtherRegions.map(o => o.value).join(", ");
 
       const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
         method: "PUT",
@@ -166,6 +174,13 @@ export default function BioForm() {
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
           <GenderSelectorBlock setGender={setGender} options={GenderOptions} value={gender} />
           <LocationSelectorBlock setContinent={setContinent} options={ContinentsOptions} value={continent} />
+
+          <OtherRegionsSelectorBlock
+            setRegions={setOpenToOtherRegions}
+            options={ContinentsOptions.filter(o => o.value !== continent?.value)}
+            value={openToOtherRegions}
+          />
+
           <AboutMeInputBlock setAboutMe={setAboutMe} value={aboutMe} />
 
           {error && <ErrorParagraph errorMsg={error} />}

@@ -34,8 +34,12 @@ public class User {
     private String platforms; // PC, Xbox, etc
     private String intensity; // gaming intensity, e.g. casual to sweaty
     private String location;
+    private String openToOtherRegions; // comma-separated list of additional regions the user is open to matching with
+    private String preferredGenders;   // comma-separated genders the user wants to match with (null = any)
+    private Integer preferredAgeMin;   // minimum age of preferred match (null = no limit)
+    private Integer preferredAgeMax;   // maximum age of preferred match (null = no limit)
 
-    private String profilePictureUrl; 
+    private String profilePictureUrl;
 
     @Column(length=2000)
     private String aboutMe; 
