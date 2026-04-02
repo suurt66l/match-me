@@ -13,6 +13,7 @@ interface UserData {
   avatarUrl: string | null;
   country: string;
   dateOfBirth: string;
+  gender: string;
   games: string;
   gameGenres: string;
   platform: string;
@@ -50,15 +51,13 @@ export default function ConnectionsSection() {
 
   async function fetchUserDetails(id: number): Promise<UserData | null> {
     try {
-      const [summaryRes, bioRes, profileRes] = await Promise.all([
+      const [summaryRes, bioRes] = await Promise.all([
         fetch(`http://localhost:8080/api/users/${id}`, { headers: { "Authorization": `Bearer ${token}` } }),
         fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { "Authorization": `Bearer ${token}` } }),
       ]);
-      if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
+      if (!summaryRes.ok || !bioRes.ok) return null;
       const summary = await summaryRes.json();
       const bio = await bioRes.json();
-      const profile = await profileRes.json();
       return {
         connectionId: 0,
         requesterId: 0,
@@ -67,13 +66,14 @@ export default function ConnectionsSection() {
         avatarUrl: summary.profilePictureUrl || null,
         country: bio.location ?? "",
         dateOfBirth: bio.dateOfBirth ?? "",
-        games: bio.gamePreference ?? "",
-        gameGenres: bio.gameGenrePreference ?? "",
-        platform: bio.platforms ?? "",
-        lookingFor: bio.lookingFor ?? "",
-        intensity: bio.intensity ?? "",
-        timeRange: bio.timeRange ?? "",
-        aboutMe: profile.aboutMe ?? "",
+        gender: bio.gender ?? "",
+        games: "",
+        gameGenres: "",
+        platform: "",
+        lookingFor: "",
+        intensity: "",
+        timeRange: "",
+        aboutMe: "",
         matchedFields: [],
       };
     } catch {

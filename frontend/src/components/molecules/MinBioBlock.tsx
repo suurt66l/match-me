@@ -2,24 +2,25 @@ import Avatar from "../atoms/Avatar";
 import Identity from "../atoms/Identity";
 
 interface Props {
-    avatarUrl: string | null
+    avatarUrl: string | null;
     nickname: string;
     country: string;
     age: string | null;
+    gender?: string;
 }
 
-export default function MinBioBlock({avatarUrl, nickname, country, age}: Props){
+export default function MinBioBlock({avatarUrl, nickname, country, age, gender}: Props){
     return(
       <div className="flex items-center gap-4">
         <Avatar avatarUrl={avatarUrl}/>
         <div>
-          <Identity 
+          <Identity
             nickname={nickname}
             country={country}
             age={age}
+            gender={gender}
           />
         </div>
       </div>
-
-    )
+    );
 }

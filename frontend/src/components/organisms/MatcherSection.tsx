@@ -8,6 +8,7 @@ interface MatchUser {
   avatarUrl: string | null;
   country: string;
   dateOfBirth: string;
+  gender: string;
   games: string;
   gameGenres: string;
   platform: string;
@@ -53,7 +54,7 @@ function computeMatchedFields(myBio: Record<string, string>, candidateBio: Recor
   return matched;
 }
 
-export default function MatcherSection() {
+export default function gMatcherSection() {
   const [matches, setMatches] = useState<MatchUser[]>([]);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { token } = useAuth();
@@ -76,6 +77,7 @@ export default function MatcherSection() {
         avatarUrl: summary.profilePictureUrl || null,
         country: bio.location ?? "",
         dateOfBirth: bio.dateOfBirth ?? "",
+        gender: bio.gender ?? "",
         games: bio.gamePreference ?? "",
         gameGenres: bio.gameGenrePreference ?? "",
         platform: bio.platforms ?? "",

@@ -10,6 +10,7 @@ import ProtectedLayout from './components/templates/ProtectedLayout';
 import ConnectionsPage from './components/pages/ConnectionsPage';
 import ChatPage from './components/pages/ChatPage';
 import ProfilePage from './components/pages/ProfilePage';
+import UserProfilePage from './components/pages/UserProfilePage';
 import Page404 from './components/pages/Page404';
 import GuestLayout from './components/templates/GuestLayout';
 
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/connections" element={ <ConnectionsPage /> } />
                 <Route path="/chat" element={ <ChatPage /> } />
                 <Route path="/profile" element={ <ProfilePage /> } />
+                <Route path="/user/:id" element={ <UserProfilePage /> } />
               </Route>
             </Route>
 
