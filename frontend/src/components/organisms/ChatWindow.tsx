@@ -15,6 +15,7 @@ interface Message {
   recipientId: number;
   content: string;
   timestamp: string;
+  read: boolean;
 }
 
 interface Props {
@@ -46,7 +47,7 @@ export default function ChatWindow({ activeId, activeUser, messages, myId, isTyp
               myId={myId}
               bottomRef={bottomRef}/>
 
-            <MessageInputBlock 
+            <MessageInputBlock
                 input={input}
                 onInputChange={onInputChange}
                 onKeyDown={onKeyDown}

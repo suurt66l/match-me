@@ -13,12 +13,12 @@ export default function ProtectedLayout() {
 
     return (
         <WebSocketProvider>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col h-dvh">
             { /* Header */}
-            <div className="flex items-center min-w-screen bg-amber-600">
+            <div className="flex items-center min-w-screen bg-amber-600 shrink-0">
                 <Header onMenuToggle = {toggleMenu} />
             </div>
-            <div className="relative flex flex-1">
+            <div className="relative flex flex-1 overflow-hidden">
                 { /* SideBar */}
                 <div className={`absolute right-0 z-50 w-64 ${isMenuOpen ? "block" : "hidden"} lg:block lg:relative lg:right-auto`}>
                     <div className="lg:hidden bg-amber-500/90 rounded-bl-xl shadow-xl px-2 py-2">
@@ -30,7 +30,7 @@ export default function ProtectedLayout() {
                 </div>
 
                 { /* Main Zone */}
-                <div className="flex-1 bg-amber-300">
+                <div className="flex-1 overflow-y-auto bg-amber-300">
                     <Outlet />
                 </div>
             </div>

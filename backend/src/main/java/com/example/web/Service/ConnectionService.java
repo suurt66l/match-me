@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.web.Entity.Connection;
@@ -19,10 +20,12 @@ import jakarta.transaction.Transactional;
 public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public ConnectionService(ConnectionRepository connectionRepository, UserRepository userRepository) {
+    public ConnectionService(ConnectionRepository connectionRepository, UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
         this.connectionRepository = connectionRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public Optional<Connection> findBetweenUsers(User user1, User user2) {
@@ -63,7 +66,10 @@ public class ConnectionService {
         connection.setRequester(requester);
         connection.setAddressee(addressee);
         connection.setStatus(ConnectionStatus.PENDING);
-        return connectionRepository.save(connection);
+        Connection saved = connectionRepository.save(connection);
+        // Notify the addressee so their Connections page updates in real time
+        messagingTemplate.convertAndSendToUser(addressee.getEmail(), "/queue/connections", "update");
+        return saved;
     }
 
     // accept a pending request (only the addressee can accept)
@@ -81,7 +87,10 @@ public class ConnectionService {
         }
 
         connection.setStatus(ConnectionStatus.ACCEPTED);
-        return connectionRepository.save(connection);
+        Connection saved = connectionRepository.save(connection);
+        // Notify the requester so their Connections page updates in real time
+        messagingTemplate.convertAndSendToUser(connection.getRequester().getEmail(), "/queue/connections", "update");
+        return saved;
     }
 
     // reject a pending request (either the addressee or the requester can reject)

@@ -103,10 +103,8 @@ public class ChatService {
         User otherUser = userRepository.findById(otherUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (!connectionService.areConnected(currentUser, otherUser)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not connected to this user");
-        }
-
+        // History is always readable — even after a connection is dismissed or blocked.
+        // Write access is still guarded separately in sendMessage.
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
         return messageRepository.findConversation(currentUser, otherUser, pageable);
     }

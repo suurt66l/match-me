@@ -34,9 +34,9 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     void markAsRead(@Param("recipient") User recipient, @Param("sender") User sender);
 
     // Returns the timestamp of the latest message between the given user and each of their conversation partners.
-    // Used to sort the chat sidebar by most recently active conversation.
-    @Query("SELECT CASE WHEN m.sender = :user THEN m.recipient.id ELSE m.sender.id END, MAX(m.timestamp) " +
-           "FROM Message m WHERE m.sender = :user OR m.recipient = :user " +
-           "GROUP BY CASE WHEN m.sender = :user THEN m.recipient.id ELSE m.sender.id END")
-    List<Object[]> findLastMessageTimePerConversation(@Param("user") User user);
+    // Uses IDs in the CASE expression to avoid Hibernate rejecting entity comparisons in GROUP BY.
+    @Query("SELECT CASE WHEN m.sender.id = :userId THEN m.recipient.id ELSE m.sender.id END, MAX(m.timestamp) " +
+           "FROM Message m WHERE m.sender.id = :userId OR m.recipient.id = :userId " +
+           "GROUP BY CASE WHEN m.sender.id = :userId THEN m.recipient.id ELSE m.sender.id END")
+    List<Object[]> findLastMessageTimePerConversation(@Param("userId") Long userId);
 }

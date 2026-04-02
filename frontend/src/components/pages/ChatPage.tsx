@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
 import { useWebSocket } from "../../utils/WebSocketContext";
@@ -54,7 +54,13 @@ export default function ChatPage() {
     if (token) loadMe();
   }, [token]);
 
-  useEffect(() => {
+  // useCallback keeps the function reference stable across renders.
+  // Without it, every render would create a new function object, which would cause
+  // the useEffect below to re-run on every render — triggering infinite API calls.
+  const loadConnections = useCallback(async () => {
+    if (!token) return;
+
+    // Fetches a single user's display info (name, avatar) by their ID
     async function fetchConnectionDetails(id: number): Promise<Connection | null> {
       try {
         const res = await fetch(`http://localhost:8080/api/users/${id}`, {
@@ -67,55 +73,61 @@ export default function ChatPage() {
           id: data.id,
           nickname: data.nickname,
           avatarUrl: data.profilePictureUrl || null,
-          isOnline: false,
+          isOnline: false, // online state is managed separately via onlineIds
         };
       } catch {
         return null;
       }
     }
 
-    async function loadConnections() {
-      try {
-        const res = await fetch("http://localhost:8080/api/connections", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const ids: number[] = await res.json();
-          const users = await Promise.all(ids.map(id => fetchConnectionDetails(id)));
-          setConnections(users.filter((u): u is Connection => u !== null));
-        }
-        const unreadRes = await fetch("http://localhost:8080/api/chat/unread", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (unreadRes.ok) {
-          const data = await unreadRes.json();
-          setUnreadCounts(data);
-        }
-        // Seed the initial online state from REST so we don't depend on WebSocket timing.
-        // Real-time updates after this come from the /topic/status subscription.
-        const onlineRes = await fetch("http://localhost:8080/api/chat/online", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (onlineRes.ok) {
-          const data: number[] = await onlineRes.json();
-          setOnlineIds(new Set(data));
-        }
-        // Load last message timestamp per conversation for sidebar sorting
-        const lastActiveRes = await fetch("http://localhost:8080/api/chat/last-active", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (lastActiveRes.ok) {
-          const data: Record<number, string> = await lastActiveRes.json();
-          setLastActive(data);
-        }
-      } catch { /* unreachable */ }
-    }
-    loadConnections();
+    try {
+      // Fire all four requests simultaneously instead of one after another —
+      // Promise.all waits for all of them to finish before continuing
+      const [connRes, unreadRes, onlineRes, lastActiveRes] = await Promise.all([
+        fetch("http://localhost:8080/api/connections", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("http://localhost:8080/api/chat/unread", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("http://localhost:8080/api/chat/online", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("http://localhost:8080/api/chat/last-active", { headers: { "Authorization": `Bearer ${token}` } }),
+      ]);
+
+      // GET /api/connections returns just a list of user IDs — we then fetch each one's details
+      const activeIds: number[] = connRes.ok ? await connRes.json() : [];
+      const activeUsers = await Promise.all(activeIds.map(id => fetchConnectionDetails(id)));
+
+      // Filter out any nulls (users whose profiles couldn't be loaded)
+      setConnections(activeUsers.filter((u): u is Connection => u !== null));
+
+      // Unread counts: { userId -> number } — drives the red badge on each sidebar entry
+      if (unreadRes.ok) setUnreadCounts(await unreadRes.json());
+      // Online IDs come from REST on load; real-time updates arrive via WebSocket subscription
+      if (onlineRes.ok) setOnlineIds(new Set(await onlineRes.json()));
+      // Last active timestamps: { userId -> ISO string } — used to sort sidebar by most recent
+      if (lastActiveRes.ok) setLastActive(await lastActiveRes.json());
+    } catch { /* unreachable */ }
   }, [token]);
+
+  useEffect(() => {
+    loadConnections();
+  }, [loadConnections]);
+
+  // Re-seed online status each time the WebSocket connects.
+  // The initial loadConnections REST call can race with other users connecting,
+  // so we re-fetch once the socket is confirmed up to get an accurate snapshot.
+  useEffect(() => {
+    if (!client || !token) return;
+    fetch("http://localhost:8080/api/chat/online", {
+      headers: { "Authorization": `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then((ids: number[]) => setOnlineIds(new Set(ids)));
+  }, [client, token]);
 
   // Set up all WebSocket subscriptions. Re-runs when the client connects or the active chat changes.
   useEffect(() => {
     if (!client) return;
+
+    // Connection list updates (new request received, request accepted)
+    const subConnections = client.subscribe("/user/queue/connections", () => loadConnections());
 
     // Incoming messages delivered by the backend to this user's private queue
     const subMessages = client.subscribe("/user/queue/messages", (frame) => {
@@ -164,30 +176,40 @@ export default function ChatPage() {
 
     // Clean up all subscriptions when the component unmounts or dependencies change
     return () => {
+      subConnections.unsubscribe();
       subMessages.unsubscribe();
       subTyping.unsubscribe();
       subStatus.unsubscribe();
       subReceipts.unsubscribe();
     };
-  }, [client, activeId]);
+  }, [client, activeId, loadConnections]);
 
+  // Runs whenever the user selects a different conversation.
+  // Loads the last 50 messages and marks all unread messages from that user as read.
   useEffect(() => {
+    // No conversation selected — clear the message list and stop showing typing indicator
     if (!activeId) { setMessages([]); setIsTyping(false); return; }
     async function loadHistory() {
       try {
+        // page=0&size=50 means "give me the first page of 50 messages" (newest 50)
         const res = await fetch(`http://localhost:8080/api/chat/history/${activeId}?page=0&size=50`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
+          // The API returns messages newest-first (for efficient pagination).
+          // We reverse them so the oldest message appears at the top of the chat window.
           setMessages([...data.content].reverse());
         }
         if (client) {
+          // Tell the server these messages have been read — triggers a read receipt
+          // on the other user's screen (their sent messages get a ✓✓ checkmark)
           client.publish({
             destination: "/app/chat.read",
             body: JSON.stringify({ senderId: activeId }),
           });
         }
+        // Clear the unread badge for this conversation in the sidebar
         setUnreadCounts(prev => ({ ...prev, [activeId as number]: 0 }));
       } catch { /* unreachable */ }
     }
@@ -195,10 +217,14 @@ export default function ChatPage() {
     setIsTyping(false);
   }, [activeId, token]);
 
+  // Scroll to the bottom of the message list whenever a new message arrives
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Called on every keystroke in the input field.
+  // Sends a "typing: true" event to the other user and automatically stops it after 2 seconds
+  // of inactivity — so the typing indicator disappears if the user stops typing.
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInput(e.target.value);
     if (!client || !activeId) return;
@@ -206,6 +232,7 @@ export default function ChatPage() {
       destination: "/app/chat.typing",
       body: JSON.stringify({ recipientId: activeId, typing: true }),
     });
+    // Reset the 2-second timer each time the user types a character
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       client.publish({
@@ -218,15 +245,23 @@ export default function ChatPage() {
   function sendMessage() {
     const text = input.trim();
     if (!text || !activeId || !client || myId === null) return;
+
+    // Publish the message to the backend via WebSocket — the backend saves it and forwards
+    // it to the recipient's private queue (/user/queue/messages)
     client.publish({
       destination: "/app/chat.send",
       body: JSON.stringify({ recipientId: activeId, content: text }),
     });
+
+    // Stop the typing indicator immediately when a message is sent
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     client.publish({
       destination: "/app/chat.typing",
       body: JSON.stringify({ recipientId: activeId, typing: false }),
     });
+
+    // Optimistically add the message to the local state so it appears instantly,
+    // without waiting for the server to echo it back
     const now = new Date().toISOString();
     setMessages(prev => [...prev, {
       senderId: myId,
@@ -244,7 +279,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-dvh bg-amber-300">
+    <div className="flex h-full overflow-hidden bg-amber-300">
       <ChatSidebar
         connections={connections
           .map(c => ({ ...c, isOnline: onlineIds.has(c.id) }))
@@ -264,6 +299,7 @@ export default function ChatPage() {
         myId={myId}
         isTyping={isTyping}
         input={input}
+
         onInputChange={handleInputChange}
         onSend={sendMessage}
         onKeyDown={handleKeyDown}
