@@ -15,6 +15,7 @@ interface Message {
   recipientId: number;
   content: string;
   timestamp: string;
+  read: boolean;
 }
 
 interface Props {
@@ -24,6 +25,8 @@ interface Props {
   myId: number | null;
   isTyping: boolean;
   input: string;
+  hasMoreHistory: boolean;
+  onLoadMore: () => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -31,7 +34,7 @@ interface Props {
   bottomRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function ChatWindow({ activeId, activeUser, messages, myId, isTyping, input, onInputChange, onSend, onKeyDown, onBack, bottomRef }: Props) {
+export default function ChatWindow({ activeId, activeUser, messages, myId, isTyping, input, hasMoreHistory, onLoadMore, onInputChange, onSend, onKeyDown, onBack, bottomRef }: Props) {
   return (
     <div className={`flex-col flex-1 min-w-0 ${activeId ? "flex" : "hidden sm:flex"}`}>
       {activeUser ? (
@@ -41,12 +44,14 @@ export default function ChatWindow({ activeId, activeUser, messages, myId, isTyp
                 activeUserName={activeUser.nickname}
                 onBack={onBack}/>
 
-            <MessagesBlock 
+            <MessagesBlock
               messages={messages}
               myId={myId}
+              hasMoreHistory={hasMoreHistory}
+              onLoadMore={onLoadMore}
               bottomRef={bottomRef}/>
 
-            <MessageInputBlock 
+            <MessageInputBlock
                 input={input}
                 onInputChange={onInputChange}
                 onKeyDown={onKeyDown}

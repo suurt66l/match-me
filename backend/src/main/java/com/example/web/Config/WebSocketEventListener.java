@@ -14,8 +14,16 @@ import com.example.web.Service.ConnectionService;
 import com.example.web.Service.OnlineStatusRegistry;
 
 /**
- * Listens for WebSocket connect/disconnect events fired by Spring automatically.
- * Notifies only the user's accepted connections — not all users on the server.
+ * Listens for WebSocket connect/disconnect events that Spring fires automatically.
+ *
+ * When a user opens the app, their browser establishes a WebSocket connection.
+ * When they close the tab or log out, the connection closes.
+ * Spring detects both events and calls the methods below.
+ *
+ * On each event we:
+ *   1. Update the in-memory OnlineStatusRegistry (who is currently online)
+ *   2. Notify only that user's accepted connections — not everyone on the server —
+ *      so users can't find out who is online unless they are already friends.
  */
 @Component
 public class WebSocketEventListener {
@@ -31,18 +39,28 @@ public class WebSocketEventListener {
         this.connectionService = connectionService;
     }
 
+    /**
+     * Fires when a user's browser successfully opens a WebSocket connection.
+     * We add them to the online registry and tell their friends they came online.
+     */
     @EventListener
     public void handleConnect(SessionConnectedEvent event) {
+        // StompHeaderAccessor lets us read the headers from the CONNECT frame,
+        // including the authenticated user that our JWT interceptor attached
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         if (accessor.getUser() == null) return;
         String email = accessor.getUser().getName();
         userRepository.findByEmail(email).ifPresent(user -> {
             onlineStatusRegistry.setOnline(user.getId());
-            // Send online notification only to this user's accepted connections
             notifyConnections(user, true);
         });
     }
 
+    /**
+     * Fires when a user's WebSocket connection closes (clean logout/navigation).
+     * For hard tab closes (browser killed), this is triggered via the sendBeacon
+     * REST endpoint instead — see ChatHistoryController.goOffline().
+     */
     @EventListener
     public void handleDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
@@ -50,15 +68,18 @@ public class WebSocketEventListener {
         String email = accessor.getUser().getName();
         userRepository.findByEmail(email).ifPresent(user -> {
             onlineStatusRegistry.setOffline(user.getId());
-            // Send offline notification only to this user's accepted connections
             notifyConnections(user, false);
         });
     }
 
-    // Sends a status update to each of the user's accepted connections via their private queue.
-    // This ensures strangers never learn about this user's online/offline status.
+    /**
+     * Pushes an online/offline status update to each of the given user's accepted connections.
+     *
+     * convertAndSendToUser sends to a specific user's private queue — only they receive it.
+     * The destination "/queue/status" is prefixed with "/user/" internally by Spring,
+     * so the full destination becomes "/user/{email}/queue/status".
+     */
     private void notifyConnections(User user, boolean online) {
-        // Get IDs of all accepted connections, then look up each one to send the notification
         connectionService.getAcceptedConnectionIds(user).forEach(connId ->
             userRepository.findById(connId).ifPresent(other ->
                 messagingTemplate.convertAndSendToUser(

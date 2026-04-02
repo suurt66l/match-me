@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { useWebSocket } from "../../utils/WebSocketContext";
 import PendingCard from "./PendingCard";
 import SentCard from "./SentCard";
 import ConnectionCard from "./ConnectionCard";
@@ -28,12 +29,24 @@ export default function ConnectionsSection() {
   const [pending, setPending] = useState<UserData[]>([]);
   const [sent, setSent] = useState<UserData[]>([]);
   const { token } = useAuth();
+  const { client } = useWebSocket();
 
   useEffect(() => {
     loadConnections();
     loadPending();
     loadSent();
   }, [token]);
+
+  // Re-load when the backend signals a connection change (new request or accepted)
+  useEffect(() => {
+    if (!client) return;
+    const sub = client.subscribe("/user/queue/connections", () => {
+      loadConnections();
+      loadPending();
+      loadSent();
+    });
+    return () => sub.unsubscribe();
+  }, [client]);
 
   async function fetchUserDetails(id: number): Promise<UserData | null> {
     try {
