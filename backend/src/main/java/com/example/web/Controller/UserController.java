@@ -27,6 +27,7 @@ import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Security.JwtUtil;
 import com.example.web.Service.ConnectionService;
+import com.example.web.Service.MatchingService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -34,6 +35,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final ConnectionService connectionService;
+    private final MatchingService matchingService;
 
     private boolean isAuthenticated() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -43,10 +45,11 @@ public class UserController {
              authentication.getPrincipal().equals("anonymousUser"));
 }
     
-    public UserController(UserRepository userRepository, JwtUtil jwtUtil, ConnectionService connectionService) {
+    public UserController(UserRepository userRepository, JwtUtil jwtUtil, ConnectionService connectionService, MatchingService matchingService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.connectionService = connectionService;
+        this.matchingService = matchingService;
     }
 
     // helper to get current user from email
@@ -67,10 +70,13 @@ public class UserController {
         }
         Optional<Connection> connectionOpt = connectionService.findBetweenUsers(viewer, target);
         if (connectionOpt.isEmpty()) {
-            return true; // no connection > strangers > allowed
+            // No connection record — allow only if they have a positive compatibility score
+            // (i.e., they would appear in each other's recommendations)
+            return matchingService.hasPositiveScore(viewer, target);
         }
         Connection conn = connectionOpt.get();
-        return conn.getStatus() != ConnectionStatus.REJECTED && conn.getStatus() != ConnectionStatus.BLOCKED;
+        // BLOCKED means one user explicitly blocked the other — deny access
+        return conn.getStatus() != ConnectionStatus.BLOCKED;
     }
 
     // GET /users/{id}
@@ -99,9 +105,12 @@ public class UserController {
         }
         
         //3. otherwise return data
-        //placeholder profile picture if null
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        return ResponseEntity.ok(new UserSummaryDto(
+            user.getId(), user.getNickname(), picUrl,
+            "/api/users/" + id + "/profile",
+            "/api/users/" + id + "/bio"
+        ));
     }
 
     // GET /users/{id}/profile
@@ -162,7 +171,11 @@ public class UserController {
             user.getLookingFor(),
             user.getPlatforms(),
             user.getIntensity(),
-            user.getLocation()
+            user.getLocation(),
+            user.getOpenToOtherRegions(),
+            user.getPreferredGenders(),
+            user.getPreferredAgeMin(),
+            user.getPreferredAgeMax()
         );
         return ResponseEntity.ok(bio);
     }

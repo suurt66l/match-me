@@ -1,4 +1,5 @@
 import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
 
 
 interface Option {
@@ -15,7 +16,7 @@ interface Props {
 
 export default function MultiSelect({ options, value, placeholder = "Select...", onChange }: Props) {
   return (
-    <Select
+    <CreatableSelect
         isMulti
         options={options}
         value={value}

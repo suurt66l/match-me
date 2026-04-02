@@ -124,11 +124,14 @@ public class ConnectionService {
     }
 
     // get all accepted connections for a user, returning full Connection objects
+    @Transactional
     public List<Connection> getAcceptedConnections(User user) {
         return connectionRepository.findAllAcceptedByUser(user);
     }
 
     // get all accepted connections (friends) for a user, returning list of user IDs
+    // @Transactional keeps the Hibernate session open so lazy-loaded fields (requester, addressee) are accessible
+    @Transactional
     public List<Long> getAcceptedConnectionIds(User user) {
         List<Connection> connections = connectionRepository.findAllAcceptedByUser(user);
         return connections.stream()
@@ -177,6 +180,16 @@ public class ConnectionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not part of this connection");
         }
 
+        connectionRepository.delete(connection);
+    }
+
+    // Disconnect from a user by their ID (used when frontend only has user ID, not connection ID)
+    @Transactional
+    public void dismissByUserId(User currentUser, Long otherUserId) {
+        User other = userRepository.findById(otherUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        Connection connection = connectionRepository.findBetweenUsers(currentUser, other)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Connection not found"));
         connectionRepository.delete(connection);
     }
 

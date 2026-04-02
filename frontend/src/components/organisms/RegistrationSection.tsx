@@ -16,8 +16,8 @@ interface Props {
 export default function RegistrationSection ({ setNickname, setEmail, setPassword, setConfirmPassword, onSubmit, error }: Props) {
   
   return (
-      <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl w-full max-w-sm mx-4 sm:mx-auto">
+        <div className="w-full">
 
           <form onSubmit={onSubmit} method="POST" className="space-y-6">
             <NicknameInputBlock 

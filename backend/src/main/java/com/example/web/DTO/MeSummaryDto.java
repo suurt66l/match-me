@@ -5,9 +5,11 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MeSummaryDto { // for GET /api/me — own profile only, includes email
+public class MeSummaryDto { // for GET /api/me — own profile only, includes email + links
     private Long id;
     private String nickname;
     private String profilePictureUrl;
     private String email;
+    private String profileUrl;
+    private String bioUrl;
 }

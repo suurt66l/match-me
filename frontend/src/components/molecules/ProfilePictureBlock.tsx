@@ -5,9 +5,10 @@ import ProfilePictureInput from "../atoms/ProfilePictureInput";
 interface Props {
     setProfilePicture: (file: File) => void;
     existingAvatarUrl: string | null;
+    onRemove: () => void;
 }
 
-export default function ProfilePictureBlock({ setProfilePicture, existingAvatarUrl }: Props) {
+export default function ProfilePictureBlock({ setProfilePicture, existingAvatarUrl, onRemove }: Props) {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     function handleFileSelect(file: File) {
@@ -17,6 +18,7 @@ export default function ProfilePictureBlock({ setProfilePicture, existingAvatarU
 
     // Show newly selected file preview, saved avatar, or default
     const displayUrl = previewUrl ?? existingAvatarUrl ?? "/assets/default-avatar.svg";
+    const hasPicture = previewUrl !== null || existingAvatarUrl !== null;
 
     return (
         <div>
@@ -28,8 +30,17 @@ export default function ProfilePictureBlock({ setProfilePicture, existingAvatarU
                     className="w-24 h-24 rounded-full object-cover outline-2 outline-white/25"
                 />
             </div>
-            <div className="mt-2">
+            <div className="mt-2 space-y-2">
                 <ProfilePictureInput setProfilePicture={handleFileSelect} />
+                {hasPicture && (
+                    <button
+                        type="button"
+                        onClick={() => { setPreviewUrl(null); onRemove(); }}
+                        className="inline-block text-sm text-white py-1.5 px-3 rounded-md border-0 font-semibold bg-amber-950 hover:bg-amber-900 cursor-pointer"
+                    >
+                        Remove picture
+                    </button>
+                )}
             </div>
         </div>
     );

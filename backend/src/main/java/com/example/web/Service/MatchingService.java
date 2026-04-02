@@ -108,9 +108,18 @@ public class MatchingService {
     }
 
     private Optional<Double> computeScore(User current, User other) {
-        // 1. Location filter (exact match)
-        if (current.getLocation() == null || other.getLocation() == null ||
-                !current.getLocation().equalsIgnoreCase(other.getLocation())) {
+        // 1. Location filter (same region, or either user is open to the other's region)
+        if (!locationsCompatible(current, other)) {
+            return Optional.empty();
+        }
+
+        // 2. Gender preference filter — if the viewer specified preferred genders, the candidate must match
+        if (!genderCompatible(current, other)) {
+            return Optional.empty();
+        }
+
+        // 3. Age preference filter — if the viewer specified an age range, the candidate must fall within it
+        if (!ageCompatible(current, other)) {
             return Optional.empty();
         }
 
@@ -165,6 +174,47 @@ public class MatchingService {
         }
 
         return Optional.of(score);
+    }
+
+    // Returns true if two users would have a positive compatibility score (used for profile visibility)
+    public boolean hasPositiveScore(User a, User b) {
+        if (!locationsCompatible(a, b)) return false;
+        return getTimeOverlapMinutes(a, b) > 0;
+    }
+
+    // Returns true if the two users' locations are compatible for matching
+    // (same region, or either user is open to the other's region)
+    private boolean locationsCompatible(User a, User b) {
+        if (a.getLocation() == null || b.getLocation() == null) return false;
+        if (a.getLocation().equalsIgnoreCase(b.getLocation())) return true;
+        return isOpenToRegion(a, b.getLocation()) || isOpenToRegion(b, a.getLocation());
+    }
+
+    private boolean isOpenToRegion(User user, String region) {
+        if (user.getOpenToOtherRegions() == null || user.getOpenToOtherRegions().isBlank()) return false;
+        return Arrays.stream(user.getOpenToOtherRegions().split(","))
+                .map(String::trim)
+                .anyMatch(r -> r.equalsIgnoreCase(region));
+    }
+
+    // Returns true if the candidate's gender satisfies the viewer's gender preference.
+    // If the viewer has no preference, or the candidate hasn't set a gender, always returns true.
+    private boolean genderCompatible(User viewer, User candidate) {
+        if (viewer.getPreferredGenders() == null || viewer.getPreferredGenders().isBlank()) return true;
+        if (candidate.getGender() == null || candidate.getGender().isBlank()) return true;
+        return Arrays.stream(viewer.getPreferredGenders().split(","))
+                .map(String::trim)
+                .anyMatch(g -> g.equalsIgnoreCase(candidate.getGender()));
+    }
+
+    // Returns true if the candidate's age falls within the viewer's preferred age range.
+    // Bounds that are not set are ignored. Candidates without a date of birth are always included.
+    private boolean ageCompatible(User viewer, User candidate) {
+        if (candidate.getDateOfBirth() == null) return true;
+        int age = java.time.Period.between(candidate.getDateOfBirth(), java.time.LocalDate.now()).getYears();
+        if (viewer.getPreferredAgeMin() != null && age < viewer.getPreferredAgeMin()) return false;
+        if (viewer.getPreferredAgeMax() != null && age > viewer.getPreferredAgeMax()) return false;
+        return true;
     }
 
     private boolean hasTimeOverlap(User current, User other) {

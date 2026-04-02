@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -64,7 +65,10 @@ public class MeController {
             return ResponseEntity.notFound().build();
         }
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail(),
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
     // PUT /api/me/account — update nickname, email, password (only fields that are provided)
@@ -85,51 +89,40 @@ public class MeController {
         }
         userRepository.save(user);
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail()));
+        return ResponseEntity.ok(new MeSummaryDto(user.getId(), user.getNickname(), picUrl, user.getEmail(),
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
     }
 
-    // GET /api/me
+    // GET /api/me — redirects to /api/users/{id} (shortcut so clients don't need to know their own ID)
     @GetMapping
-    public ResponseEntity<UserSummaryDto> getMySummary() {
+    public ResponseEntity<Void> getMySummary() {
         User user = getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        if (user == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.status(302)
+                .header("Location", "/api/users/" + user.getId())
+                .build();
     }
 
-    // GET /api/me/profile
+    // GET /api/me/profile — redirects to /api/users/{id}/profile
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileDto> getMyProfile() {
+    public ResponseEntity<Void> getMyProfile() {
         User user = getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new UserProfileDto(user.getId(), user.getAboutMe()));
+        if (user == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.status(302)
+                .header("Location", "/api/users/" + user.getId() + "/profile")
+                .build();
     }
 
-    // GET /api/me/bio
+    // GET /api/me/bio — redirects to /api/users/{id}/bio
     @GetMapping("/bio")
-    public ResponseEntity<UserBioDto> getMyBio() {
+    public ResponseEntity<Void> getMyBio() {
         User user = getCurrentUser();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        UserBioDto bio = new UserBioDto(
-                user.getId(),
-                user.getGender(),
-                user.getDateOfBirth(),
-                user.getTimezone(),
-                user.getTimeRange(),
-                user.getGamePreference(),
-                user.getGameGenrePreference(),
-                user.getLookingFor(),
-                user.getPlatforms(),
-                user.getIntensity(),
-                user.getLocation()
-        );
-        return ResponseEntity.ok(bio);
+        if (user == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.status(302)
+                .header("Location", "/api/users/" + user.getId() + "/bio")
+                .build();
     }
 
     // PUT /api/me/profile
@@ -165,6 +158,10 @@ public class MeController {
         if (request.getPlatforms() != null) user.setPlatforms(request.getPlatforms());
         if (request.getIntensity() != null) user.setIntensity(request.getIntensity());
         if (request.getLocation() != null) user.setLocation(request.getLocation());
+        if (request.getOpenToOtherRegions() != null) user.setOpenToOtherRegions(request.getOpenToOtherRegions());
+        if (request.getPreferredGenders() != null) user.setPreferredGenders(request.getPreferredGenders());
+        if (request.getPreferredAgeMin() != null) user.setPreferredAgeMin(request.getPreferredAgeMin());
+        if (request.getPreferredAgeMax() != null) user.setPreferredAgeMax(request.getPreferredAgeMax());
 
         userRepository.save(user);
 
@@ -179,7 +176,11 @@ public class MeController {
                 user.getLookingFor(),
                 user.getPlatforms(),
                 user.getIntensity(),
-                user.getLocation()
+                user.getLocation(),
+                user.getOpenToOtherRegions(),
+                user.getPreferredGenders(),
+                user.getPreferredAgeMin(),
+                user.getPreferredAgeMax()
         );
         return ResponseEntity.ok(bio);
     }
@@ -208,6 +209,17 @@ public class MeController {
 
         // Return updated summary
         String picUrl = user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "";
-        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl));
+        return ResponseEntity.ok(new UserSummaryDto(user.getId(), user.getNickname(), picUrl,
+            "/api/users/" + user.getId() + "/profile",
+            "/api/users/" + user.getId() + "/bio"
+        ));
+    }
+
+    @DeleteMapping("/picture")
+    public ResponseEntity<Void> removeProfilePicture() {
+        User user = getCurrentUser();
+        user.setProfilePictureUrl(null);
+        userRepository.save(user);
+        return ResponseEntity.noContent().build();
     }
 }

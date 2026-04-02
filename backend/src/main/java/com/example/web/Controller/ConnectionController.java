@@ -78,35 +78,20 @@ public class ConnectionController {
         return ResponseEntity.noContent().build();
     }
 
-    // GET /api/connections — returns accepted connections with full user info
+    // GET /api/connections — returns list of accepted connection user IDs only
     @GetMapping
-    public ResponseEntity<List<ConnectionUserDto>> getConnections() {
+    public ResponseEntity<List<Long>> getConnections() {
         User currentUser = getCurrentUser();
-        List<ConnectionUserDto> result = connectionService.getAcceptedConnections(currentUser)
-                .stream()
-                .map(conn -> {
-                    // Return the OTHER user's info (not the current user)
-                    User other = conn.getRequester().getId().equals(currentUser.getId())
-                            ? conn.getAddressee()
-                            : conn.getRequester();
-                    return new ConnectionUserDto(
-                            conn.getId(),
-                            other.getId(),
-                            other.getNickname(),
-                            other.getProfilePictureUrl(),
-                            other.getLocation(),
-                            other.getDateOfBirth(),
-                            other.getGamePreference(),
-                            other.getGameGenrePreference(),
-                            other.getPlatforms(),
-                            other.getLookingFor(),
-                            other.getIntensity(),
-                            other.getTimeRange(),
-                            other.getAboutMe()
-                    );
-                })
-                .toList();
-        return ResponseEntity.ok(result);
+        List<Long> ids = connectionService.getAcceptedConnectionIds(currentUser);
+        return ResponseEntity.ok(ids);
+    }
+
+    // DELETE /api/connections/with/{userId} — disconnect from a user by their ID
+    @DeleteMapping("/with/{userId}")
+    public ResponseEntity<Void> disconnectByUserId(@PathVariable Long userId) {
+        User currentUser = getCurrentUser();
+        connectionService.dismissByUserId(currentUser, userId);
+        return ResponseEntity.noContent().build();
     }
 
     // GET /api/connections/pending — returns incoming pending requests

@@ -5,6 +5,7 @@ import SuccessParagraph from "../atoms/SuccessParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
 import GenderSelectorBlock from "../molecules/GenderSelectorBlock";
 import LocationSelectorBlock from "../molecules/LocationSelectorBlock";
+import OtherRegionsSelectorBlock from "../molecules/OtherRegionsSelectorBlock";
 import AboutMeInputBlock from "../molecules/AboutMeInputBlock";
 import ProfilePictureBlock from "../molecules/ProfilePictureBlock";
 import SaveButton from "../atoms/SaveButton";
@@ -44,9 +45,11 @@ export default function BioForm() {
   const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [gender, setGender] = useState<Option | null>(null);
   const [continent, setContinent] = useState<Option | null>(null);
+  const [openToOtherRegions, setOpenToOtherRegions] = useState<Option[]>([]);
   const [aboutMe, setAboutMe] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
+  const [removePicture, setRemovePicture] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -64,6 +67,11 @@ export default function BioForm() {
           setDateOfBirth(bio.dateOfBirth ?? "");
           setGender(bio.gender ? createOption(bio.gender) : null);
           setContinent(bio.location ? createOption(bio.location) : null);
+          setOpenToOtherRegions(
+            bio.openToOtherRegions
+              ? bio.openToOtherRegions.split(",").map((s: string) => s.trim()).filter(Boolean).map(createOption)
+              : []
+          );
         }
 
         // aboutMe and avatar come from separate endpoints
@@ -101,6 +109,7 @@ export default function BioForm() {
       if (gender) bioBody.gender = gender.value;
       if (dateOfBirth) bioBody.dateOfBirth = dateOfBirth;
       if (continent) bioBody.location = continent.value;
+      bioBody.openToOtherRegions = openToOtherRegions.map(o => o.value).join(", ");
 
       const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
         method: "PUT",
@@ -121,8 +130,14 @@ export default function BioForm() {
         body: JSON.stringify({ aboutMe }),
       });
 
-      // Upload picture if a new one was selected
-      if (profilePicture) {
+      // Remove picture if flagged, otherwise upload new one if selected
+      if (removePicture) {
+        await fetch("http://localhost:8080/api/me/picture", {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        setRemovePicture(false);
+      } else if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
         await fetch("http://localhost:8080/api/me/picture", {
@@ -131,6 +146,7 @@ export default function BioForm() {
           body: formData,
         });
       }
+
 
       if (!bioResponse.ok || !profileResponse.ok) {
         setError("Something went wrong while saving.");
@@ -143,15 +159,28 @@ export default function BioForm() {
     }
   }
 
+  function handleRemovePicture() {
+    setRemovePicture(true);
+    setExistingAvatarUrl(null);
+    setProfilePicture(null);
+  }
+
   return (
     <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
-          <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} />
+          <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} onRemove={handleRemovePicture} />
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
           <GenderSelectorBlock setGender={setGender} options={GenderOptions} value={gender} />
           <LocationSelectorBlock setContinent={setContinent} options={ContinentsOptions} value={continent} />
+
+          <OtherRegionsSelectorBlock
+            setRegions={setOpenToOtherRegions}
+            options={ContinentsOptions.filter(o => o.value !== continent?.value)}
+            value={openToOtherRegions}
+          />
+
           <AboutMeInputBlock setAboutMe={setAboutMe} value={aboutMe} />
 
           {error && <ErrorParagraph errorMsg={error} />}

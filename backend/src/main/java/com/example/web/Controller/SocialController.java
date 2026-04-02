@@ -52,33 +52,38 @@ public class SocialController {
         if (user.getLookingFor() == null || user.getLookingFor().isBlank()) missing.add("lookingFor");
         if (user.getIntensity() == null || user.getIntensity().isBlank()) missing.add("intensity");
         if (user.getTimeRange() == null || user.getTimeRange().isBlank()) missing.add("timeRange");
+        if (user.getTimezone() == null || user.getTimezone().isBlank()) missing.add("timezone");
         if (user.getAboutMe() == null || user.getAboutMe().isBlank()) missing.add("aboutMe");
 
         
         return missing;
     }
 
-    // GET /api/recommendations
+    // GET /api/recommendations/complete — check if profile is complete enough to get recommendations.
+    // Returns {complete: true} or {complete: false, missingFields: [...]}
+    @GetMapping("/recommendations/complete")
+    public ResponseEntity<RecommendationsResponseDto> checkProfileComplete() {
+        User currentUser = getCurrentUser();
+        RecommendationsResponseDto response = new RecommendationsResponseDto();
+        List<String> missingFields = getMissingFields(currentUser);
+        response.setComplete(missingFields.isEmpty());
+        response.setMissingFields(missingFields);
+        response.setMatches(new ArrayList<>());
+        return ResponseEntity.ok(response);
+    }
+
+    // GET /api/recommendations — returns a list of up to 10 user IDs, sorted best match first.
+    // Returns 403 if the user's profile is not complete.
     @GetMapping("/recommendations")
-    public ResponseEntity<RecommendationsResponseDto> getRecommendations() {
+    public ResponseEntity<List<Long>> getRecommendations() {
         User currentUser = getCurrentUser();
 
-        RecommendationsResponseDto response = new RecommendationsResponseDto();
-
-        // Check if profile is complete — if not, tell frontend which fields are missing
-        List<String> missingFields = getMissingFields(currentUser);
-
-        System.out.println("Missing fields: " + response.getMissingFields());
-
-        if (!missingFields.isEmpty()) {
-            response.setComplete(false);
-            response.setMissingFields(missingFields);
-            response.setMatches(new ArrayList<>());
-            return ResponseEntity.ok(response);
+        if (!getMissingFields(currentUser).isEmpty()) {
+            return ResponseEntity.status(403).build();
         }
 
-        // Profile is complete - get recommendations, filtering out users with incomplete profiles
-        List<RecommendationItemDto> matches = matchingService.getRecommendations(currentUser.getId())
+        // Filter out incomplete profiles and poor matches (score = 0), cap at 10
+        List<Long> ids = matchingService.getRecommendations(currentUser.getId())
                 .stream()
                 .filter(u ->
                         u.getGames() != null && !u.getGames().isBlank() &&
@@ -92,14 +97,10 @@ public class SocialController {
                         u.getAboutMe() != null && !u.getAboutMe().isBlank() &&
                         u.getScore() > 0
                 )
+                .limit(10)
+                .map(RecommendationItemDto::getId)
                 .collect(java.util.stream.Collectors.toList());
-        response.setComplete(true);
-        response.setMissingFields(new ArrayList<>());
-        response.setMatches(matches);
 
-        System.out.println("I'm sending request");
-        System.out.println("Matches: " + response.getMatches().size());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ids);
     }
 }

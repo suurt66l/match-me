@@ -10,6 +10,8 @@ import PlatformSelectorBlock from "../molecules/PlatfromSelectorBlock";
 import IntensityInputBlock from "../molecules/IntensityInputBlock";
 
 import GamesSelectorBlock from "../molecules/GamesSelectorBlock";
+import PreferredGenderSelectorBlock from "../molecules/PreferredGenderSelectorBlock";
+import PreferredAgeRangeBlock from "../molecules/PreferredAgeRangeBlock";
 import { timeZones } from "../../data/timezones";
 
 interface Option {
@@ -24,31 +26,9 @@ function createOption (label: string): Option {
   });
 }
 
-// Tepmorary Dataset
-/*//////////////////////////////////////////////////////////////////// */
-const DEFAULT_GENRES = [
-  "MOBA",
-  "FPS",
-  "Strategy",
-  "RPG"
-]
-const DEFAULT_GAMES = [
-  "CS:GO",
-  "DOTA 2",
-  "Warhamer",
-  "Snake"
-]
-const DEFAULT_PLATFORMS = [
-  "PC",
-  "PlayStation 5",
-  "XBox One",
-  "Nintendo Switch"
-]
-const GameOptions: Option[] = DEFAULT_GAMES.map(createOption)
-const GenreOptions: Option[] = DEFAULT_GENRES.map(createOption)
-const PlatformOptions: Option[] = DEFAULT_PLATFORMS.map(createOption)
-/*//////////////////////////////////////////////////////////////////// */
 
+const DEFAULT_GENDERS = ["Male", "Female", "Non-binary"];
+const GenderOptions: Option[] = DEFAULT_GENDERS.map(createOption);
 
 const DEFAULT_LOOKING_FOR = [
   "Play together",
@@ -57,8 +37,8 @@ const DEFAULT_LOOKING_FOR = [
   "Relationships IRL"
 ]
 
-const TimeZoneOptions: Option[] = timeZones.map(createOption) 
-const LookingForOptions: Option[] = DEFAULT_LOOKING_FOR.map(createOption) 
+const TimeZoneOptions: Option[] = timeZones.map(createOption)
+const LookingForOptions: Option[] = DEFAULT_LOOKING_FOR.map(createOption)
 
 function optionsFromDatabase(options: string): Option[]{
   return options ? options.split(",").map(createOption) : [];
@@ -78,8 +58,15 @@ export default function PreferencesForm() {
   const [lookingFor, setLookingFor] = useState<Option[]>([]);
   const [platforms, setPlatforms] = useState<Option[]>([]);
   const [intensity, setIntensity] = useState<string>("5");
+  const [preferredGenders, setPreferredGenders] = useState<Option[]>([]);
+  const [preferredAgeMin, setPreferredAgeMin] = useState<string>("");
+  const [preferredAgeMax, setPreferredAgeMax] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [gameOptions, setGameOptions] = useState<Option[]>([]);
+  const [genreOptions, setGenreOptions] = useState<Option[]>([]);
+  const [platformOptions, setPlatformOptions] = useState<Option[]>([]);
 
   const { token } = useAuth();
 
@@ -104,12 +91,41 @@ export default function PreferencesForm() {
           setLookingFor(optionsFromDatabase(data.lookingFor));
           setPlatforms(optionsFromDatabase(data.platforms));
           setIntensity(data.intensity ?? "5");
+          setPreferredGenders(optionsFromDatabase(data.preferredGenders));
+          setPreferredAgeMin(data.preferredAgeMin?.toString() ?? "");
+          setPreferredAgeMax(data.preferredAgeMax?.toString() ?? "");
         }
       } catch {
         console.log("Can't load preferences. Server isn't available! ")
       }
     }
+
+    async function loadOptions() {
+      try{
+        // Games Options
+        const resGameOpts = await fetch("http://localhost:8080/api/lookup/games", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataGameOpts: string[] = await resGameOpts.json();
+        setGameOptions(dataGameOpts.map(createOption));
+        // Genre Options
+        const resGenreOpts = await fetch("http://localhost:8080/api/lookup/genres", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataGenreOpts: string[] = await resGenreOpts.json();
+        setGenreOptions(dataGenreOpts.map(createOption));
+        // Platform Options
+        const resPlatfromOpts = await fetch("http://localhost:8080/api/lookup/platforms", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const dataPlatfromOpts: string[] = await resPlatfromOpts.json();
+        setPlatformOptions(dataPlatfromOpts.map(createOption));
+      } catch {
+        console.log("Server is unreachable! Can't retrieve data from the server.")
+      }
+    }
     loadPreferences();
+    loadOptions();
   }, [token]);
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
@@ -127,6 +143,9 @@ export default function PreferencesForm() {
     if (lookingFor) body.lookingFor = optionsToDatabase(lookingFor);
     if (platforms) body.platforms = optionsToDatabase(platforms);
     if (intensity) body.intensity = intensity;
+    if (preferredGenders.length > 0) body.preferredGenders = optionsToDatabase(preferredGenders);
+    if (preferredAgeMin) body.preferredAgeMin = preferredAgeMin;
+    if (preferredAgeMax) body.preferredAgeMax = preferredAgeMax;
 
     try {
       const response = await fetch("http://localhost:8080/api/me/bio", {
@@ -166,11 +185,13 @@ export default function PreferencesForm() {
             timeZone={timeZone}
             timeZoneOptions={TimeZoneOptions}
           />
-          <GamesSelectorBlock setGames={setGames} gameOptions={GameOptions} value={games} />
-          <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={GenreOptions} value={gameGenres} />
-          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={PlatformOptions}  value={platforms} />
+          <GamesSelectorBlock setGames={setGames} gameOptions={gameOptions} value={games} />
+          <GameGenresSelectorBlock setGameGenres={setGameGenres} genreOptions={genreOptions} value={gameGenres} />
+          <PlatformSelectorBlock setPlatforms={setPlatforms} platformOptions={platformOptions}  value={platforms} />
           <LookingForSelectorBlock setLookingFor={setLookingFor} lookingForOptions={LookingForOptions} value={lookingFor} />
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
+          <PreferredGenderSelectorBlock setGenders={setPreferredGenders} options={GenderOptions} value={preferredGenders} />
+          <PreferredAgeRangeBlock minAge={preferredAgeMin} maxAge={preferredAgeMax} setMinAge={setPreferredAgeMin} setMaxAge={setPreferredAgeMax} />
 
           {error && <ErrorParagraph errorMsg={error} />}
           {success && <SuccessParagraph msg={success} />}

@@ -7,16 +7,31 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+
 import com.example.web.DTO.MessageDto;
+import com.example.web.DTO.ReadReceiptDto;
 import com.example.web.Entity.Message;
 import com.example.web.Entity.User;
+import com.example.web.Repository.MessageRepository;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.ChatService;
+import com.example.web.Service.ConnectionService;
+import com.example.web.Service.OnlineStatusRegistry;
+
+import java.util.Set;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -24,10 +39,18 @@ public class ChatHistoryController {
 
     private final ChatService chatService;
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final OnlineStatusRegistry onlineStatusRegistry;
+    private final ConnectionService connectionService;
 
-    public ChatHistoryController(ChatService chatService, UserRepository userRepository) {
+    public ChatHistoryController(ChatService chatService, UserRepository userRepository, MessageRepository messageRepository, SimpMessagingTemplate messagingTemplate, OnlineStatusRegistry onlineStatusRegistry, ConnectionService connectionService) {
         this.chatService = chatService;
         this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.onlineStatusRegistry = onlineStatusRegistry;
+        this.connectionService = connectionService;
     }
 
     private User getCurrentUser() {
@@ -50,7 +73,56 @@ public class ChatHistoryController {
         Page<MessageDto> dtoPage = messagePage.map(this::convertToDto);
         return ResponseEntity.ok(dtoPage);
         }
-    
+
+    // Returns a map of userId -> ISO timestamp of the last message exchanged with that user.
+    // The frontend uses this to sort the chat sidebar by most recently active conversation.
+    @GetMapping("/last-active")
+    public ResponseEntity<Map<Long, String>> getLastActive() {
+        User currentUser = getCurrentUser();
+        List<Object[]> rows = messageRepository.findLastMessageTimePerConversation(currentUser);
+        Map<Long, String> result = new HashMap<>();
+        for (Object[] row : rows) {
+            result.put((Long) row[0], row[1].toString());
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/online")
+    public ResponseEntity<Set<Long>> getOnlineUsers() {
+        User currentUser = getCurrentUser();
+        List<Long> connectionIds = connectionService.getAcceptedConnectionIds(currentUser);
+        Set<Long> onlineConnectionIds = connectionIds.stream()
+                .filter(onlineStatusRegistry::isOnline)
+                .collect(java.util.stream.Collectors.toSet());
+        return ResponseEntity.ok(onlineConnectionIds);
+    }
+
+    @GetMapping("/unread")
+    public ResponseEntity<Map<Long, Long>> getUnreadCounts() {
+        User currentUser = getCurrentUser();
+        List<Object[]> rows = messageRepository.countUnreadGroupedBySender(currentUser);
+        Map<Long, Long> counts = new HashMap<>();
+        for (Object[] row : rows) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+        return ResponseEntity.ok(counts);
+    }
+
+    @PutMapping("/read/{userId}")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long userId) {
+        User currentUser = getCurrentUser();
+        User sender = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        messageRepository.markAsRead(currentUser, sender);
+        // Notify the sender that their messages were read
+        messagingTemplate.convertAndSendToUser(
+            sender.getEmail(),
+            "/queue/read-receipts",
+            new ReadReceiptDto(currentUser.getId())
+        );
+        return ResponseEntity.noContent().build();
+    }
+
     private MessageDto convertToDto(Message message) {
         return new MessageDto(
             message.getId(),
@@ -61,5 +133,5 @@ public class ChatHistoryController {
             message.isRead()
         );
     }
-    
+
 }

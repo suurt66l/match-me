@@ -21,7 +21,8 @@ public class TimeUtils {
         LocalTime startLocal = LocalTime.parse(parts[0], TIME_FORMATTER);
         LocalTime endLocal = LocalTime.parse(parts[1], TIME_FORMATTER);
 
-        ZoneId zone = ZoneId.of(timezoneId);
+        // Normalize "UTC+1" / "UTC-5" to "UTC+01:00" which Java's ZoneId requires
+        ZoneId zone = ZoneId.of(normalizeUtcOffset(timezoneId));
         // convert to UTC using a reference date (any date, we need to handle wrap-around)
         // Use a fixed non-leap date
         LocalDate refDate = LocalDate.of(2024, 1, 1);
@@ -46,6 +47,20 @@ public class TimeUtils {
             endMinutes += 24 * 60;
         }
         return new int[]{(int) startMinutes, (int) endMinutes};
+    }
+
+    // Converts "UTC+1" or "UTC-5" to "UTC+01:00" which Java's ZoneId.of() requires.
+    // Named timezones like "Europe/Berlin" are returned as-is.
+    private static String normalizeUtcOffset(String tz) {
+        if (tz == null) return "UTC";
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("^UTC([+-])(\\d{1,2})$").matcher(tz);
+        if (m.matches()) {
+            String sign = m.group(1);
+            String hours = String.format("%02d", Integer.parseInt(m.group(2)));
+            return "UTC" + sign + hours + ":00";
+        }
+        return tz;
     }
 
     // calculated overlap in minutes between two intervals of minutes
