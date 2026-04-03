@@ -1,6 +1,8 @@
+import { API_URL } from "../../utils/api";
+
 export default function Avatar({avatarUrl} : {avatarUrl: string | null}){
     const src = avatarUrl
-        ? `http://localhost:8080${avatarUrl}`
+        ? `${API_URL}${avatarUrl}`
         : "/assets/default-avatar.svg";
 
     return(

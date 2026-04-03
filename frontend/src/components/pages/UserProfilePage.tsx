@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
+import { API_URL } from "../../utils/api";
 import UserCard from "../organisms/UserCard";
 import ConnectButton from "../atoms/ConnectButton";
 import DismissButton from "../atoms/DismissButton";
@@ -40,12 +41,12 @@ export default function UserProfilePage() {
     async function load() {
       try {
         const [summaryRes, bioRes, profileRes, connectionsRes, pendingRes, sentRes] = await Promise.all([
-          fetch(`http://localhost:8080/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("http://localhost:8080/api/connections", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("http://localhost:8080/api/connections/pending", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("http://localhost:8080/api/connections/pending/sent", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/connections`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/connections/pending`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/connections/pending/sent`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
         if (!summaryRes.ok) { setLoading(false); return; }
@@ -75,12 +76,12 @@ export default function UserProfilePage() {
         const connectedIds: number[] = connectionsRes.ok ? await connectionsRes.json() : [];
         if (connectedIds.includes(userId)) { setRelationship("connected"); return; }
 
-        const pending = pendingRes.ok ? await pendingRes.json() : [];
-        const pendingMatch = pending.find((c: any) => c.requesterId === userId);
-        if (pendingMatch) { setRelationship("pending_received"); setConnectionId(pendingMatch.id); return; }
+        const pending: { connectionId: number; userId: number }[] = pendingRes.ok ? await pendingRes.json() : [];
+        const pendingMatch = pending.find(c => c.userId === userId);
+        if (pendingMatch) { setRelationship("pending_received"); setConnectionId(pendingMatch.connectionId); return; }
 
-        const sent = sentRes.ok ? await sentRes.json() : [];
-        const sentConn = sent.find((c: any) => c.id === userId);
+        const sent: { connectionId: number; userId: number }[] = sentRes.ok ? await sentRes.json() : [];
+        const sentConn = sent.find(c => c.userId === userId);
         if (sentConn) { setRelationship("pending_sent"); setConnectionId(sentConn.connectionId); return; }
 
         setRelationship("none");
@@ -92,7 +93,7 @@ export default function UserProfilePage() {
   }, [id, token]);
 
   async function handleConnect() {
-    await fetch(`http://localhost:8080/api/connections/request/${id}`, {
+    await fetch(`${API_URL}/api/connections/request/${id}`, {
       method: "POST", headers: { Authorization: `Bearer ${token}` },
     });
     setRelationship("pending_sent");
@@ -100,14 +101,14 @@ export default function UserProfilePage() {
 
   async function handleAccept() {
     if (!connectionId) return;
-    await fetch(`http://localhost:8080/api/connections/accept/${connectionId}`, {
+    await fetch(`${API_URL}/api/connections/accept/${connectionId}`, {
       method: "PUT", headers: { Authorization: `Bearer ${token}` },
     });
     setRelationship("connected");
   }
 
   async function handleDismiss() {
-    await fetch(`http://localhost:8080/api/connections/block/${id}`, {
+    await fetch(`${API_URL}/api/connections/block/${id}`, {
       method: "POST", headers: { Authorization: `Bearer ${token}` },
     });
     navigate(-1);

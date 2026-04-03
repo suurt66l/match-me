@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../utils/AuthContext";
 import { useWebSocket } from "../../utils/WebSocketContext";
+import { API_URL } from "../../utils/api";
 import ChatSidebar from "../organisms/ChatSidebar";
 import ChatWindow from "../organisms/ChatWindow";
 
@@ -47,7 +48,7 @@ export default function ChatPage() {
   useEffect(() => {
     async function loadMe() {
       try {
-        const res = await fetch("http://localhost:8080/api/me", {
+        const res = await fetch(`${API_URL}/api/me`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (res.ok) {
@@ -68,7 +69,7 @@ export default function ChatPage() {
     // Fetches a single user's display info (name, avatar) by their ID
     async function fetchConnectionDetails(id: number): Promise<Connection | null> {
       try {
-        const res = await fetch(`http://localhost:8080/api/users/${id}`, {
+        const res = await fetch(`${API_URL}/api/users/${id}`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (!res.ok) return null;
@@ -89,10 +90,10 @@ export default function ChatPage() {
       // Fire all four requests simultaneously instead of one after another —
       // Promise.all waits for all of them to finish before continuing
       const [connRes, unreadRes, onlineRes, lastActiveRes] = await Promise.all([
-        fetch("http://localhost:8080/api/connections", { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch("http://localhost:8080/api/chat/unread", { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch("http://localhost:8080/api/chat/online", { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch("http://localhost:8080/api/chat/last-active", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/connections`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/chat/unread`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/chat/online`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/chat/last-active`, { headers: { "Authorization": `Bearer ${token}` } }),
       ]);
 
       // GET /api/connections returns just a list of user IDs — we then fetch each one's details
@@ -120,7 +121,7 @@ export default function ChatPage() {
   // so we re-fetch once the socket is confirmed up to get an accurate snapshot.
   useEffect(() => {
     if (!client || !token) return;
-    fetch("http://localhost:8080/api/chat/online", {
+    fetch(`${API_URL}/api/chat/online`, {
       headers: { "Authorization": `Bearer ${token}` },
     })
       .then(r => r.ok ? r.json() : [])
@@ -197,7 +198,7 @@ export default function ChatPage() {
     async function loadHistory() {
       try {
         // page=0&size=50 means "give me the first page of 50 messages" (newest 50)
-        const res = await fetch(`http://localhost:8080/api/chat/history/${activeId}?page=0&size=50`, {
+        const res = await fetch(`${API_URL}/api/chat/history/${activeId}?page=0&size=50`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (res.ok) {
@@ -231,7 +232,7 @@ export default function ChatPage() {
     if (!activeId || !token) return;
     const nextPage = historyPage + 1;
     try {
-      const res = await fetch(`http://localhost:8080/api/chat/history/${activeId}?page=${nextPage}&size=50`, {
+      const res = await fetch(`${API_URL}/api/chat/history/${activeId}?page=${nextPage}&size=50`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       if (res.ok) {

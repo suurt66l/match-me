@@ -115,14 +115,29 @@ public class MeController {
                 .build();
     }
 
-    // GET /api/me/bio — redirects to /api/users/{id}/bio
+    // GET /api/me/bio — returns full bio including private preference fields (owner only)
     @GetMapping("/bio")
-    public ResponseEntity<Void> getMyBio() {
+    public ResponseEntity<UserBioDto> getMyBio() {
         User user = getCurrentUser();
         if (user == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.status(302)
-                .header("Location", "/api/users/" + user.getId() + "/bio")
-                .build();
+        UserBioDto bio = new UserBioDto(
+                user.getId(),
+                user.getGender(),
+                user.getDateOfBirth(),
+                user.getTimezone(),
+                user.getTimeRange(),
+                user.getGamePreference(),
+                user.getGameGenrePreference(),
+                user.getLookingFor(),
+                user.getPlatforms(),
+                user.getIntensity(),
+                user.getLocation(),
+                user.getOpenToOtherRegions(),
+                user.getPreferredGenders(),
+                user.getPreferredAgeMin(),
+                user.getPreferredAgeMax()
+        );
+        return ResponseEntity.ok(bio);
     }
 
     // PUT /api/me/profile

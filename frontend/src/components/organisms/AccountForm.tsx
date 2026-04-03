@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { API_URL } from "../../utils/api";
 import EmailInputBlock from "../molecules/EmailInputBlock";
 import PasswordInputBlock from "../molecules/PasswordInputBlock";
 import ErrorParagraph from "../atoms/ErrorParagraph";
@@ -22,7 +23,7 @@ export default function AccountForm () {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch("http://localhost:8080/api/me/account", {
+        const response = await fetch(`${API_URL}/api/me/account`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (response.ok) {
@@ -53,7 +54,7 @@ export default function AccountForm () {
     if (password) body.password = password;
 
     try {
-      const response = await fetch("http://localhost:8080/api/me/account", {
+      const response = await fetch(`${API_URL}/api/me/account`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -2,7 +2,7 @@ interface Props {
     onConnect: () => void;
 }
 
-export default function DismissButton({ onConnect }: Props) {
+export default function ConnectButton({ onConnect }: Props) {
     return(
         <>
             <button onClick={onConnect}

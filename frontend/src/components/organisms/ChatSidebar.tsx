@@ -1,3 +1,5 @@
+import { API_URL } from "../../utils/api";
+
 interface Connection {
     connectionId: number;
     id: number;
@@ -29,7 +31,7 @@ export default function ChatSidebar({ connections, activeId, unreadCounts, onSel
                         <div className="relative shrink-0">
                             <div className="w-9 h-9 rounded-full bg-amber-950 overflow-hidden">
                             <img
-                                src={user.avatarUrl ? `http://localhost:8080${user.avatarUrl}` : "/assets/default-avatar.svg"}
+                                src={user.avatarUrl ? `${API_URL}${user.avatarUrl}` : "/assets/default-avatar.svg"}
                                 alt={user.nickname}
                                 className="w-full h-full object-cover"
                             />

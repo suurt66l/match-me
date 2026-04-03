@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { API_URL } from "../../utils/api";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import SuccessParagraph from "../atoms/SuccessParagraph";
 import DateOfBirthInputBlock from "../molecules/DateOfBirthInputBlock";
@@ -59,7 +60,7 @@ export default function BioForm() {
     async function loadProfile() {
       try {
         // Bio fields (gender, dateOfBirth, location) come from /api/me/bio
-        const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
+        const bioResponse = await fetch(`${API_URL}/api/me/bio`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (bioResponse.ok) {
@@ -75,7 +76,7 @@ export default function BioForm() {
         }
 
         // aboutMe and avatar come from separate endpoints
-        const profileResponse = await fetch("http://localhost:8080/api/me/profile", {
+        const profileResponse = await fetch(`${API_URL}/api/me/profile`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (profileResponse.ok) {
@@ -83,13 +84,13 @@ export default function BioForm() {
           setAboutMe(profile.aboutMe ?? "");
         }
 
-        const summaryResponse = await fetch("http://localhost:8080/api/me", {
+        const summaryResponse = await fetch(`${API_URL}/api/me`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (summaryResponse.ok) {
           const summary = await summaryResponse.json();
           const pic = summary.profilePictureUrl;
-          setExistingAvatarUrl(pic ? `http://localhost:8080${pic}` : null);
+          setExistingAvatarUrl(pic ? `${API_URL}${pic}` : null);
         }
       } catch {
         // Server unreachable — form starts empty
@@ -111,7 +112,7 @@ export default function BioForm() {
       if (continent) bioBody.location = continent.value;
       bioBody.openToOtherRegions = openToOtherRegions.map(o => o.value).join(", ");
 
-      const bioResponse = await fetch("http://localhost:8080/api/me/bio", {
+      const bioResponse = await fetch(`${API_URL}/api/me/bio`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -121,7 +122,7 @@ export default function BioForm() {
       });
 
       // Save aboutMe separately
-      const profileResponse = await fetch("http://localhost:8080/api/me/profile", {
+      const profileResponse = await fetch(`${API_URL}/api/me/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +133,7 @@ export default function BioForm() {
 
       // Remove picture if flagged, otherwise upload new one if selected
       if (removePicture) {
-        await fetch("http://localhost:8080/api/me/picture", {
+        await fetch(`${API_URL}/api/me/picture`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` },
         });
@@ -140,7 +141,7 @@ export default function BioForm() {
       } else if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
-        await fetch("http://localhost:8080/api/me/picture", {
+        await fetch(`${API_URL}/api/me/picture`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { API_URL } from "../../utils/api";
 import MatcherCard from "./MatcherCard";
 
 interface MatchUser {
@@ -54,7 +55,7 @@ function computeMatchedFields(myBio: Record<string, string>, candidateBio: Recor
   return matched;
 }
 
-export default function gMatcherSection() {
+export default function MatcherSection() {
   const [matches, setMatches] = useState<MatchUser[]>([]);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,9 +65,9 @@ export default function gMatcherSection() {
   async function fetchUserDetails(id: number, token: string, myBio: Record<string, string>): Promise<MatchUser | null> {
     try {
       const [summaryRes, bioRes, profileRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
       const summary = await summaryRes.json();
@@ -97,7 +98,7 @@ export default function gMatcherSection() {
     async function loadMatches() {
       try {
         // Step 1: check if profile is complete
-        const completeRes = await fetch("http://localhost:8080/api/recommendations/complete", {
+        const completeRes = await fetch(`${API_URL}/api/recommendations/complete`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!completeRes.ok) return;
@@ -110,13 +111,13 @@ export default function gMatcherSection() {
         setMissingFields([]);
 
         // Step 2: fetch current user's own bio for matched fields comparison
-        const myBioRes = await fetch("http://localhost:8080/api/me/bio", {
+        const myBioRes = await fetch(`${API_URL}/api/me/bio`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const myBio = myBioRes.ok ? await myBioRes.json() : {};
 
         // Step 3: get the list of recommended IDs
-        const idsRes = await fetch("http://localhost:8080/api/recommendations", {
+        const idsRes = await fetch(`${API_URL}/api/recommendations`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!idsRes.ok) return;
@@ -138,7 +139,7 @@ export default function gMatcherSection() {
   async function handleConnect(id: number) {
     setMatches(matches.filter(item => item.id !== id));
     try {
-      await fetch(`http://localhost:8080/api/connections/request/${id}`, {
+      await fetch(`${API_URL}/api/connections/request/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -151,7 +152,7 @@ export default function gMatcherSection() {
   async function handleDismiss(id: number) {
     setMatches(matches.filter(item => item.id !== id));
     try {
-      await fetch(`http://localhost:8080/api/connections/block/${id}`, {
+      await fetch(`${API_URL}/api/connections/block/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,7 +1,7 @@
 package com.example.web.Controller;
 
 import com.example.web.DTO.ConnectionUserDto;
-import com.example.web.DTO.PendingConnectionDto;
+import com.example.web.DTO.PendingConnectionIdDto;
 import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.ConnectionService;
@@ -94,52 +94,24 @@ public class ConnectionController {
         return ResponseEntity.noContent().build();
     }
 
-    // GET /api/connections/pending — returns incoming pending requests
+    // GET /api/connections/pending — returns incoming pending requests as {connectionId, userId} pairs
     @GetMapping("/pending")
-    public ResponseEntity<List<PendingConnectionDto>> getPendingConnections() {
+    public ResponseEntity<List<PendingConnectionIdDto>> getPendingConnections() {
         User currentUser = getCurrentUser();
-        List<PendingConnectionDto> result = connectionService.getPendingIncomingConnections(currentUser)
+        List<PendingConnectionIdDto> result = connectionService.getPendingIncomingConnections(currentUser)
                 .stream()
-                .map(conn -> new PendingConnectionDto(
-                        conn.getId(),
-                        conn.getRequester().getId(),
-                        conn.getRequester().getNickname(),
-                        conn.getRequester().getProfilePictureUrl(),
-                        conn.getRequester().getLocation(),
-                        conn.getRequester().getDateOfBirth(),
-                        conn.getRequester().getGamePreference(),
-                        conn.getRequester().getGameGenrePreference(),
-                        conn.getRequester().getPlatforms(),
-                        conn.getRequester().getLookingFor(),
-                        conn.getRequester().getIntensity(),
-                        conn.getRequester().getTimeRange(),
-                        conn.getRequester().getAboutMe()
-                ))
+                .map(conn -> new PendingConnectionIdDto(conn.getId(), conn.getRequester().getId()))
                 .toList();
         return ResponseEntity.ok(result);
     }
 
-    // GET /api/connections/pending/sent — returns outgoing pending requests
+    // GET /api/connections/pending/sent — returns outgoing pending requests as {connectionId, userId} pairs
     @GetMapping("/pending/sent")
-    public ResponseEntity<List<PendingConnectionDto>> getSentConnections() {
+    public ResponseEntity<List<PendingConnectionIdDto>> getSentConnections() {
         User currentUser = getCurrentUser();
-        List<PendingConnectionDto> result = connectionService.getPendingOutgoingConnections(currentUser)
+        List<PendingConnectionIdDto> result = connectionService.getPendingOutgoingConnections(currentUser)
                 .stream()
-                .map(conn -> new PendingConnectionDto(
-                        conn.getId(),
-                        conn.getAddressee().getId(),
-                        conn.getAddressee().getNickname(),
-                        conn.getAddressee().getProfilePictureUrl(),
-                        conn.getAddressee().getLocation(),
-                        conn.getAddressee().getDateOfBirth(),
-                        conn.getAddressee().getGamePreference(),
-                        conn.getAddressee().getGameGenrePreference(),
-                        conn.getAddressee().getPlatforms(),
-                        conn.getAddressee().getLookingFor(),
-                        conn.getAddressee().getIntensity(),
-                        conn.getAddressee().getTimeRange(),
-                        conn.getAddressee().getAboutMe()
-                ))
+                .map(conn -> new PendingConnectionIdDto(conn.getId(), conn.getAddressee().getId()))
                 .toList();
         return ResponseEntity.ok(result);
     }

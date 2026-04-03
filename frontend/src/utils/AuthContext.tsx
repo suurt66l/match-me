@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import useToken from './useToken';
+import { API_URL } from './api';
 
 interface AuthContextProps {
     token: string | null;
@@ -35,7 +36,7 @@ export default function AuthProvider( { children } : { children: React.ReactNode
   /* Handles login */
   async function login( loginCredentials : LoginCredentials) : Promise<AuthResponse> {
   
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginCredentials)
@@ -60,7 +61,7 @@ export default function AuthProvider( { children } : { children: React.ReactNode
 
   /* Handles registration */
   async function register( regCredentials : RegCredentials) : Promise<AuthResponse> {
-    const response = await fetch('http://localhost:8080/api/auth/register', {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(regCredentials)

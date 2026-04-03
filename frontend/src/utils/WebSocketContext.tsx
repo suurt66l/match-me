@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useAuth } from "./AuthContext";
+import { API_URL } from "./api";
 
 /**
  * WebSocketContext gives any component in the app access to the shared STOMP client.
@@ -35,7 +36,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     // The JWT token is sent in the CONNECT frame headers so the backend can authenticate
     // the WebSocket session the same way it authenticates regular HTTP requests.
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(`${API_URL}/ws`),
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -58,7 +59,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     // We include the JWT in the request body because sendBeacon cannot set custom headers.
     function handleUnload() {
       navigator.sendBeacon(
-        "http://localhost:8080/api/chat/offline",
+        `${API_URL}/api/chat/offline`,
         new Blob([JSON.stringify({ token })], { type: "application/json" })
       );
     }

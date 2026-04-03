@@ -176,9 +176,12 @@ public class MatchingService {
         return Optional.of(score);
     }
 
-    // Returns true if two users would have a positive compatibility score (used for profile visibility)
+    // Returns true if two users would have a positive compatibility score (used for profile visibility).
+    // Must match the same filters used in getRecommendations: location, gender, age, time overlap.
     public boolean hasPositiveScore(User a, User b) {
         if (!locationsCompatible(a, b)) return false;
+        if (!genderCompatible(a, b) || !genderCompatible(b, a)) return false;
+        if (!ageCompatible(a, b) || !ageCompatible(b, a)) return false;
         return getTimeOverlapMinutes(a, b) > 0;
     }
 

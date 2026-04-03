@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { API_URL } from "../../utils/api";
 import ErrorParagraph from "../atoms/ErrorParagraph";
 import SuccessParagraph from "../atoms/SuccessParagraph";
 import SaveButton from "../atoms/SaveButton";
@@ -74,7 +75,7 @@ export default function PreferencesForm() {
   useEffect(() => {
     async function loadPreferences() {
       try {
-        const response = await fetch("http://localhost:8080/api/me/bio", {
+        const response = await fetch(`${API_URL}/api/me/bio`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (response.ok) {
@@ -103,19 +104,19 @@ export default function PreferencesForm() {
     async function loadOptions() {
       try{
         // Games Options
-        const resGameOpts = await fetch("http://localhost:8080/api/lookup/games", {
+        const resGameOpts = await fetch(`${API_URL}/api/lookup/games`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const dataGameOpts: string[] = await resGameOpts.json();
         setGameOptions(dataGameOpts.map(createOption));
         // Genre Options
-        const resGenreOpts = await fetch("http://localhost:8080/api/lookup/genres", {
+        const resGenreOpts = await fetch(`${API_URL}/api/lookup/genres`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const dataGenreOpts: string[] = await resGenreOpts.json();
         setGenreOptions(dataGenreOpts.map(createOption));
         // Platform Options
-        const resPlatfromOpts = await fetch("http://localhost:8080/api/lookup/platforms", {
+        const resPlatfromOpts = await fetch(`${API_URL}/api/lookup/platforms`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const dataPlatfromOpts: string[] = await resPlatfromOpts.json();
@@ -148,7 +149,7 @@ export default function PreferencesForm() {
     if (preferredAgeMax) body.preferredAgeMax = preferredAgeMax;
 
     try {
-      const response = await fetch("http://localhost:8080/api/me/bio", {
+      const response = await fetch(`${API_URL}/api/me/bio`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
