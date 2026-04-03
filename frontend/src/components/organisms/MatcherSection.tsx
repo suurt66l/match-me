@@ -57,6 +57,7 @@ function computeMatchedFields(myBio: Record<string, string>, candidateBio: Recor
 export default function gMatcherSection() {
   const [matches, setMatches] = useState<MatchUser[]>([]);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuth();
 
   // Fetch all data for a single user by combining the three user endpoints
@@ -126,6 +127,8 @@ export default function gMatcherSection() {
         setMatches(users.filter((u): u is MatchUser => u !== null));
       } catch {
         console.log("Can't load matches. Server is unreachable!");
+      } finally {
+        setLoading(false);
       }
     }
     loadMatches();
@@ -155,6 +158,10 @@ export default function gMatcherSection() {
     } catch {
       console.log("Can't dismiss user. Server is unreachable!");
     }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   // Show which fields are missing if profile is incomplete

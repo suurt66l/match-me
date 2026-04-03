@@ -29,13 +29,12 @@ export default function ConnectionsSection() {
   const [connections, setConnections] = useState<UserData[]>([]);
   const [pending, setPending] = useState<UserData[]>([]);
   const [sent, setSent] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuth();
   const { client } = useWebSocket();
 
   useEffect(() => {
-    loadConnections();
-    loadPending();
-    loadSent();
+    Promise.all([loadConnections(), loadPending(), loadSent()]).finally(() => setLoading(false));
   }, [token]);
 
   // Re-load when the backend signals a connection change (new request or accepted)
@@ -184,6 +183,10 @@ export default function ConnectionsSection() {
     } catch {
       console.log("Server is unreachable!");
     }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   return (
