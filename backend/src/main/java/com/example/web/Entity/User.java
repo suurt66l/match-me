@@ -33,8 +33,12 @@ public class User {
     private String lookingFor; // e.g "just gaming, friendship, relationship, etc"
     private String platforms; // PC, Xbox, etc
     private String intensity; // gaming intensity, e.g. casual to sweaty
-    private String location;
-    private String openToOtherRegions; // comma-separated list of additional regions the user is open to matching with
+    private String location;  // continent
+    private String country;   // specific country within that continent
+    private String matchScope; // "global", "regional", "local" — who the user wants to match with
+    private String openToOtherRegions; // legacy, no longer used in matching
+    private String preferredContinents; // comma-separated continents to filter when scope=global (null = no filter)
+    private String preferredCountries;  // comma-separated countries to filter within region when scope=regional (null = no filter)
     private String preferredGenders;   // comma-separated genders the user wants to match with (null = any)
     private Integer preferredAgeMin;   // minimum age of preferred match (null = no limit)
     private Integer preferredAgeMax;   // maximum age of preferred match (null = no limit)

@@ -132,7 +132,10 @@ public class MeController {
                 user.getPlatforms(),
                 user.getIntensity(),
                 user.getLocation(),
-                user.getOpenToOtherRegions(),
+                user.getCountry(),
+                user.getMatchScope(),
+                user.getPreferredContinents(),
+                user.getPreferredCountries(),
                 user.getPreferredGenders(),
                 user.getPreferredAgeMin(),
                 user.getPreferredAgeMax()
@@ -173,7 +176,10 @@ public class MeController {
         if (request.getPlatforms() != null) user.setPlatforms(request.getPlatforms());
         if (request.getIntensity() != null) user.setIntensity(request.getIntensity());
         if (request.getLocation() != null) user.setLocation(request.getLocation());
-        if (request.getOpenToOtherRegions() != null) user.setOpenToOtherRegions(request.getOpenToOtherRegions());
+        if (request.getCountry() != null) user.setCountry(request.getCountry());
+        if (request.getMatchScope() != null) user.setMatchScope(request.getMatchScope());
+        if (request.getPreferredContinents() != null) user.setPreferredContinents(request.getPreferredContinents());
+        if (request.getPreferredCountries() != null) user.setPreferredCountries(request.getPreferredCountries());
         if (request.getPreferredGenders() != null) user.setPreferredGenders(request.getPreferredGenders());
         if (request.getPreferredAgeMin() != null) user.setPreferredAgeMin(request.getPreferredAgeMin());
         if (request.getPreferredAgeMax() != null) user.setPreferredAgeMax(request.getPreferredAgeMax());
@@ -192,7 +198,10 @@ public class MeController {
                 user.getPlatforms(),
                 user.getIntensity(),
                 user.getLocation(),
-                user.getOpenToOtherRegions(),
+                user.getCountry(),
+                user.getMatchScope(),
+                user.getPreferredContinents(),
+                user.getPreferredCountries(),
                 user.getPreferredGenders(),
                 user.getPreferredAgeMin(),
                 user.getPreferredAgeMax()

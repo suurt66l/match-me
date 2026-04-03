@@ -14,6 +14,8 @@ import GamesSelectorBlock from "../molecules/GamesSelectorBlock";
 import PreferredGenderSelectorBlock from "../molecules/PreferredGenderSelectorBlock";
 import PreferredAgeRangeBlock from "../molecules/PreferredAgeRangeBlock";
 import { timeZones } from "../../data/timezones";
+import { countriesByContinent } from "../../data/countries";
+import MultiSelect from "../atoms/MultiSelect";
 
 interface Option {
   readonly label: string;
@@ -30,6 +32,10 @@ function createOption (label: string): Option {
 
 const DEFAULT_GENDERS = ["Male", "Female", "Non-binary"];
 const GenderOptions: Option[] = DEFAULT_GENDERS.map(createOption);
+
+const DEFAULT_CONTINENTS = ["Africa", "Antarctica", "Asia", "Europe", "North America", "Oceania", "South America"];
+const ContinentOptions: Option[] = DEFAULT_CONTINENTS.map(createOption);
+const AllCountryOptions: Option[] = Object.values(countriesByContinent).flat().sort().map(createOption);
 
 const DEFAULT_LOOKING_FOR = [
   "Play together",
@@ -62,6 +68,10 @@ export default function PreferencesForm() {
   const [preferredGenders, setPreferredGenders] = useState<Option[]>([]);
   const [preferredAgeMin, setPreferredAgeMin] = useState<string>("");
   const [preferredAgeMax, setPreferredAgeMax] = useState<string>("");
+  const [matchScope, setMatchScope] = useState<string>("global");
+  const [preferredContinents, setPreferredContinents] = useState<Option[]>([]);
+  const [preferredCountries, setPreferredCountries] = useState<Option[]>([]);
+  const [myContinent, setMyContinent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -95,6 +105,10 @@ export default function PreferencesForm() {
           setPreferredGenders(optionsFromDatabase(data.preferredGenders));
           setPreferredAgeMin(data.preferredAgeMin?.toString() ?? "");
           setPreferredAgeMax(data.preferredAgeMax?.toString() ?? "");
+          setMatchScope(data.matchScope ?? "global");
+          setPreferredContinents(optionsFromDatabase(data.preferredContinents));
+          setPreferredCountries(optionsFromDatabase(data.preferredCountries));
+          setMyContinent(data.location ?? null);
         }
       } catch {
         console.log("Can't load preferences. Server isn't available! ")
@@ -147,6 +161,9 @@ export default function PreferencesForm() {
     if (preferredGenders.length > 0) body.preferredGenders = optionsToDatabase(preferredGenders);
     if (preferredAgeMin) body.preferredAgeMin = preferredAgeMin;
     if (preferredAgeMax) body.preferredAgeMax = preferredAgeMax;
+    body.matchScope = matchScope;
+    body.preferredContinents = optionsToDatabase(preferredContinents);
+    body.preferredCountries = optionsToDatabase(preferredCountries);
 
     try {
       const response = await fetch(`${API_URL}/api/me/bio`, {
@@ -193,6 +210,57 @@ export default function PreferencesForm() {
           <IntensityInputBlock setIntensity={setIntensity} value={intensity} />
           <PreferredGenderSelectorBlock setGenders={setPreferredGenders} options={GenderOptions} value={preferredGenders} />
           <PreferredAgeRangeBlock minAge={preferredAgeMin} maxAge={preferredAgeMax} setMinAge={setPreferredAgeMin} setMaxAge={setPreferredAgeMax} />
+
+          <div>
+            <label className="block text-sm font-bold text-gray-100 mb-1">Match scope</label>
+            <p className="text-xs text-amber-200 mb-2">Your continent and country are configured in the Bio tab.</p>
+            <div className="flex flex-col gap-2">
+              {[
+                { value: "global",   label: "Global",   desc: "Match with anyone worldwide" },
+                { value: "regional", label: "Regional", desc: "Match within my continent only" },
+                { value: "local",    label: "Local",    desc: "Match within my country only" },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setMatchScope(opt.value)}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors ${
+                    matchScope === opt.value
+                      ? "bg-amber-950 text-amber-300 font-semibold"
+                      : "bg-amber-400 text-amber-950 hover:bg-amber-500"
+                  }`}
+                >
+                  <span className="font-semibold">{opt.label}</span> — {opt.desc}
+                </button>
+              ))}
+            </div>
+
+            {matchScope === "global" && (
+              <div className="mt-3">
+                <label className="block text-sm font-bold text-gray-100 mb-1">Limit to continents (optional)</label>
+                <p className="text-xs text-amber-200 mb-1">Leave empty to match anyone worldwide.</p>
+                <MultiSelect
+                  options={ContinentOptions}
+                  value={preferredContinents}
+                  onChange={setPreferredContinents}
+                  placeholder="Any continent"
+                />
+              </div>
+            )}
+
+            {matchScope === "regional" && (
+              <div className="mt-3">
+                <label className="block text-sm font-bold text-gray-100 mb-1">Limit to countries (optional)</label>
+                <p className="text-xs text-amber-200 mb-1">Leave empty to match anyone in your continent.</p>
+                <MultiSelect
+                  options={myContinent ? (countriesByContinent[myContinent] ?? []).map(createOption) : AllCountryOptions}
+                  value={preferredCountries}
+                  onChange={setPreferredCountries}
+                  placeholder="Any country"
+                />
+              </div>
+            )}
+          </div>
 
           {error && <ErrorParagraph errorMsg={error} />}
           {success && <SuccessParagraph msg={success} />}

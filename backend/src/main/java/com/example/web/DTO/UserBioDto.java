@@ -19,7 +19,10 @@ public class UserBioDto { // for /users/{id}/bio (data for recommends)
     private String platforms; 
     private String intensity;
     private String location;
-    private String openToOtherRegions;
+    private String country;
+    private String matchScope;
+    private String preferredContinents;
+    private String preferredCountries;
     private String preferredGenders;
     private Integer preferredAgeMin;
     private Integer preferredAgeMax;

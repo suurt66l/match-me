@@ -185,19 +185,47 @@ public class MatchingService {
         return getTimeOverlapMinutes(a, b) > 0;
     }
 
-    // Returns true if the two users' locations are compatible for matching
-    // (same region, or either user is open to the other's region)
+    // Returns true if both users' match scopes are mutually compatible.
+    // Each user's scope defines who THEY want to match with:
+    //   global   — match anyone, no location restriction
+    //   regional — match within same continent (location field)
+    //   local    — match within same country
     private boolean locationsCompatible(User a, User b) {
-        if (a.getLocation() == null || b.getLocation() == null) return false;
-        if (a.getLocation().equalsIgnoreCase(b.getLocation())) return true;
-        return isOpenToRegion(a, b.getLocation()) || isOpenToRegion(b, a.getLocation());
+        return scopeAllows(a, b) && scopeAllows(b, a);
     }
 
-    private boolean isOpenToRegion(User user, String region) {
-        if (user.getOpenToOtherRegions() == null || user.getOpenToOtherRegions().isBlank()) return false;
-        return Arrays.stream(user.getOpenToOtherRegions().split(","))
-                .map(String::trim)
-                .anyMatch(r -> r.equalsIgnoreCase(region));
+    // Returns true if the viewer's match scope allows the candidate's location
+    private boolean scopeAllows(User viewer, User candidate) {
+        String scope = viewer.getMatchScope();
+        if (scope == null || "global".equalsIgnoreCase(scope)) {
+            // If viewer chose specific continents, candidate must be in one of them
+            if (viewer.getPreferredContinents() != null && !viewer.getPreferredContinents().isBlank()) {
+                Set<String> allowed = parseCommaSeparated(viewer.getPreferredContinents());
+                String candidateContinent = candidate.getLocation();
+                if (candidateContinent == null) return false;
+                return allowed.contains(candidateContinent.trim().toLowerCase());
+            }
+            return true;
+        }
+        if ("regional".equalsIgnoreCase(scope)) {
+            // Must share the same continent
+            if (viewer.getLocation() == null || !viewer.getLocation().equalsIgnoreCase(candidate.getLocation())) {
+                return false;
+            }
+            // If viewer chose specific countries within their region, candidate must be in one of them
+            if (viewer.getPreferredCountries() != null && !viewer.getPreferredCountries().isBlank()) {
+                Set<String> allowed = parseCommaSeparated(viewer.getPreferredCountries());
+                String candidateCountry = candidate.getCountry();
+                if (candidateCountry == null) return false;
+                return allowed.contains(candidateCountry.trim().toLowerCase());
+            }
+            return true;
+        }
+        if ("local".equalsIgnoreCase(scope)) {
+            return viewer.getCountry() != null &&
+                   viewer.getCountry().equalsIgnoreCase(candidate.getCountry());
+        }
+        return true;
     }
 
     // Returns true if the candidate's gender satisfies the viewer's gender preference.

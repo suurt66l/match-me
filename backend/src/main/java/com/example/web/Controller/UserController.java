@@ -115,7 +115,7 @@ public class UserController {
                 target.getPlatforms(),
                 target.getIntensity(),
                 target.getLocation(),
-                target.getOpenToOtherRegions()
+                target.getCountry()
         ));
     }
 }

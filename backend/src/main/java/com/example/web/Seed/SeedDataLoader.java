@@ -2,6 +2,7 @@ package com.example.web.Seed;
 
 import com.example.web.Entity.User;
 import com.example.web.Repository.ConnectionRepository;
+import com.example.web.Repository.MessageRepository;
 import com.example.web.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,11 +25,14 @@ public class SeedDataLoader {
 
     private final UserRepository userRepository;
     private final ConnectionRepository connectionRepository;
+    private final MessageRepository messageRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public SeedDataLoader(UserRepository userRepository, ConnectionRepository connectionRepository, PasswordEncoder passwordEncoder) {
+    public SeedDataLoader(UserRepository userRepository, ConnectionRepository connectionRepository,
+                          MessageRepository messageRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.connectionRepository = connectionRepository;
+        this.messageRepository = messageRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,13 +44,29 @@ public class SeedDataLoader {
 
         String password = passwordEncoder.encode("1234");
 
-        // --- Data pools ---
-
-        // Continents paired with UTC offsets — same format as the frontend timezone selector
-        String[][] locationTimezone = {
-            {"Europe",        "UTC+1"},
-            {"North America", "UTC-5"},
-            {"Asia",          "UTC+9"},
+        // Each entry: { continent, country, timezone }
+        // ~75% Europe (30% Estonia emphasis), ~15% North America, ~10% Asia
+        String[][] locationData = {
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Estonia",        "UTC+2"},
+            {"Europe", "Latvia",         "UTC+2"},
+            {"Europe", "Lithuania",      "UTC+2"},
+            {"Europe", "Finland",        "UTC+2"},
+            {"Europe", "Germany",        "UTC+1"},
+            {"Europe", "Poland",         "UTC+1"},
+            {"Europe", "Sweden",         "UTC+1"},
+            {"Europe", "Norway",         "UTC+1"},
+            {"Europe", "Netherlands",    "UTC+1"},
+            {"Europe", "France",         "UTC+1"},
+            {"North America", "United States", "UTC-5"},
+            {"North America", "Canada",        "UTC-5"},
+            {"North America", "United States", "UTC-8"},
+            {"Asia", "Japan",     "UTC+9"},
+            {"Asia", "South Korea", "UTC+9"},
         };
 
         String[] timeRanges = {"08:00-14:00", "12:00-18:00", "16:00-22:00", "20:00-02:00"};
@@ -94,8 +114,6 @@ public class SeedDataLoader {
 
         String[] intensities = {"3", "4", "5", "5", "6", "6", "7", "8"};
 
-        String[] genders = {"Male", "Female", "Non-binary"};
-
         String[] nicknames = {
             "ShadowFox", "NeonBlade", "CryptoKnight", "FrostWolf", "IronHawk",
             "LaserPanda", "GhostRider", "SteelViper", "ArcticOwl", "StormCrow",
@@ -120,25 +138,16 @@ public class SeedDataLoader {
             "New to competitive gaming but learning fast. Patient teammates welcome.",
         };
 
-        // Other-region options per home continent — all continents except own
-        String[][] openToByLocation = {
-            {"North America", "Asia"},           // Europe users can expand to these
-            {"Europe", "Asia"},                  // North America users can expand to these
-            {"Europe", "North America", "Antarctica"},         // Asia users can expand to these
-        };
-
         for (int i = 0; i < 120; i++) {
             int emailNum = i + 10;
             String email = "test" + emailNum + "@test.com";
 
-            // Skip if this email already exists
             if (userRepository.findByEmail(email).isPresent()) continue;
 
             int groupIdx = i % gameGroups.length;
-            int locIdx   = i % locationTimezone.length;
+            int locIdx   = i % locationData.length;
             int timeIdx  = i % timeRanges.length;
 
-            // Use 1 or 2 games from the same group — creates natural matching clusters
             String userGames  = (i % 3 == 0)
                 ? gameGroups[groupIdx][0]
                 : gameGroups[groupIdx][0] + ", " + gameGroups[groupIdx][1];
@@ -146,12 +155,11 @@ public class SeedDataLoader {
             String userGenres = genreGroups[groupIdx][0] + ", " + genreGroups[groupIdx][1];
             String userPlats  = platformGroups[groupIdx];
 
-            // Vary cross-region openness: 1/4 same-region-only, 1/4 one other, 1/2 all other
-            String[] otherRegions = openToByLocation[locIdx];
-            String openToOtherRegions = switch (i % 4) {
-                case 0 -> null;                                          // same region only
-                case 1 -> otherRegions[0];                              // one other region
-                default -> otherRegions[0] + ", " + otherRegions[1];   // both other regions
+            // Gender distribution: 50% Female, 30% Non-binary, 20% Male
+            String gender = switch (i % 10) {
+                case 0, 1, 2, 3, 4 -> "Female";
+                case 5, 6, 7       -> "Non-binary";
+                default            -> "Male";
             };
 
             User user = new User();
@@ -159,9 +167,10 @@ public class SeedDataLoader {
             user.setPassword(password);
             user.setNickname(nicknames[i % nicknames.length] + emailNum);
             user.setDateOfBirth(LocalDate.of(1993 + (i % 12), 1 + (i % 12), 1 + (i % 27)));
-            user.setGender(genders[i % genders.length]);
-            user.setLocation(locationTimezone[locIdx][0]);
-            user.setTimezone(locationTimezone[locIdx][1]);
+            user.setGender(gender);
+            user.setLocation(locationData[locIdx][0]);
+            user.setCountry(locationData[locIdx][1]);
+            user.setTimezone(locationData[locIdx][2]);
             user.setTimeRange(timeRanges[timeIdx]);
             user.setGamePreference(userGames);
             user.setGameGenrePreference(userGenres);
@@ -169,7 +178,7 @@ public class SeedDataLoader {
             user.setLookingFor(lookingFor[i % lookingFor.length]);
             user.setIntensity(intensities[i % intensities.length]);
             user.setAboutMe(aboutMeTexts[i % aboutMeTexts.length]);
-            user.setOpenToOtherRegions(openToOtherRegions);
+            user.setMatchScope("global");
 
             userRepository.save(user);
         }
@@ -181,7 +190,6 @@ public class SeedDataLoader {
     // Users below test10 (e.g. test1@test.com) are NOT deleted
     @DeleteMapping
     public ResponseEntity<String> deleteSeed() {
-        // Match test10@test.com through test999@test.com — two or more digits after "test"
         List<User> seeded = userRepository.findByEmailLike("test%@test.com").stream()
                 .filter(u -> {
                     String local = u.getEmail().replace("@test.com", "").replace("test", "");
@@ -192,7 +200,8 @@ public class SeedDataLoader {
                     }
                 })
                 .toList();
-        // Delete connections first to avoid foreign key violations
+        // Delete in order: messages → connections → users (FK constraints)
+        seeded.forEach(u -> messageRepository.deleteAllByUser(u));
         seeded.forEach(u -> connectionRepository.deleteAll(connectionRepository.findAllByUser(u)));
         userRepository.deleteAll(seeded);
         return ResponseEntity.ok("Deleted " + seeded.size() + " seeded users.");
