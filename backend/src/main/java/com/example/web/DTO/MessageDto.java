@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageDto { //for WebSocket delivery and REST responses
-    private Long d;
+    private Long id;
     private Long senderId;
     private Long recipientId;
     private String content;

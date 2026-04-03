@@ -11,7 +11,8 @@ interface Props {
 
 function formatTime(timestamp: string): string {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleDateString([], { month: "short", day: "numeric" }) + " " +
+           date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function ChatMessage({ isMine, message }: Props) {
