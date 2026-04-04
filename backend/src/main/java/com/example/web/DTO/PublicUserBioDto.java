@@ -20,4 +20,5 @@ public class PublicUserBioDto { // for GET /api/users/{id}/bio — excludes priv
     private String intensity;
     private String location;
     private String country;
+    private String city;
 }

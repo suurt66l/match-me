@@ -133,9 +133,10 @@ public class MeController {
                 user.getIntensity(),
                 user.getLocation(),
                 user.getCountry(),
-                user.getMatchScope(),
-                user.getPreferredContinents(),
-                user.getPreferredCountries(),
+                user.getCity(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getMaxDistanceKm(),
                 user.getPreferredGenders(),
                 user.getPreferredAgeMin(),
                 user.getPreferredAgeMax()
@@ -177,9 +178,10 @@ public class MeController {
         if (request.getIntensity() != null) user.setIntensity(request.getIntensity());
         if (request.getLocation() != null) user.setLocation(request.getLocation());
         if (request.getCountry() != null) user.setCountry(request.getCountry());
-        if (request.getMatchScope() != null) user.setMatchScope(request.getMatchScope());
-        if (request.getPreferredContinents() != null) user.setPreferredContinents(request.getPreferredContinents());
-        if (request.getPreferredCountries() != null) user.setPreferredCountries(request.getPreferredCountries());
+        if (request.getCity() != null) user.setCity(request.getCity());
+        if (request.getLatitude() != null) user.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null) user.setLongitude(request.getLongitude());
+        if (request.getMaxDistanceKm() != null) user.setMaxDistanceKm(request.getMaxDistanceKm());
         if (request.getPreferredGenders() != null) user.setPreferredGenders(request.getPreferredGenders());
         if (request.getPreferredAgeMin() != null) user.setPreferredAgeMin(request.getPreferredAgeMin());
         if (request.getPreferredAgeMax() != null) user.setPreferredAgeMax(request.getPreferredAgeMax());
@@ -199,9 +201,10 @@ public class MeController {
                 user.getIntensity(),
                 user.getLocation(),
                 user.getCountry(),
-                user.getMatchScope(),
-                user.getPreferredContinents(),
-                user.getPreferredCountries(),
+                user.getCity(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getMaxDistanceKm(),
                 user.getPreferredGenders(),
                 user.getPreferredAgeMin(),
                 user.getPreferredAgeMax()

@@ -44,7 +44,6 @@ public class SocialController {
     private List<String> getMissingFields(User user) {
         List<String> missing = new ArrayList<>();
 
-        if (user.getLocation() == null || user.getLocation().isBlank()) missing.add("country");
         if (user.getDateOfBirth() == null) missing.add("dateOfBirth");
         if (user.getGamePreference() == null || user.getGamePreference().isBlank()) missing.add("games");
         if (user.getGameGenrePreference() == null || user.getGameGenrePreference().isBlank()) missing.add("gameGenres");

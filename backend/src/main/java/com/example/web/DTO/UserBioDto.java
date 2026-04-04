@@ -20,9 +20,10 @@ public class UserBioDto { // for /users/{id}/bio (data for recommends)
     private String intensity;
     private String location;
     private String country;
-    private String matchScope;
-    private String preferredContinents;
-    private String preferredCountries;
+    private String city;
+    private Double latitude;
+    private Double longitude;
+    private Integer maxDistanceKm;
     private String preferredGenders;
     private Integer preferredAgeMin;
     private Integer preferredAgeMax;

@@ -8,6 +8,7 @@ interface UserData {
   nickname: string;
   avatarUrl: string | null;
   country: string;
+  city?: string;
   dateOfBirth: string;
   gender?: string;
   games: string;
@@ -58,6 +59,7 @@ export default function UserCard({ user, children, matchedOnly = false }: Props)
         avatarUrl={user.avatarUrl}
         nickname={user.nickname}
         country={user.country}
+        city={user.city}
         age={age}
         gender={user.gender}
       />

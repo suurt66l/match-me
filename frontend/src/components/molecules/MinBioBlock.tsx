@@ -5,11 +5,12 @@ interface Props {
     avatarUrl: string | null;
     nickname: string;
     country: string;
+    city?: string;
     age: string | null;
     gender?: string;
 }
 
-export default function MinBioBlock({avatarUrl, nickname, country, age, gender}: Props){
+export default function MinBioBlock({avatarUrl, nickname, country, city, age, gender}: Props){
     return(
       <div className="flex items-center gap-4">
         <Avatar avatarUrl={avatarUrl}/>
@@ -17,6 +18,7 @@ export default function MinBioBlock({avatarUrl, nickname, country, age, gender}:
           <Identity
             nickname={nickname}
             country={country}
+            city={city}
             age={age}
             gender={gender}
           />

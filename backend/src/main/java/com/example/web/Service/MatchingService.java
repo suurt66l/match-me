@@ -74,7 +74,7 @@ public class MatchingService {
                     su.user.getId(),
                     su.user.getNickname(),
                     su.user.getProfilePictureUrl(),
-                    su.user.getLocation(),
+                    su.user.getCountry(),
                     su.user.getDateOfBirth(),
                     su.user.getGamePreference(),
                     su.user.getGameGenrePreference(),
@@ -185,47 +185,31 @@ public class MatchingService {
         return getTimeOverlapMinutes(a, b) > 0;
     }
 
-    // Returns true if both users' match scopes are mutually compatible.
-    // Each user's scope defines who THEY want to match with:
-    //   global   — match anyone, no location restriction
-    //   regional — match within same continent (location field)
-    //   local    — match within same country
+    // Returns true if both users are within each other's preferred distance.
+    // If a user has no GPS coordinates or no distance limit, they impose no restriction.
     private boolean locationsCompatible(User a, User b) {
-        return scopeAllows(a, b) && scopeAllows(b, a);
+        // If either user has no coordinates, skip location filtering entirely
+        if (a.getLatitude() == null || a.getLongitude() == null ||
+                b.getLatitude() == null || b.getLongitude() == null) {
+            return true;
+        }
+        double distanceKm = haversineKm(a.getLatitude(), a.getLongitude(),
+                                        b.getLatitude(), b.getLongitude());
+        // Both users' radius limits must be satisfied
+        if (a.getMaxDistanceKm() != null && distanceKm > a.getMaxDistanceKm()) return false;
+        if (b.getMaxDistanceKm() != null && distanceKm > b.getMaxDistanceKm()) return false;
+        return true;
     }
 
-    // Returns true if the viewer's match scope allows the candidate's location
-    private boolean scopeAllows(User viewer, User candidate) {
-        String scope = viewer.getMatchScope();
-        if (scope == null || "global".equalsIgnoreCase(scope)) {
-            // If viewer chose specific continents, candidate must be in one of them
-            if (viewer.getPreferredContinents() != null && !viewer.getPreferredContinents().isBlank()) {
-                Set<String> allowed = parseCommaSeparated(viewer.getPreferredContinents());
-                String candidateContinent = candidate.getLocation();
-                if (candidateContinent == null) return false;
-                return allowed.contains(candidateContinent.trim().toLowerCase());
-            }
-            return true;
-        }
-        if ("regional".equalsIgnoreCase(scope)) {
-            // Must share the same continent
-            if (viewer.getLocation() == null || !viewer.getLocation().equalsIgnoreCase(candidate.getLocation())) {
-                return false;
-            }
-            // If viewer chose specific countries within their region, candidate must be in one of them
-            if (viewer.getPreferredCountries() != null && !viewer.getPreferredCountries().isBlank()) {
-                Set<String> allowed = parseCommaSeparated(viewer.getPreferredCountries());
-                String candidateCountry = candidate.getCountry();
-                if (candidateCountry == null) return false;
-                return allowed.contains(candidateCountry.trim().toLowerCase());
-            }
-            return true;
-        }
-        if ("local".equalsIgnoreCase(scope)) {
-            return viewer.getCountry() != null &&
-                   viewer.getCountry().equalsIgnoreCase(candidate.getCountry());
-        }
-        return true;
+    // Haversine formula — returns distance in kilometres between two GPS points
+    private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     // Returns true if the candidate's gender satisfies the viewer's gender preference.

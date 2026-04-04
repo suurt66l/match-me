@@ -9,6 +9,7 @@ interface UserData {
   nickname: string;
   avatarUrl: string | null;
   country: string;
+  city?: string;
   dateOfBirth: string;
   gender?: string;
 }
@@ -28,6 +29,7 @@ export default function SentCard({ user, onCancel }: Props) {
         avatarUrl={user.avatarUrl}
         nickname={user.nickname}
         country={user.country}
+        city={user.city}
         age={age}
         gender={user.gender}
       />

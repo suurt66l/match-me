@@ -11,6 +11,7 @@ interface ProfileData {
   nickname: string;
   avatarUrl: string | null;
   country: string;
+  city: string;
   dateOfBirth: string;
   gender: string;
   games: string;
@@ -60,6 +61,7 @@ export default function UserProfilePage() {
           nickname: summary.nickname,
           avatarUrl: summary.profilePictureUrl || null,
           country: bio.country ?? bio.location ?? "",
+          city: bio.city ?? "",
           dateOfBirth: bio.dateOfBirth ?? "",
           gender: bio.gender ?? "",
           games: bio.gamePreference ?? "",
