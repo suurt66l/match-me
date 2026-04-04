@@ -147,13 +147,17 @@ public class MatchingService {
             return Optional.empty();
         }
 
-        // Hard filter 2: Gender preference — candidate must match what the current user prefers
-        if (!genderCompatible(currentUser, candidate)) {
+        // Hard filter 2: Gender preference — must work both ways.
+        // The candidate must match what the current user prefers,
+        // AND the current user must match what the candidate prefers.
+        if (!genderCompatible(currentUser, candidate) || !genderCompatible(candidate, currentUser)) {
             return Optional.empty();
         }
 
-        // Hard filter 3: Age preference — candidate must be within the current user's preferred age range
-        if (!ageCompatible(currentUser, candidate)) {
+        // Hard filter 3: Age preference — must work both ways.
+        // The candidate must be in the current user's preferred age range,
+        // AND the current user must be in the candidate's preferred age range.
+        if (!ageCompatible(currentUser, candidate) || !ageCompatible(candidate, currentUser)) {
             return Optional.empty();
         }
 

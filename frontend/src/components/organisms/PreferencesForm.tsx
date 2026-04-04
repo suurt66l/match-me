@@ -148,8 +148,8 @@ export default function PreferencesForm() {
   }
 
   return (
-    <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+    <div className="flex min-h-full justify-center px-4 sm:px-8 py-12 bg-amber-500 rounded-xl">
+      <div className="w-full mx-auto sm:max-w-sm">
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
           <GameTimeInputBlock
             setGameTimeFrom={setGameTimeFrom}

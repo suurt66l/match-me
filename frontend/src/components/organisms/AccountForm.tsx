@@ -139,8 +139,8 @@ export default function AccountForm() {
   }
 
   return (
-    <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm flex flex-col gap-6">
+    <div className="flex min-h-full justify-center px-4 sm:px-8 py-12 bg-amber-500 rounded-xl">
+      <div className="w-full mx-auto sm:max-w-sm flex flex-col gap-6">
 
         {/* Nickname */}
         <Section>

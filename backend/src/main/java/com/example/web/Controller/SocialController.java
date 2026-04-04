@@ -45,6 +45,7 @@ public class SocialController {
         List<String> missing = new ArrayList<>();
 
         if (user.getDateOfBirth() == null) missing.add("dateOfBirth");
+        if (user.getGender() == null || user.getGender().isBlank()) missing.add("gender");
         if (user.getGamePreference() == null || user.getGamePreference().isBlank()) missing.add("games");
         if (user.getGameGenrePreference() == null || user.getGameGenrePreference().isBlank()) missing.add("gameGenres");
         if (user.getPlatforms() == null || user.getPlatforms().isBlank()) missing.add("platform");

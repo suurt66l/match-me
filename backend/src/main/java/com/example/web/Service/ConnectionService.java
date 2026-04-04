@@ -67,8 +67,10 @@ public class ConnectionService {
         connection.setAddressee(addressee);
         connection.setStatus(ConnectionStatus.PENDING);
         Connection saved = connectionRepository.save(connection);
-        // Notify the addressee so their Connections page updates in real time
+        // Notify both sides — the addressee gets the incoming request,
+        // the requester's matcher should also refresh (the other user may have already sent them a request)
         messagingTemplate.convertAndSendToUser(addressee.getEmail(), "/queue/connections", "update");
+        messagingTemplate.convertAndSendToUser(requester.getEmail(), "/queue/connections", "update");
         return saved;
     }
 
@@ -110,7 +112,12 @@ public class ConnectionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only pending connections can be rejected");
         }
 
-        connectionRepository.delete(connection); // might be worth not deleting to keep history?
+        // Notify the other user so their Connections page updates in real time
+        User other = connection.getRequester().getId().equals(currentUser.getId())
+                ? connection.getAddressee()
+                : connection.getRequester();
+        connectionRepository.delete(connection);
+        messagingTemplate.convertAndSendToUser(other.getEmail(), "/queue/connections", "update");
     }
 
     // block a user

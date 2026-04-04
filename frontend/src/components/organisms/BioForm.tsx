@@ -238,8 +238,8 @@ export default function BioForm() {
   const hasLocation = city || country || latitude !== null;
 
   return (
-    <div className="flex min-h-full justify-center px-8 py-12 bg-amber-500 rounded-xl">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+    <div className="flex min-h-full justify-center px-4 sm:px-8 py-12 bg-amber-500 rounded-xl">
+      <div className="w-full mx-auto sm:max-w-sm">
         <form onSubmit={handleSubmit} method="POST" className="space-y-6">
           <ProfilePictureBlock setProfilePicture={setProfilePicture} existingAvatarUrl={existingAvatarUrl} onRemove={handleRemovePicture} />
           <DateOfBirthInputBlock setDateOfBirth={setDateOfBirth} value={dateOfBirth} />
