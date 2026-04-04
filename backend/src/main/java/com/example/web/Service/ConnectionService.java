@@ -88,8 +88,9 @@ public class ConnectionService {
 
         connection.setStatus(ConnectionStatus.ACCEPTED);
         Connection saved = connectionRepository.save(connection);
-        // Notify the requester so their Connections page updates in real time
+        // Notify both sides so both Connections pages update in real time
         messagingTemplate.convertAndSendToUser(connection.getRequester().getEmail(), "/queue/connections", "update");
+        messagingTemplate.convertAndSendToUser(currentUser.getEmail(), "/queue/connections", "update");
         return saved;
     }
 
@@ -189,7 +190,11 @@ public class ConnectionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not part of this connection");
         }
 
+        User other = connection.getRequester().getId().equals(currentUser.getId())
+                ? connection.getAddressee()
+                : connection.getRequester();
         connectionRepository.delete(connection);
+        messagingTemplate.convertAndSendToUser(other.getEmail(), "/queue/connections", "update");
     }
 
     // Disconnect from a user by their ID (used when frontend only has user ID, not connection ID)
@@ -200,6 +205,7 @@ public class ConnectionService {
         Connection connection = connectionRepository.findBetweenUsers(currentUser, other)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Connection not found"));
         connectionRepository.delete(connection);
+        messagingTemplate.convertAndSendToUser(other.getEmail(), "/queue/connections", "update");
     }
 
 }

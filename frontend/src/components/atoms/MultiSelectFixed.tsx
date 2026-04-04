@@ -23,14 +23,14 @@ export default function MultiSelectFixed({ options, value, placeholder = "Select
         unstyled
         classNames={{
             valueContainer: () => "flex flex-wrap gap-1",
-            control: () => "bg-amber-500 border-2 border-white/25 rounded-lg py-1 px-1 hover:text-amber-400",
+            control: () => "bg-amber-200 border-2 border-amber-400 rounded-lg py-1 px-1",
             menu: () => "bg-amber-950 border-5 border-amber-900 rounded-lg mt-1",
-            option: () => "px-3 py-2 text-white hover:bg-amber-900 cursor-pointer",
-            multiValue: () => "bg-amber-950 rounded px-1",
+            option: () => "px-3 py-2 text-white hover:bg-amber-800 cursor-pointer",
+            multiValue: () => "bg-amber-700 rounded px-1",
             multiValueLabel: () => "text-white text-sm px-1",
-            multiValueRemove: () => "text-white hover:text-amber-400 px-1",
-            placeholder: () => "text-white",
-            input: () => "text-white",
+            multiValueRemove: () => "text-white hover:text-amber-300 px-1",
+            placeholder: () => "text-amber-600",
+            input: () => "text-amber-950",
       }}
     />
   );

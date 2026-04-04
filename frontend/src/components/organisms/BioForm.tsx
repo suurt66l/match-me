@@ -278,7 +278,7 @@ export default function BioForm() {
               type="button"
               onClick={handleDetectLocation}
               disabled={detecting}
-              className="w-full px-4 py-2 rounded-lg text-sm bg-amber-950 text-amber-300 font-semibold hover:bg-amber-800 transition-colors mb-2 disabled:opacity-60"
+              className="w-full px-4 py-2 rounded-lg text-sm bg-amber-950 text-white font-semibold hover:bg-amber-800 transition-colors mb-2 disabled:opacity-60"
             >
               {detecting ? "Detecting…" : hasLocation ? "📍 Update my location" : "📍 Detect my location"}
             </button>
@@ -291,7 +291,7 @@ export default function BioForm() {
                 value={locationSearch}
                 onChange={e => setLocationSearch(e.target.value)}
                 placeholder="Or search for a city…"
-                className="w-full rounded-lg bg-amber-400 px-3 py-2 text-sm text-amber-950 placeholder-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-950"
+                className="w-full rounded-lg bg-amber-200 px-3 py-2 text-sm text-amber-950 placeholder-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-700"
               />
               {suggestions.length > 0 && (
                 <ul className="absolute z-20 left-0 right-0 mt-1 bg-amber-950 rounded-lg overflow-hidden shadow-lg">

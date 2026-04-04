@@ -23,7 +23,7 @@ export default function ChatMessage({ isMine, message }: Props) {
                 <div className={`flex items-center justify-end gap-1 mt-1 text-xs select-none ${isMine ? "text-amber-600" : "text-amber-800"}`}>
                     <span>{formatTime(message.timestamp)}</span>
                     {isMine && (
-                        <span className={message.read ? "text-amber-400" : "text-amber-700"}>
+                        <span className={message.read ? "text-amber-600" : "text-amber-700"}>
                             {message.read ? "✓✓" : "✓"}
                         </span>
                     )}

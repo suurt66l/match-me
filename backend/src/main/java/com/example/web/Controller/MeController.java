@@ -82,6 +82,11 @@ public class MeController {
             user.setNickname(request.getNickname());
         }
         if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (request.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.FORBIDDEN, "Current password is incorrect");
+            }
             user.setEmail(request.getEmail());
         }
         if (request.getPassword() != null && !request.getPassword().isBlank()) {

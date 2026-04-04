@@ -180,7 +180,7 @@ export default function PreferencesForm() {
               value={maxDistanceKm}
               onChange={e => setMaxDistanceKm(e.target.value)}
               placeholder="e.g. 500"
-              className="w-full rounded-lg bg-amber-400 px-3 py-2 text-sm text-amber-950 placeholder-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-950"
+              className="w-full rounded-lg bg-amber-200 px-3 py-2 text-sm text-amber-950 placeholder-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-700"
             />
           </div>
 
