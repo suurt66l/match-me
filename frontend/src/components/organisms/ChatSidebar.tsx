@@ -1,4 +1,5 @@
 import { API_URL } from "../../utils/api";
+import defaultAvatar from "../../assets/default-avatar.svg";
 
 interface Connection {
     connectionId: number;
@@ -31,7 +32,7 @@ export default function ChatSidebar({ connections, activeId, unreadCounts, onSel
                         <div className="relative shrink-0">
                             <div className="w-9 h-9 rounded-full bg-amber-950 overflow-hidden">
                             <img
-                                src={user.avatarUrl ? `${API_URL}${user.avatarUrl}` : "/assets/default-avatar.svg"}
+                                src={user.avatarUrl ? `${API_URL}${user.avatarUrl}` : defaultAvatar}
                                 alt={user.nickname}
                                 className="w-full h-full object-cover"
                             />

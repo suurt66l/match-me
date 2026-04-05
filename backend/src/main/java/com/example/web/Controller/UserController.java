@@ -114,7 +114,6 @@ public class UserController {
                 target.getLookingFor(),
                 target.getPlatforms(),
                 target.getIntensity(),
-                target.getLocation(),
                 target.getCountry(),
                 target.getCity()
         ));

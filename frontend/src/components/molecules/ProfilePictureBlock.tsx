@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ProfilePictureLabel from "../atoms/ProfilePictureLabel";
 import ProfilePictureInput from "../atoms/ProfilePictureInput";
+import defaultAvatar from "../../assets/default-avatar.svg";
 
 interface Props {
     setProfilePicture: (file: File) => void;
@@ -17,7 +18,7 @@ export default function ProfilePictureBlock({ setProfilePicture, existingAvatarU
     }
 
     // Show newly selected file preview, saved avatar, or default
-    const displayUrl = previewUrl ?? existingAvatarUrl ?? "/assets/default-avatar.svg";
+    const displayUrl = previewUrl ?? existingAvatarUrl ?? defaultAvatar;
     const hasPicture = previewUrl !== null || existingAvatarUrl !== null;
 
     return (

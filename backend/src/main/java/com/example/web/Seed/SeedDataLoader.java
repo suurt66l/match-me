@@ -174,7 +174,6 @@ public class SeedDataLoader {
             user.setNickname(nicknames[i % nicknames.length] + emailNum);
             user.setDateOfBirth(LocalDate.of(1993 + (i % 12), 1 + (i % 12), 1 + (i % 27)));
             user.setGender(gender);
-            user.setLocation(locationData[locIdx][0]);
             user.setCountry(locationData[locIdx][1]);
             user.setCity(locationData[locIdx][2]);
             user.setTimezone(locationData[locIdx][3]);

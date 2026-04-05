@@ -18,7 +18,6 @@ public class UserBioDto { // for /users/{id}/bio (data for recommends)
     private String lookingFor;
     private String platforms; 
     private String intensity;
-    private String location;
     private String country;
     private String city;
     private Double latitude;

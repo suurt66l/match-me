@@ -136,7 +136,6 @@ public class MeController {
                 user.getLookingFor(),
                 user.getPlatforms(),
                 user.getIntensity(),
-                user.getLocation(),
                 user.getCountry(),
                 user.getCity(),
                 user.getLatitude(),
@@ -181,7 +180,6 @@ public class MeController {
         if (request.getLookingFor() != null) user.setLookingFor(request.getLookingFor());
         if (request.getPlatforms() != null) user.setPlatforms(request.getPlatforms());
         if (request.getIntensity() != null) user.setIntensity(request.getIntensity());
-        if (request.getLocation() != null) user.setLocation(request.getLocation());
         if (request.getCountry() != null) user.setCountry(request.getCountry());
         if (request.getCity() != null) user.setCity(request.getCity());
         if (request.getLatitude() != null) user.setLatitude(request.getLatitude());
@@ -204,7 +202,6 @@ public class MeController {
                 user.getLookingFor(),
                 user.getPlatforms(),
                 user.getIntensity(),
-                user.getLocation(),
                 user.getCountry(),
                 user.getCity(),
                 user.getLatitude(),

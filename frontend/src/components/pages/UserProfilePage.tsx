@@ -60,7 +60,7 @@ export default function UserProfilePage() {
           id: summary.id,
           nickname: summary.nickname,
           avatarUrl: summary.profilePictureUrl || null,
-          country: bio.country ?? bio.location ?? "",
+          country: bio.country ?? "",
           city: bio.city ?? "",
           dateOfBirth: bio.dateOfBirth ?? "",
           gender: bio.gender ?? "",
