@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import { useWebSocket } from "../../utils/WebSocketContext";
+import { API_URL } from "../../utils/api";
 import PendingCard from "./PendingCard";
 import SentCard from "./SentCard";
 import ConnectionCard from "./ConnectionCard";
 
 interface UserData {
   connectionId: number;
-  requesterId: number;
   id: number;
   nickname: string;
   avatarUrl: string | null;
   country: string;
+  city: string;
   dateOfBirth: string;
+  gender: string;
   games: string;
   gameGenres: string;
   platform: string;
@@ -28,13 +30,12 @@ export default function ConnectionsSection() {
   const [connections, setConnections] = useState<UserData[]>([]);
   const [pending, setPending] = useState<UserData[]>([]);
   const [sent, setSent] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuth();
   const { client } = useWebSocket();
 
   useEffect(() => {
-    loadConnections();
-    loadPending();
-    loadSent();
+    Promise.all([loadConnections(), loadPending(), loadSent()]).finally(() => setLoading(false));
   }, [token]);
 
   // Re-load when the backend signals a connection change (new request or accepted)
@@ -50,30 +51,29 @@ export default function ConnectionsSection() {
 
   async function fetchUserDetails(id: number): Promise<UserData | null> {
     try {
-      const [summaryRes, bioRes, profileRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/users/${id}`, { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { "Authorization": `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { "Authorization": `Bearer ${token}` } }),
+      const [summaryRes, bioRes] = await Promise.all([
+        fetch(`${API_URL}/api/users/${id}`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}/bio`, { headers: { "Authorization": `Bearer ${token}` } }),
       ]);
-      if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
+      if (!summaryRes.ok || !bioRes.ok) return null;
       const summary = await summaryRes.json();
       const bio = await bioRes.json();
-      const profile = await profileRes.json();
       return {
         connectionId: 0,
-        requesterId: 0,
         id: summary.id,
         nickname: summary.nickname,
         avatarUrl: summary.profilePictureUrl || null,
-        country: bio.location ?? "",
+        country: bio.country ?? "",
+        city: bio.city ?? "",
         dateOfBirth: bio.dateOfBirth ?? "",
-        games: bio.gamePreference ?? "",
-        gameGenres: bio.gameGenrePreference ?? "",
-        platform: bio.platforms ?? "",
-        lookingFor: bio.lookingFor ?? "",
-        intensity: bio.intensity ?? "",
-        timeRange: bio.timeRange ?? "",
-        aboutMe: profile.aboutMe ?? "",
+        gender: bio.gender ?? "",
+        games: "",
+        gameGenres: "",
+        platform: "",
+        lookingFor: "",
+        intensity: "",
+        timeRange: "",
+        aboutMe: "",
         matchedFields: [],
       };
     } catch {
@@ -84,7 +84,7 @@ export default function ConnectionsSection() {
   async function loadConnections() {
     try {
       // Fetch IDs only, then load details for each
-      const response = await fetch("http://localhost:8080/api/connections", {
+      const response = await fetch(`${API_URL}/api/connections`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       if (response.ok) {
@@ -99,12 +99,16 @@ export default function ConnectionsSection() {
 
   async function loadPending() {
     try {
-      const response = await fetch("http://localhost:8080/api/connections/pending", {
+      const response = await fetch(`${API_URL}/api/connections/pending`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       if (response.ok) {
-        const data = await response.json();
-        setPending(data);
+        const pairs: { connectionId: number; userId: number }[] = await response.json();
+        const users = await Promise.all(pairs.map(async ({ connectionId, userId }) => {
+          const user = await fetchUserDetails(userId);
+          return user ? { ...user, connectionId } : null;
+        }));
+        setPending(users.filter((u): u is UserData => u !== null));
       }
     } catch {
       console.log("Server is unreachable!");
@@ -113,12 +117,16 @@ export default function ConnectionsSection() {
 
   async function loadSent() {
     try {
-      const response = await fetch("http://localhost:8080/api/connections/pending/sent", {
+      const response = await fetch(`${API_URL}/api/connections/pending/sent`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       if (response.ok) {
-        const data = await response.json();
-        setSent(data);
+        const pairs: { connectionId: number; userId: number }[] = await response.json();
+        const users = await Promise.all(pairs.map(async ({ connectionId, userId }) => {
+          const user = await fetchUserDetails(userId);
+          return user ? { ...user, connectionId } : null;
+        }));
+        setSent(users.filter((u): u is UserData => u !== null));
       }
     } catch {
       console.log("Server is unreachable!");
@@ -128,7 +136,7 @@ export default function ConnectionsSection() {
   async function cancelRequest(connectionId: number) {
     setSent(sent.filter(item => item.connectionId !== connectionId));
     try {
-      await fetch(`http://localhost:8080/api/connections/reject/${connectionId}`, {
+      await fetch(`${API_URL}/api/connections/reject/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -140,7 +148,7 @@ export default function ConnectionsSection() {
   async function removeConnection(userId: number) {
     setConnections(connections.filter(item => item.id !== userId));
     try {
-      await fetch(`http://localhost:8080/api/connections/with/${userId}`, {
+      await fetch(`${API_URL}/api/connections/with/${userId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -153,7 +161,7 @@ export default function ConnectionsSection() {
   async function blockConnection(id: number) {
     setConnections(connections.filter(item => item.id !== id));
     try {
-      await fetch(`http://localhost:8080/api/connections/block/${id}`, {
+      await fetch(`${API_URL}/api/connections/block/${id}`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -165,7 +173,7 @@ export default function ConnectionsSection() {
   async function acceptRequest(connectionId: number) {
     setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
-      await fetch(`http://localhost:8080/api/connections/accept/${connectionId}`, {
+      await fetch(`${API_URL}/api/connections/accept/${connectionId}`, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -177,13 +185,17 @@ export default function ConnectionsSection() {
   async function rejectRequest(connectionId: number) {
     setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
-      await fetch(`http://localhost:8080/api/connections/reject/${connectionId}`, {
+      await fetch(`${API_URL}/api/connections/reject/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
     } catch {
       console.log("Server is unreachable!");
     }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   return (
@@ -227,7 +239,7 @@ export default function ConnectionsSection() {
       {/* Accepted connections */}
       {connections.length > 0 && (
         <div>
-          {pending.length > 0 && <h2 className="text-amber-950 font-bold text-lg mb-3">Connected</h2>}
+          <h2 className="text-amber-950 font-bold text-lg mb-3">Connected</h2>
           <div className="flex flex-col gap-3">
             {connections.map(user => (
               <div key={user.id}>

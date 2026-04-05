@@ -2,6 +2,7 @@ package com.example.web.Seed;
 
 import com.example.web.Entity.User;
 import com.example.web.Repository.ConnectionRepository;
+import com.example.web.Repository.MessageRepository;
 import com.example.web.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,11 +25,14 @@ public class SeedDataLoader {
 
     private final UserRepository userRepository;
     private final ConnectionRepository connectionRepository;
+    private final MessageRepository messageRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public SeedDataLoader(UserRepository userRepository, ConnectionRepository connectionRepository, PasswordEncoder passwordEncoder) {
+    public SeedDataLoader(UserRepository userRepository, ConnectionRepository connectionRepository,
+                          MessageRepository messageRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.connectionRepository = connectionRepository;
+        this.messageRepository = messageRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,18 +44,49 @@ public class SeedDataLoader {
 
         String password = passwordEncoder.encode("1234");
 
-        // --- Data pools ---
+        // Each entry: { continent, country, city, timezone }
+        // ~75% Europe (6 Estonia cities), ~15% North America, ~10% Asia
+        String[][] locationData = {
+            {"Europe", "Estonia",          "Tallinn",     "UTC+2"},
+            {"Europe", "Estonia",          "Tartu",       "UTC+2"},
+            {"Europe", "Estonia",          "Narva",       "UTC+2"},
+            {"Europe", "Estonia",          "Pärnu",       "UTC+2"},
+            {"Europe", "Estonia",          "Tallinn",     "UTC+2"},
+            {"Europe", "Estonia",          "Tartu",       "UTC+2"},
+            {"Europe", "Latvia",           "Riga",        "UTC+2"},
+            {"Europe", "Lithuania",        "Vilnius",     "UTC+2"},
+            {"Europe", "Finland",          "Helsinki",    "UTC+2"},
+            {"Europe", "Germany",          "Berlin",      "UTC+1"},
+            {"Europe", "Poland",           "Warsaw",      "UTC+1"},
+            {"Europe", "Sweden",           "Stockholm",   "UTC+1"},
+            {"Europe", "Norway",           "Oslo",        "UTC+1"},
+            {"Europe", "Netherlands",      "Amsterdam",   "UTC+1"},
+            {"Europe", "France",           "Paris",       "UTC+1"},
+            {"North America", "United States", "New York",    "UTC-5"},
+            {"North America", "Canada",        "Toronto",     "UTC-5"},
+            {"North America", "United States", "Los Angeles", "UTC-8"},
+            {"Asia", "Japan",              "Tokyo",       "UTC+9"},
+            {"Asia", "South Korea",        "Seoul",       "UTC+9"},
+        };
 
-        // Continents paired with UTC offsets — same format as the frontend timezone selector
-        String[][] locationTimezone = {
-            {"Europe",        "UTC+1"},
-            {"North America", "UTC-5"},
-            {"Asia",          "UTC+9"},
+        // GPS coordinates matching the locationData order (base coordinates per city)
+        double[] baseLat = {
+             59.4370,  58.3780,  59.3977,  58.3893,  59.4370,  58.3780, // Estonia
+             56.9496,  54.6872,  60.1699,  52.5200,  52.2297,  59.3293, // Latvia..France
+             59.9139,  52.3676,  48.8566,                                // Oslo..Paris
+             40.7128,  43.6532,  34.0522,                                // NA
+             35.6762,  37.5665                                           // Asia
+        };
+        double[] baseLng = {
+             24.7536,  26.7290,  28.1469,  24.4997,  24.7536,  26.7290, // Estonia
+             24.1052,  25.2797,  24.9384,  13.4050,  21.0122,  18.0686, // Latvia..Stockholm
+             10.7522,   4.9041,   2.3522,                                // Oslo..Paris
+            -74.0060, -79.3832,-118.2437,                                // NA
+            139.6503, 126.9780                                           // Asia
         };
 
         String[] timeRanges = {"08:00-14:00", "12:00-18:00", "16:00-22:00", "20:00-02:00"};
 
-        // Groups of games that share genres — creates natural clusters for the matcher
         String[][] gameGroups = {
             {"Valorant", "CS2"},
             {"League of Legends", "Dota 2"},
@@ -75,26 +110,12 @@ public class SeedDataLoader {
         };
 
         String[] platformGroups = {
-            "PC",
-            "PC, PlayStation",
-            "PlayStation",
-            "PC, Xbox",
-            "Xbox",
-            "PC, Nintendo Switch",
-            "Nintendo Switch",
-            "PC",
+            "PC", "PC, PlayStation", "PlayStation", "PC, Xbox",
+            "Xbox", "PC, Nintendo Switch", "Nintendo Switch", "PC",
         };
 
-        String[] lookingFor = {
-            "Play together",
-            "Friendship",
-            "Just to chat",
-            "Relationships IRL",
-        };
-
+        String[] lookingFor = {"Play together", "Friendship", "Just to chat", "Relationships IRL"};
         String[] intensities = {"3", "4", "5", "5", "6", "6", "7", "8"};
-
-        String[] genders = {"Male", "Female", "Non-binary"};
 
         String[] nicknames = {
             "ShadowFox", "NeonBlade", "CryptoKnight", "FrostWolf", "IronHawk",
@@ -120,56 +141,52 @@ public class SeedDataLoader {
             "New to competitive gaming but learning fast. Patient teammates welcome.",
         };
 
-        // Other-region options per home continent — all continents except own
-        String[][] openToByLocation = {
-            {"North America", "Asia"},           // Europe users can expand to these
-            {"Europe", "Asia"},                  // North America users can expand to these
-            {"Europe", "North America", "Antarctica"},         // Asia users can expand to these
-        };
+        // maxDistanceKm variation: null=any, 500=regional, 2000=wide
+        Integer[] maxDistances = {null, 500, 2000};
 
         for (int i = 0; i < 120; i++) {
             int emailNum = i + 10;
             String email = "test" + emailNum + "@test.com";
-
-            // Skip if this email already exists
             if (userRepository.findByEmail(email).isPresent()) continue;
 
             int groupIdx = i % gameGroups.length;
-            int locIdx   = i % locationTimezone.length;
+            int locIdx   = i % locationData.length;
             int timeIdx  = i % timeRanges.length;
 
-            // Use 1 or 2 games from the same group — creates natural matching clusters
             String userGames  = (i % 3 == 0)
                 ? gameGroups[groupIdx][0]
                 : gameGroups[groupIdx][0] + ", " + gameGroups[groupIdx][1];
 
-            String userGenres = genreGroups[groupIdx][0] + ", " + genreGroups[groupIdx][1];
-            String userPlats  = platformGroups[groupIdx];
-
-            // Vary cross-region openness: 1/4 same-region-only, 1/4 one other, 1/2 all other
-            String[] otherRegions = openToByLocation[locIdx];
-            String openToOtherRegions = switch (i % 4) {
-                case 0 -> null;                                          // same region only
-                case 1 -> otherRegions[0];                              // one other region
-                default -> otherRegions[0] + ", " + otherRegions[1];   // both other regions
+            // Gender: 50% Female, 30% Non-binary, 20% Male
+            String gender = switch (i % 10) {
+                case 0, 1, 2, 3, 4 -> "Female";
+                case 5, 6, 7       -> "Non-binary";
+                default            -> "Male";
             };
+
+            // Scatter users slightly around their city's base coordinates
+            double lat = baseLat[locIdx] + (i % 7 - 3) * 0.015;
+            double lng = baseLng[locIdx] + (i % 5 - 2) * 0.015;
 
             User user = new User();
             user.setEmail(email);
             user.setPassword(password);
             user.setNickname(nicknames[i % nicknames.length] + emailNum);
             user.setDateOfBirth(LocalDate.of(1993 + (i % 12), 1 + (i % 12), 1 + (i % 27)));
-            user.setGender(genders[i % genders.length]);
-            user.setLocation(locationTimezone[locIdx][0]);
-            user.setTimezone(locationTimezone[locIdx][1]);
+            user.setGender(gender);
+            user.setCountry(locationData[locIdx][1]);
+            user.setCity(locationData[locIdx][2]);
+            user.setTimezone(locationData[locIdx][3]);
+            user.setLatitude(lat);
+            user.setLongitude(lng);
+            user.setMaxDistanceKm(maxDistances[i % maxDistances.length]);
             user.setTimeRange(timeRanges[timeIdx]);
             user.setGamePreference(userGames);
-            user.setGameGenrePreference(userGenres);
-            user.setPlatforms(userPlats);
+            user.setGameGenrePreference(genreGroups[groupIdx][0] + ", " + genreGroups[groupIdx][1]);
+            user.setPlatforms(platformGroups[groupIdx]);
             user.setLookingFor(lookingFor[i % lookingFor.length]);
             user.setIntensity(intensities[i % intensities.length]);
             user.setAboutMe(aboutMeTexts[i % aboutMeTexts.length]);
-            user.setOpenToOtherRegions(openToOtherRegions);
 
             userRepository.save(user);
         }
@@ -177,22 +194,16 @@ public class SeedDataLoader {
         return ResponseEntity.ok("Seed complete: 120 users created (test10@test.com ... test129@test.com, password: 1234)");
     }
 
-    // DELETE /api/seed — removes all seeded users (test10@test.com and above)
-    // Users below test10 (e.g. test1@test.com) are NOT deleted
     @DeleteMapping
     public ResponseEntity<String> deleteSeed() {
-        // Match test10@test.com through test999@test.com — two or more digits after "test"
         List<User> seeded = userRepository.findByEmailLike("test%@test.com").stream()
                 .filter(u -> {
                     String local = u.getEmail().replace("@test.com", "").replace("test", "");
-                    try {
-                        return Integer.parseInt(local) >= 10;
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
+                    try { return Integer.parseInt(local) >= 10; }
+                    catch (NumberFormatException e) { return false; }
                 })
                 .toList();
-        // Delete connections first to avoid foreign key violations
+        seeded.forEach(u -> messageRepository.deleteAllByUser(u));
         seeded.forEach(u -> connectionRepository.deleteAll(connectionRepository.findAllByUser(u)));
         userRepository.deleteAll(seeded);
         return ResponseEntity.ok("Deleted " + seeded.size() + " seeded users.");

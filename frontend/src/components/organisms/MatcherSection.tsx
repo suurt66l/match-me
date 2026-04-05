@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../utils/AuthContext";
+import { useWebSocket } from "../../utils/WebSocketContext";
+import { API_URL } from "../../utils/api";
 import MatcherCard from "./MatcherCard";
 
 interface MatchUser {
@@ -7,7 +9,9 @@ interface MatchUser {
   nickname: string;
   avatarUrl: string | null;
   country: string;
+  city: string;
   dateOfBirth: string;
+  gender: string;
   games: string;
   gameGenres: string;
   platform: string;
@@ -56,15 +60,17 @@ function computeMatchedFields(myBio: Record<string, string>, candidateBio: Recor
 export default function MatcherSection() {
   const [matches, setMatches] = useState<MatchUser[]>([]);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+  const { client } = useWebSocket();
 
   // Fetch all data for a single user by combining the three user endpoints
   async function fetchUserDetails(id: number, token: string, myBio: Record<string, string>): Promise<MatchUser | null> {
     try {
       const [summaryRes, bioRes, profileRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`http://localhost:8080/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
       const summary = await summaryRes.json();
@@ -74,8 +80,10 @@ export default function MatcherSection() {
         id: summary.id,
         nickname: summary.nickname,
         avatarUrl: summary.profilePictureUrl || null,
-        country: bio.location ?? "",
+        country: bio.country ?? "",
+        city: bio.city ?? "",
         dateOfBirth: bio.dateOfBirth ?? "",
+        gender: bio.gender ?? "",
         games: bio.gamePreference ?? "",
         gameGenres: bio.gameGenrePreference ?? "",
         platform: bio.platforms ?? "",
@@ -90,69 +98,97 @@ export default function MatcherSection() {
     }
   }
 
-  useEffect(() => {
-    async function loadMatches() {
-      try {
-        // Step 1: check if profile is complete
-        const completeRes = await fetch("http://localhost:8080/api/recommendations/complete", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!completeRes.ok) return;
-        const completeData = await completeRes.json();
-        if (!completeData.complete) {
-          setMissingFields(completeData.missingFields ?? []);
-          setMatches([]);
-          return;
-        }
-        setMissingFields([]);
-
-        // Step 2: fetch current user's own bio for matched fields comparison
-        const myBioRes = await fetch("http://localhost:8080/api/me/bio", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const myBio = myBioRes.ok ? await myBioRes.json() : {};
-
-        // Step 3: get the list of recommended IDs
-        const idsRes = await fetch("http://localhost:8080/api/recommendations", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!idsRes.ok) return;
-        const ids: number[] = await idsRes.json();
-
-        // Step 4: fetch full details for each ID in parallel, with matched fields
-        const users = await Promise.all(ids.map(id => fetchUserDetails(id, token!, myBio)));
-        setMatches(users.filter((u): u is MatchUser => u !== null));
-      } catch {
-        console.log("Can't load matches. Server is unreachable!");
+  // Fetches the full recommendations list from the server and updates state.
+  // Called on initial load and after every dismiss/connect action so the list
+  // stays accurate and fills in a new match to replace the removed one.
+  async function loadMatches() {
+    try {
+      // Step 1: check if profile is complete
+      const completeRes = await fetch(`${API_URL}/api/recommendations/complete`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!completeRes.ok) return;
+      const completeData = await completeRes.json();
+      if (!completeData.complete) {
+        setMissingFields(completeData.missingFields ?? []);
+        setMatches([]);
+        return;
       }
+      setMissingFields([]);
+
+      // Step 2: fetch current user's own bio for matched fields comparison
+      const myBioRes = await fetch(`${API_URL}/api/me/bio`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const myBio = myBioRes.ok ? await myBioRes.json() : {};
+
+      // Step 3: get the list of recommended IDs (max 10 from the server)
+      const idsRes = await fetch(`${API_URL}/api/recommendations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!idsRes.ok) return;
+      const ids: number[] = await idsRes.json();
+
+      // Step 4: fetch full details for each ID in parallel
+      const users = await Promise.all(ids.map(id => fetchUserDetails(id, token!, myBio)));
+      setMatches(users.filter((u): u is MatchUser => u !== null));
+    } catch {
+      console.log("Can't load matches. Server is unreachable!");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  // Load recommendations on first render
+  useEffect(() => {
     loadMatches();
   }, [token]);
 
-  // Send a connection request to the user
+  // Subscribe to real-time connection updates.
+  // When the backend sends "update" (e.g. the other user also pressed Connect),
+  // reload the recommendations so the mutual match moves to Connections automatically.
+  useEffect(() => {
+    if (!client) return;
+    const subscription = client.subscribe("/user/queue/connections", () => {
+      loadMatches();
+    });
+    return () => subscription.unsubscribe();
+  }, [client]);
+
+  // Send a connection request, then refresh the list so the slot is filled
   async function handleConnect(id: number) {
-    setMatches(matches.filter(item => item.id !== id));
+    // Remove immediately from UI so the user sees instant feedback
+    setMatches(prev => prev.filter(item => item.id !== id));
     try {
-      await fetch(`http://localhost:8080/api/connections/request/${id}`, {
+      await fetch(`${API_URL}/api/connections/request/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {
       console.log("Can't connect to user. Server is unreachable!");
     }
+    // Refetch so a new match fills the empty slot
+    loadMatches();
   }
 
-  // Block the user so they never appear in recommendations again
+  // Dismiss (block) the user, then refresh the list so the slot is filled
   async function handleDismiss(id: number) {
-    setMatches(matches.filter(item => item.id !== id));
+    // Remove immediately from UI so the user sees instant feedback
+    setMatches(prev => prev.filter(item => item.id !== id));
     try {
-      await fetch(`http://localhost:8080/api/connections/block/${id}`, {
+      await fetch(`${API_URL}/api/connections/block/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {
       console.log("Can't dismiss user. Server is unreachable!");
     }
+    // Refetch so a new match fills the empty slot
+    loadMatches();
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }
 
   // Show which fields are missing if profile is incomplete

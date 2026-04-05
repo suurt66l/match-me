@@ -33,8 +33,12 @@ public class User {
     private String lookingFor; // e.g "just gaming, friendship, relationship, etc"
     private String platforms; // PC, Xbox, etc
     private String intensity; // gaming intensity, e.g. casual to sweaty
-    private String location;
-    private String openToOtherRegions; // comma-separated list of additional regions the user is open to matching with
+    private String country;   // country name (shown on profile)
+    private String city;      // city name (shown on profile)
+    private Double latitude;  // GPS coordinates for proximity matching
+    private Double longitude;
+    private Integer maxDistanceKm; // max distance the user is willing to match within (null = no limit)
+    private String openToOtherRegions; // legacy, unused
     private String preferredGenders;   // comma-separated genders the user wants to match with (null = any)
     private Integer preferredAgeMin;   // minimum age of preferred match (null = no limit)
     private Integer preferredAgeMax;   // maximum age of preferred match (null = no limit)

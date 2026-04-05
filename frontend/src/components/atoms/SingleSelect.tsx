@@ -21,12 +21,12 @@ export default function SingleSelect({ options, value, placeholder = "Select..."
         placeholder={placeholder}
         unstyled
         classNames={{
-            control: () => "bg-amber-500 border-2 border-white/25 rounded-lg py-1 px-1 hover:text-amber-400",
+            control: () => "bg-amber-200 border-2 border-amber-400 rounded-lg py-1 px-1",
             menu: () => "bg-amber-950 border-5 border-amber-900 rounded-lg mt-1",
-            option: () => "px-3 py-2 text-white hover:bg-amber-900 cursor-pointer",
-            singleValue: () => "text-white rounded px-1",
-            placeholder: () => "text-white",
-            input: () => "text-white",
+            option: () => "px-3 py-2 text-white hover:bg-amber-800 cursor-pointer",
+            singleValue: () => "text-amber-950 rounded px-1",
+            placeholder: () => "text-amber-600",
+            input: () => "text-amber-950",
       }}
     />
   );

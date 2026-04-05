@@ -6,5 +6,6 @@ import lombok.Data;
 public class UpdateAccountRequest {
     private String nickname;
     private String email;
-    private String password;
+    private String currentPassword; // required when changing email
+    private String password;        // new password
 }

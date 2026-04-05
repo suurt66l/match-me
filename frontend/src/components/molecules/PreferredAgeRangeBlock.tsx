@@ -19,7 +19,7 @@ export default function PreferredAgeRangeBlock({ minAge, maxAge, setMinAge, setM
               placeholder="Min"
               value={minAge}
               onChange={e => setMinAge(e.target.value)}
-              className="w-full rounded-lg border-2 border-white/25 bg-amber-500 px-3 py-1.5 text-white placeholder-white text-sm focus:outline-none"
+              className="w-full rounded-lg border-2 border-amber-400 bg-amber-200 px-3 py-1.5 text-amber-950 placeholder-amber-700 text-sm focus:outline-none focus:border-amber-700"
             />
             <span className="text-gray-100 text-sm shrink-0">to</span>
             <input
@@ -29,7 +29,7 @@ export default function PreferredAgeRangeBlock({ minAge, maxAge, setMinAge, setM
               placeholder="Max"
               value={maxAge}
               onChange={e => setMaxAge(e.target.value)}
-              className="w-full rounded-lg border-2 border-white/25 bg-amber-500 px-3 py-1.5 text-white placeholder-white text-sm focus:outline-none"
+              className="w-full rounded-lg border-2 border-amber-400 bg-amber-200 px-3 py-1.5 text-amber-950 placeholder-amber-700 text-sm focus:outline-none focus:border-amber-700"
             />
           </div>
         </div>

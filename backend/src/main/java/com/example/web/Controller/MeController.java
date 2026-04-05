@@ -82,6 +82,11 @@ public class MeController {
             user.setNickname(request.getNickname());
         }
         if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (request.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.FORBIDDEN, "Current password is incorrect");
+            }
             user.setEmail(request.getEmail());
         }
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
@@ -115,14 +120,32 @@ public class MeController {
                 .build();
     }
 
-    // GET /api/me/bio — redirects to /api/users/{id}/bio
+    // GET /api/me/bio — returns full bio including private preference fields (owner only)
     @GetMapping("/bio")
-    public ResponseEntity<Void> getMyBio() {
+    public ResponseEntity<UserBioDto> getMyBio() {
         User user = getCurrentUser();
         if (user == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.status(302)
-                .header("Location", "/api/users/" + user.getId() + "/bio")
-                .build();
+        UserBioDto bio = new UserBioDto(
+                user.getId(),
+                user.getGender(),
+                user.getDateOfBirth(),
+                user.getTimezone(),
+                user.getTimeRange(),
+                user.getGamePreference(),
+                user.getGameGenrePreference(),
+                user.getLookingFor(),
+                user.getPlatforms(),
+                user.getIntensity(),
+                user.getCountry(),
+                user.getCity(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getMaxDistanceKm(),
+                user.getPreferredGenders(),
+                user.getPreferredAgeMin(),
+                user.getPreferredAgeMax()
+        );
+        return ResponseEntity.ok(bio);
     }
 
     // PUT /api/me/profile
@@ -157,8 +180,11 @@ public class MeController {
         if (request.getLookingFor() != null) user.setLookingFor(request.getLookingFor());
         if (request.getPlatforms() != null) user.setPlatforms(request.getPlatforms());
         if (request.getIntensity() != null) user.setIntensity(request.getIntensity());
-        if (request.getLocation() != null) user.setLocation(request.getLocation());
-        if (request.getOpenToOtherRegions() != null) user.setOpenToOtherRegions(request.getOpenToOtherRegions());
+        if (request.getCountry() != null) user.setCountry(request.getCountry());
+        if (request.getCity() != null) user.setCity(request.getCity());
+        if (request.getLatitude() != null) user.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null) user.setLongitude(request.getLongitude());
+        if (request.getMaxDistanceKm() != null) user.setMaxDistanceKm(request.getMaxDistanceKm());
         if (request.getPreferredGenders() != null) user.setPreferredGenders(request.getPreferredGenders());
         if (request.getPreferredAgeMin() != null) user.setPreferredAgeMin(request.getPreferredAgeMin());
         if (request.getPreferredAgeMax() != null) user.setPreferredAgeMax(request.getPreferredAgeMax());
@@ -176,8 +202,11 @@ public class MeController {
                 user.getLookingFor(),
                 user.getPlatforms(),
                 user.getIntensity(),
-                user.getLocation(),
-                user.getOpenToOtherRegions(),
+                user.getCountry(),
+                user.getCity(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getMaxDistanceKm(),
                 user.getPreferredGenders(),
                 user.getPreferredAgeMin(),
                 user.getPreferredAgeMax()

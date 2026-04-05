@@ -33,6 +33,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("UPDATE Message m SET m.read = true WHERE m.recipient = :recipient AND m.sender = :sender AND m.read = false")
     void markAsRead(@Param("recipient") User recipient, @Param("sender") User sender);
 
+    // Deletes all messages where the user is either sender or recipient.
+    // Called before deleting a user to avoid FK constraint violations.
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Message m WHERE m.sender = :user OR m.recipient = :user")
+    void deleteAllByUser(@Param("user") User user);
+
     // Returns the timestamp of the latest message between the given user and each of their conversation partners.
     // Uses IDs in the CASE expression to avoid Hibernate rejecting entity comparisons in GROUP BY.
     @Query("SELECT CASE WHEN m.sender.id = :userId THEN m.recipient.id ELSE m.sender.id END, MAX(m.timestamp) " +

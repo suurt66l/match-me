@@ -1,0 +1,351 @@
+{
+  "info": {
+    "name": "GameMe API",
+    "description": "Full API collection for the GameMe gaming connection platform.\n\n**Quick start:**\n1. Run `POST /Seed/Create seed data` to load 120 test users.\n2. Run `POST /Auth/Login` with any test user — the token is saved automatically.\n3. All other requests use the saved token. No manual copy-paste needed.\n\nTest credentials: `test10@test.com` / `1234` (or any `test10`–`test129@test.com`)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Backend base URL"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token — filled automatically after Login or Register"
+    },
+    {
+      "key": "userId",
+      "value": "10",
+      "type": "string",
+      "description": "A target user ID to use in /users/{id} requests"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Registration and login. No token required. The token is saved automatically after a successful login or register.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"reviewer@test.com\",\n  \"password\": \"1234\",\n  \"nickname\": \"Reviewer\"\n}"
+            },
+            "description": "Register a new user. Returns a JWT token on success. The token is saved automatically to the `token` variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token saved.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test10@test.com\",\n  \"password\": \"1234\"\n}"
+            },
+            "description": "Login with an existing user. Returns a JWT token. The token is saved automatically to the `token` variable and used by all other requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token saved for: ' + pm.request.body.raw);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Seed",
+      "description": "Load or delete 120 fictitious test users. No token required.",
+      "item": [
+        {
+          "name": "Create seed data",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/seed", "host": ["{{baseUrl}}"], "path": ["api", "seed"] },
+            "description": "Creates 120 test users (test10@test.com → test129@test.com, password: 1234). Idempotent — skips if 100+ users already exist."
+          }
+        },
+        {
+          "name": "Delete seed data",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/seed", "host": ["{{baseUrl}}"], "path": ["api", "seed"] },
+            "description": "Deletes all seeded users (test10@test.com → test129@test.com) and their connections and messages."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "description": "Endpoints scoped to the currently authenticated user. All require a valid token.",
+      "item": [
+        {
+          "name": "Get me (redirect)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me", "host": ["{{baseUrl}}"], "path": ["api", "me"] },
+            "description": "Returns HTTP 302 redirecting to /api/users/{your-id}. Verifies the /me shortcut works."
+          }
+        },
+        {
+          "name": "Get my account",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me/account", "host": ["{{baseUrl}}"], "path": ["api", "me", "account"] },
+            "description": "Returns the authenticated user's own account data including email, nickname, and profile picture URL. Email is only returned here — never on /users/{id}."
+          }
+        },
+        {
+          "name": "Update my account",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/me/account", "host": ["{{baseUrl}}"], "path": ["api", "me", "account"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"NewNickname\"\n}"
+            },
+            "description": "Update nickname, email, or password. Only include the fields you want to change. Changing email requires `currentPassword` to be provided."
+          }
+        },
+        {
+          "name": "Get my bio (full — includes private fields)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/me/bio", "host": ["{{baseUrl}}"], "path": ["api", "me", "bio"] },
+            "description": "Returns the full bio including private preference fields (preferredGenders, preferredAgeMin, preferredAgeMax, maxDistanceKm, latitude, longitude). These are never returned on /users/{id}/bio."
+          }
+        },
+        {
+          "name": "Update my bio",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/me/bio", "host": ["{{baseUrl}}"], "path": ["api", "me", "bio"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender\": \"Male\",\n  \"dateOfBirth\": \"2000-01-15\",\n  \"timezone\": \"UTC+2\",\n  \"timeRange\": \"16:00-22:00\",\n  \"gamePreference\": \"Valorant, CS2\",\n  \"gameGenrePreference\": \"FPS, Battle Royale\",\n  \"lookingFor\": \"Play together\",\n  \"platforms\": \"PC\",\n  \"intensity\": \"7\",\n  \"country\": \"Estonia\",\n  \"city\": \"Tallinn\",\n  \"latitude\": 59.437,\n  \"longitude\": 24.7536,\n  \"maxDistanceKm\": 500,\n  \"preferredGenders\": null,\n  \"preferredAgeMin\": null,\n  \"preferredAgeMax\": null\n}"
+            },
+            "description": "Partial update — only include fields you want to change. All fields are optional."
+          }
+        },
+        {
+          "name": "Upload profile picture",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/me/picture", "host": ["{{baseUrl}}"], "path": ["api", "me", "picture"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Select an image file (JPEG or PNG, max 5 MB)"
+                }
+              ]
+            },
+            "description": "Upload a profile picture. Select a file in the Body → form-data tab. Returns the updated user summary with the new picture URL."
+          }
+        },
+        {
+          "name": "Remove profile picture",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/me/picture", "host": ["{{baseUrl}}"], "path": ["api", "me", "picture"] },
+            "description": "Removes the profile picture. The avatar reverts to the default placeholder."
+          }
+        },
+        {
+          "name": "Get missing profile fields",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/social/missing-fields", "host": ["{{baseUrl}}"], "path": ["api", "social", "missing-fields"] },
+            "description": "Returns a list of required profile fields that are still empty. Empty array = profile is complete and recommendations will be shown."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Public user data endpoints. Returns 404 if the user does not exist OR if the caller is not allowed to view the profile (not recommended, no pending request, not connected).",
+      "item": [
+        {
+          "name": "Get user summary",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}"] },
+            "description": "Returns name, profile picture URL, and links to /profile and /bio. No email is included. Change the `userId` variable to test different users."
+          }
+        },
+        {
+          "name": "Get user profile (about me)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}/profile", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}", "profile"] },
+            "description": "Returns the user's free-text 'About me' content."
+          }
+        },
+        {
+          "name": "Get user bio (public — no private preferences)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/{{userId}}/bio", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userId}}", "bio"] },
+            "description": "Returns public biographical data: gender, dateOfBirth, timezone, timeRange, games, genres, platforms, lookingFor, intensity, country, city. Does NOT include preferredGenders, preferredAgeMin/Max, maxDistanceKm, or GPS coordinates."
+          }
+        },
+        {
+          "name": "Get non-existent user (expect 404)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/users/99999", "host": ["{{baseUrl}}"], "path": ["api", "users", "99999"] },
+            "description": "Should return 404. Verifies that the endpoint returns 404 for unknown IDs."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "description": "Returns a list of up to 10 recommended user IDs. Requires a complete profile.",
+      "item": [
+        {
+          "name": "Get recommendations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations", "host": ["{{baseUrl}}"], "path": ["api", "recommendations"] },
+            "description": "Returns a plain JSON array of up to 10 user IDs — no user data included. Example: [4, 17, 23]. Returns an empty array or an error message if the profile is incomplete."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Connections",
+      "description": "Manage connection requests and accepted connections.",
+      "item": [
+        {
+          "name": "Get connections",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/connections", "host": ["{{baseUrl}}"], "path": ["api", "connections"] },
+            "description": "Returns a plain JSON array of accepted connection user IDs. Example: [7, 12]."
+          }
+        },
+        {
+          "name": "Send connection request",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/connections/{{userId}}/request", "host": ["{{baseUrl}}"], "path": ["api", "connections", "{{userId}}", "request"] },
+            "description": "Send a connection request to the user with ID `{{userId}}`. The recipient is notified in real time via WebSocket."
+          }
+        },
+        {
+          "name": "Accept connection request",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/connections/{{userId}}/accept", "host": ["{{baseUrl}}"], "path": ["api", "connections", "{{userId}}", "accept"] },
+            "description": "Accept an incoming connection request from user `{{userId}}`. Both users are notified via WebSocket and can now chat."
+          }
+        },
+        {
+          "name": "Reject / cancel / disconnect",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/connections/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "connections", "{{userId}}"] },
+            "description": "Multi-purpose: rejects an incoming request, cancels an outgoing request, or removes an accepted connection. Both users are notified via WebSocket."
+          }
+        },
+        {
+          "name": "Block user",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/connections/{{userId}}/block", "host": ["{{baseUrl}}"], "path": ["api", "connections", "{{userId}}", "block"] },
+            "description": "Blocks the user. The blocked user can no longer find you in recommendations or send connection requests."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "description": "Chat history between connected users. Paginated — 30 messages per page.",
+      "item": [
+        {
+          "name": "Get chat history (page 0)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/{{userId}}?page=0&size=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "{{userId}}"],
+              "query": [
+                { "key": "page", "value": "0", "description": "Page number (0 = most recent)" },
+                { "key": "size", "value": "30", "description": "Messages per page" }
+              ]
+            },
+            "description": "Returns the 30 most recent messages with user `{{userId}}`. Returns 403 if you are not connected with that user. Increment `page` to load older messages."
+          }
+        },
+        {
+          "name": "Get chat history (page 1 — older messages)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/messages/{{userId}}?page=1&size=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "messages", "{{userId}}"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "30" }
+              ]
+            },
+            "description": "Returns messages 31–60 (older). If this returns an empty array, there are no more pages."
+          }
+        }
+      ]
+    }
+  ]
+}
