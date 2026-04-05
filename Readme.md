@@ -2,8 +2,6 @@
 
 A full-stack web application that matches gamers based on shared games, schedules, and preferences. Users discover compatible players, send connection requests, and chat in real time.
 
-> Built as a learning project at Kood/Jõhvi.
-
 ---
 
 ## Table of Contents
@@ -253,3 +251,17 @@ Profile endpoints return **HTTP 404** for both "not found" and "not permitted" �
 A dedicated guide for code reviewers is available in **[TESTING.md](TESTING.md)**.
 
 It covers every testing criterion in order, with a description of how each feature is implemented and step-by-step instructions for verifying it.
+
+
+---
+
+## 📄 License
+
+This project is created for educational purposes.
+---
+## 👨‍💼 Authors
+- Kirill Sergeev
+- Jevgeni Vinogradov
+
+---
+**Last Updated:** April 05, 2026
