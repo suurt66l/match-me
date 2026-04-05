@@ -255,11 +255,12 @@ It covers every testing criterion in order, with a description of how each featu
 
 ---
 
-## 📄 License
+## License
 
 This project is created for educational purposes.
+
 ---
-## 👨‍💼 Authors
+## Authors
 - Kirill Sergeev
 - Jevgeni Vinogradov
 
