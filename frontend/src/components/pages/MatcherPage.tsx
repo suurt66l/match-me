@@ -1,7 +1,5 @@
 import MatcherSection from "../organisms/MatcherSection";
 
-
-
 export default function MatcherPage() {
 
 

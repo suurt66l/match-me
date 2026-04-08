@@ -1,6 +1,6 @@
 interface Props {
     setNickname: (value: string) => void;
-    value: string;
+    value?: string;
 }
 
 export default function NicknameInput({value, setNickname} : Props) {
