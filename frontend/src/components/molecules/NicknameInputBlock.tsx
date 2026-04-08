@@ -1,7 +1,7 @@
 import NicknameInput from "../atoms/NicknameInput";
 import NicknameLabel from "../atoms/NicknameLabel";
 interface Props {
-  value: string;
+  value?: string;
   setNickname: (value: string) => void;
 }
 

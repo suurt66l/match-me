@@ -1,4 +1,3 @@
-import CreatableSelect from "react-select/creatable";
 import GameGenresLabel from "../atoms/GameGenresLabel";
 import MultiSelect from "../atoms/MultiSelect";
 

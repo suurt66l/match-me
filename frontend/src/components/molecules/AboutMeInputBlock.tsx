@@ -11,7 +11,9 @@ export default function AboutMeInputBlock({setAboutMe, value} : Props) {
             <div>
               <AboutMeLabel />
               <div className="mt-2">
-                <AboutMeInput setAboutMe={setAboutMe} value={value} />
+                <AboutMeInput 
+                  setAboutMe={setAboutMe} 
+                  value={value} />
               </div>
             </div>
     )

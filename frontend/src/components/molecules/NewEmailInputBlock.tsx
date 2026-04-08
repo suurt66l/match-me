@@ -11,7 +11,9 @@ export default function NewEmailInputBlock({ value, setEmail }: Props) {
         <div>
             <NewEmailLabel />
             <div className="mt-2">
-                <EmailInput value={value} setEmail={setEmail} />
+                <EmailInput 
+                    value={value} 
+                    setEmail={setEmail} />
             </div>
         </div>
     );

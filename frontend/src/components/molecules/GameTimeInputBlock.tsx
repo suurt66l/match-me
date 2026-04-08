@@ -28,17 +28,24 @@ export default function GameTimeInputBlock({ setGameTimeTo, setGameTimeFrom, gam
                 <GameTimeLabel />
                     <GameTimeFromLabel />
                     <div className="mt-2">
-                        <GameTimeFromInput setGameTimeFrom={setGameTimeFrom} value={gameTimeFrom} />
+                        <GameTimeFromInput 
+                            setGameTimeFrom={setGameTimeFrom} 
+                            value={gameTimeFrom} />
                     </div>
 
                     <GameTimeToLabel />
                     <div className="mt-2">
-                        <GameTimeToInput setGameTimeTo={setGameTimeTo} value={gameTimeTo} />
+                        <GameTimeToInput 
+                            setGameTimeTo={setGameTimeTo} 
+                            value={gameTimeTo} />
                     </div>
 
                     <TimeZoneLabel />
                     <div className="mt-2">
-                        <SingleSelect onChange={setTimeZone} options={timeZoneOptions} value={timeZone}/>
+                        <SingleSelect 
+                            onChange={setTimeZone} 
+                            options={timeZoneOptions} 
+                            value={timeZone}/>
                     </div>
             </div>
     )

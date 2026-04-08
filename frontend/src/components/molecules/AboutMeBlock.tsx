@@ -10,6 +10,7 @@ export default function AboutMeBlock({aboutMe, expanded, setExpand}: Props){
             <div className="rounded-t-lg text-sm px-3 py-2 bg-amber-400">
                 <label>About Me</label>
             </div>
+              {/* In case of long About Me -- shtrink at and hide behing the "read more..." button */}
               {aboutMe.length > 50 
                 ? <>
                     <div className="rounded-b-lg px-3 py-2 bg-amber-300 cursor-pointer" onClick={() => setExpand(true)}>

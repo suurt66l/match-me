@@ -10,7 +10,9 @@ export default function NewPasswordInputBlock({ setPassword }: Props) {
         <div>
             <NewPasswordLabel />
             <div className="mt-2">
-                <PasswordInput setPassword={setPassword} mode="register" />
+                <PasswordInput 
+                setPassword={setPassword} 
+                mode="register" />
             </div>
         </div>
     );

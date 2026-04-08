@@ -14,6 +14,8 @@ export default function ChatHeaderBlock({onBack, activeUserName, isTyping}: Prop
             >
               ←
             </button>
+
+            {/* Displays message if another user is typing message*/}
             <div>
               <p className="text-amber-950 font-bold">{activeUserName}</p>
               {isTyping && <p className="text-amber-800 text-xs">typing...</p>}

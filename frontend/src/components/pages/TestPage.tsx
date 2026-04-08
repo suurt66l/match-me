@@ -1,6 +1,3 @@
-import Logo from "../atoms/Logo";
-import NavMenu from "../organisms/NavMenu";
-
 export default function TestPage(){
     return (
         <div>
