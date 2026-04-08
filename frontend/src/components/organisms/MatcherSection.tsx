@@ -25,6 +25,7 @@ interface MatchUser {
 // Maps backend field names to human-readable labels for the "complete your profile" message
 const fieldLabels: Record<string, string> = {
   dateOfBirth: "Date of birth",
+  gender: "Gender",
   country: "Country",
   games: "Games",
   gameGenres: "Game genres",
