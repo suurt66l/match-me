@@ -165,7 +165,7 @@ export default function ConnectionsSection() {
       console.log("Server is unreachable!");
     }
   }
-
+/*
   async function rejectRequest(connectionId: number) {
     setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
@@ -177,7 +177,7 @@ export default function ConnectionsSection() {
       console.log("Server is unreachable!");
     }
   }
-
+*/
   async function blockConnection(id: number) {
     setConnections(connections.filter(item => item.id !== id));
     try {
@@ -208,7 +208,7 @@ export default function ConnectionsSection() {
                 <PendingCard
                   user={user}
                   onAccept={() => acceptRequest(user.connectionId)}
-                  onDismiss={() => rejectRequest(user.connectionId)}
+                  onDismiss={() => cancelRequest(user.connectionId)}
                 />
               </div>
             ))}
