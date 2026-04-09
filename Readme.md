@@ -67,6 +67,7 @@ Hibernate creates all tables automatically on first start — no migration scrip
 
 ```bash
 cd backend
+npm install
 mvn spring-boot:run
 ```
 
