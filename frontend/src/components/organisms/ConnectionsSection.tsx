@@ -136,10 +136,10 @@ export default function ConnectionsSection() {
     }
   }
 
-  async function removeConnection(userId: number) {
-    setConnections(connections.filter(item => item.id !== userId));
+  async function rejectRequest(connectionId: number) {
+    setPending(pending.filter(item => item.connectionId !== connectionId));
     try {
-      await fetch(`${API_URL}/api/connections/with/${userId}`, {
+      await fetch(`${API_URL}/api/connections/reject/${connectionId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -149,7 +149,6 @@ export default function ConnectionsSection() {
   }
 
   /* For Connection Card */
-  // Block the user so they never appear in recommendations again
   async function loadConnections() {
     try {
       // Fetch IDs only, then load details for each
@@ -165,11 +164,11 @@ export default function ConnectionsSection() {
       console.log("Server is unreachable!");
     }
   }
-/*
-  async function rejectRequest(connectionId: number) {
-    setPending(pending.filter(item => item.connectionId !== connectionId));
+
+  async function removeConnection(userId: number) {
+    setConnections(connections.filter(item => item.id !== userId));
     try {
-      await fetch(`${API_URL}/api/connections/reject/${connectionId}`, {
+      await fetch(`${API_URL}/api/connections/with/${userId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` },
       });
@@ -177,7 +176,7 @@ export default function ConnectionsSection() {
       console.log("Server is unreachable!");
     }
   }
-*/
+  // Block the user so they never appear in recommendations again
   async function blockConnection(id: number) {
     setConnections(connections.filter(item => item.id !== id));
     try {
@@ -208,7 +207,7 @@ export default function ConnectionsSection() {
                 <PendingCard
                   user={user}
                   onAccept={() => acceptRequest(user.connectionId)}
-                  onDismiss={() => cancelRequest(user.connectionId)}
+                  onDismiss={() => rejectRequest(user.connectionId)}
                 />
               </div>
             ))}

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AcceptButton from "../atoms/AcceptButton";
 import DismissButton from "../atoms/DismissButton";
+import ViewProfileButton from "../atoms/ViewProfileButton";
 import MinBioBlock from "../molecules/MinBioBlock";
 import CalculateAge from "../../utils/mini/CalculateAge";
 
@@ -36,12 +37,7 @@ export default function PendingCard({ user, onAccept, onDismiss }: Props) {
         gender={user.gender}
       />
       <div className="flex gap-2 sm:shrink-0">
-        <button
-          onClick={() => navigate(`/user/${user.id}`)}
-          className="flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm font-semibold bg-amber-700 text-white hover:bg-amber-600"
-        >
-          Profile
-        </button>
+        <ViewProfileButton onClick={() => navigate(`/user/${user.id}`)} />
         <AcceptButton onAccept={() => onAccept(user.connectionId)} />
         <DismissButton onDismiss={() => onDismiss(user.connectionId)} />
       </div>
