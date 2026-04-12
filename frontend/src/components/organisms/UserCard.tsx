@@ -24,7 +24,6 @@ interface UserData {
 interface Props {
   user: UserData;
   children: React.ReactNode;
-  // When true, only show stat rows for fields that are in matchedFields
   matchedOnly?: boolean;
 }
 
@@ -49,8 +48,14 @@ export default function UserCard({ user, children, matchedOnly = false }: Props)
   const age = user.dateOfBirth ? CalculateAge(user.dateOfBirth) : null;
   const matched = new Set(user.matchedFields);
 
-  // If matchedOnly, only render a row when the field is in matchedFields
-  const show = (field: string) => !matchedOnly || matched.has(field);
+  // Checks the current mode (matchedOnly),  if it's activated displays only matchedFields
+  const shouldDisplayField = (field: string, value: string) => {
+      // If user didn't filled the field
+      if (!value) return false;
+      // If user hasn't matched fields in matchedOnly mode.
+      if (matchedOnly && !matched.has(field)) return false;
+      return true;
+  };
 
   return (
     <div className="flex flex-col gap-4 bg-amber-500 rounded-xl px-6 py-6">
@@ -66,13 +71,13 @@ export default function UserCard({ user, children, matchedOnly = false }: Props)
 
       {/* Stats — highlighted rows are fields that match the viewer's own bio */}
       <div className="flex flex-col gap-1.5">
-        {user.games      && show("games")      && <StatRow label="Games"       value={user.games}                    highlighted={matched.has("games")} />}
-        {user.gameGenres && show("gameGenres") && <StatRow label="Genres"      value={user.gameGenres}               highlighted={matched.has("gameGenres")} />}
-        {user.platform   && show("platform")   && <StatRow label="Platform"    value={user.platform}                 highlighted={matched.has("platform")} />}
-        {user.lookingFor && show("lookingFor") && <StatRow label="Looking for" value={user.lookingFor}               highlighted={matched.has("lookingFor")} />}
-        {user.intensity  && show("intensity")  && <StatRow label="Intensity"   value={`${user.intensity} / 10`}      highlighted={matched.has("intensity")} />}
-        {user.timeRange  && show("timeRange")  && <StatRow label="Play time"   value={user.timeRange}                highlighted={matched.has("timeRange")} />}
-        {user.aboutMe    && !matchedOnly       && <AboutMeBlock aboutMe={user.aboutMe} expanded={expanded} setExpand={setExpand}/>}
+        { shouldDisplayField("games", user.games) && <StatRow label="Games"       value={user.games}                    highlighted={matched.has("games")} />}
+        { shouldDisplayField("gameGenres", user.gameGenres) && <StatRow label="Genres"      value={user.gameGenres}               highlighted={matched.has("gameGenres")} />}
+        { shouldDisplayField("platform", user.platform) && <StatRow label="Platform"    value={user.platform}                 highlighted={matched.has("platform")} />}
+        { shouldDisplayField("lookingFor", user.lookingFor) && <StatRow label="Looking for" value={user.lookingFor}               highlighted={matched.has("lookingFor")} />}
+        { shouldDisplayField("intensity", user.intensity) && <StatRow label="Intensity"   value={`${user.intensity} / 10`}      highlighted={matched.has("intensity")} />}
+        { shouldDisplayField("timeRange", user.timeRange)  && <StatRow label="Play time"   value={user.timeRange}                highlighted={matched.has("timeRange")} />}
+        {(user.aboutMe  && !matchedOnly)  && <AboutMeBlock aboutMe={user.aboutMe} expanded={expanded} setExpand={setExpand}/>}
       </div>
 
       {/* Actions */}

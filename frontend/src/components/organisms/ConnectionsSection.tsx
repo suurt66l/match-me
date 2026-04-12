@@ -15,14 +15,6 @@ interface UserData {
   city: string;
   dateOfBirth: string;
   gender: string;
-  games: string;
-  gameGenres: string;
-  platform: string;
-  lookingFor: string;
-  intensity: string;
-  timeRange: string;
-  aboutMe: string;
-  matchedFields: string[];
 }
 
 
@@ -34,7 +26,7 @@ export default function ConnectionsSection() {
   const { token } = useAuth();
   const { client } = useWebSocket();
 
-  useEffect(() => {
+  useEffect(() => { 
     Promise.all([loadConnections(), loadPending(), loadSent()]).finally(() => setLoading(false));
   }, [token]);
 
@@ -55,9 +47,12 @@ export default function ConnectionsSection() {
         fetch(`${API_URL}/api/users/${id}`, { headers: { "Authorization": `Bearer ${token}` } }),
         fetch(`${API_URL}/api/users/${id}/bio`, { headers: { "Authorization": `Bearer ${token}` } }),
       ]);
+
       if (!summaryRes.ok || !bioRes.ok) return null;
+
       const summary = await summaryRes.json();
       const bio = await bioRes.json();
+
       return {
         connectionId: 0,
         id: summary.id,
@@ -66,54 +61,14 @@ export default function ConnectionsSection() {
         country: bio.country ?? "",
         city: bio.city ?? "",
         dateOfBirth: bio.dateOfBirth ?? "",
-        gender: bio.gender ?? "",
-        games: "",
-        gameGenres: "",
-        platform: "",
-        lookingFor: "",
-        intensity: "",
-        timeRange: "",
-        aboutMe: "",
-        matchedFields: [],
+        gender: bio.gender ?? ""
       };
     } catch {
       return null;
     }
   }
 
-  async function loadConnections() {
-    try {
-      // Fetch IDs only, then load details for each
-      const response = await fetch(`${API_URL}/api/connections`, {
-        headers: { "Authorization": `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const ids: number[] = await response.json();
-        const users = await Promise.all(ids.map(id => fetchUserDetails(id)));
-        setConnections(users.filter((u): u is UserData => u !== null));
-      }
-    } catch {
-      console.log("Server is unreachable!");
-    }
-  }
-
-  async function loadPending() {
-    try {
-      const response = await fetch(`${API_URL}/api/connections/pending`, {
-        headers: { "Authorization": `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const pairs: { connectionId: number; userId: number }[] = await response.json();
-        const users = await Promise.all(pairs.map(async ({ connectionId, userId }) => {
-          const user = await fetchUserDetails(userId);
-          return user ? { ...user, connectionId } : null;
-        }));
-        setPending(users.filter((u): u is UserData => u !== null));
-      }
-    } catch {
-      console.log("Server is unreachable!");
-    }
-  }
+  /* For Sent Card */
 
   async function loadSent() {
     try {
@@ -126,7 +81,8 @@ export default function ConnectionsSection() {
           const user = await fetchUserDetails(userId);
           return user ? { ...user, connectionId } : null;
         }));
-        setSent(users.filter((u): u is UserData => u !== null));
+
+        setSent(users.filter(u  => u !== null));
       }
     } catch {
       console.log("Server is unreachable!");
@@ -145,26 +101,24 @@ export default function ConnectionsSection() {
     }
   }
 
-  async function removeConnection(userId: number) {
-    setConnections(connections.filter(item => item.id !== userId));
+  /* For pending Card */
+  async function loadPending() {
     try {
-      await fetch(`${API_URL}/api/connections/with/${userId}`, {
-        method: "DELETE",
+      const response = await fetch(`${API_URL}/api/connections/pending`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
-    } catch {
-      console.log("Server is unreachable!");
-    }
-  }
+      if (response.ok) {
+        const pairs = await response.json();
+        const users = [];
 
-  // Block the user so they never appear in recommendations again
-  async function blockConnection(id: number) {
-    setConnections(connections.filter(item => item.id !== id));
-    try {
-      await fetch(`${API_URL}/api/connections/block/${id}`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
-      });
+        for (const pair of pairs) {
+            const user = await fetchUserDetails(pair.userId);
+            if (user) {
+                users.push({ ...user, connectionId: pair.connectionId });
+            }
+        }
+        setPending(users);
+      }
     } catch {
       console.log("Server is unreachable!");
     }
@@ -194,6 +148,48 @@ export default function ConnectionsSection() {
     }
   }
 
+  /* For Connection Card */
+  async function loadConnections() {
+    try {
+      // Fetch IDs only, then load details for each
+      const response = await fetch(`${API_URL}/api/connections`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const ids: number[] = await response.json();
+        const users = await Promise.all(ids.map(id => fetchUserDetails(id)));
+        setConnections(users.filter(u => u !== null));
+      }
+    } catch {
+      console.log("Server is unreachable!");
+    }
+  }
+
+  async function removeConnection(userId: number) {
+    setConnections(connections.filter(item => item.id !== userId));
+    try {
+      await fetch(`${API_URL}/api/connections/with/${userId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+    } catch {
+      console.log("Server is unreachable!");
+    }
+  }
+  // Block the user so they never appear in recommendations again
+  async function blockConnection(id: number) {
+    setConnections(connections.filter(item => item.id !== id));
+    try {
+      await fetch(`${API_URL}/api/connections/block/${id}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+    } catch {
+      console.log("Server is unreachable!");
+    }
+  }
+
+  /* Actually renders page */
   if (loading) {
     return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }

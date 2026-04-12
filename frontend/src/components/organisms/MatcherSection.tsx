@@ -25,6 +25,7 @@ interface MatchUser {
 // Maps backend field names to human-readable labels for the "complete your profile" message
 const fieldLabels: Record<string, string> = {
   dateOfBirth: "Date of birth",
+  gender: "Gender",
   country: "Country",
   games: "Games",
   gameGenres: "Game genres",
@@ -38,22 +39,29 @@ const fieldLabels: Record<string, string> = {
 // Splits "Valorant, CS2" into a lowercase set for comparison
 function parseSet(value: string | null): Set<string> {
   if (!value) return new Set();
-  return new Set(value.split(",").map(s => s.trim().toLowerCase()).filter(Boolean));
+  return new Set(value.split(",").map(s => s.trim()
+                                            .toLowerCase())
+                                            .filter(Boolean));
 }
 
 // Computes which fields overlap between the current user's bio and a candidate's bio
 function computeMatchedFields(myBio: Record<string, string>, candidateBio: Record<string, string>): string[] {
   const matched: string[] = [];
+  
+  //Compares two sets
   const hasCommon = (a: string, b: string) => {
-    const sa = parseSet(a); const sb = parseSet(b);
-    return [...sa].some(v => sb.has(v));
+    const sa = parseSet(a); 
+    const sb = parseSet(b);
+    return [...sa].some(i => sb.has(i));
   };
+
   if (hasCommon(myBio.gamePreference, candidateBio.gamePreference)) matched.push("games");
   if (hasCommon(myBio.gameGenrePreference, candidateBio.gameGenrePreference)) matched.push("gameGenres");
   if (hasCommon(myBio.platforms, candidateBio.platforms)) matched.push("platform");
   if (hasCommon(myBio.lookingFor, candidateBio.lookingFor)) matched.push("lookingFor");
-  if (myBio.intensity && myBio.intensity.toLowerCase() === candidateBio.intensity?.toLowerCase()) matched.push("intensity");
+  if (myBio.intensity && candidateBio.intensity) matched.push("intensity");
   if (myBio.timeRange && candidateBio.timeRange) matched.push("timeRange");
+
   return matched;
 }
 
@@ -72,10 +80,13 @@ export default function MatcherSection() {
         fetch(`${API_URL}/api/users/${id}/bio`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_URL}/api/users/${id}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
+
       if (!summaryRes.ok || !bioRes.ok || !profileRes.ok) return null;
+
       const summary = await summaryRes.json();
       const bio = await bioRes.json();
       const profile = await profileRes.json();
+      
       return {
         id: summary.id,
         nickname: summary.nickname,
@@ -107,31 +118,38 @@ export default function MatcherSection() {
       const completeRes = await fetch(`${API_URL}/api/recommendations/complete`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!completeRes.ok) return;
+
       const completeData = await completeRes.json();
+
       if (!completeData.complete) {
         setMissingFields(completeData.missingFields ?? []);
         setMatches([]);
         return;
-      }
+      };
+
       setMissingFields([]);
 
       // Step 2: fetch current user's own bio for matched fields comparison
       const myBioRes = await fetch(`${API_URL}/api/me/bio`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const myBio = myBioRes.ok ? await myBioRes.json() : {};
 
       // Step 3: get the list of recommended IDs (max 10 from the server)
       const idsRes = await fetch(`${API_URL}/api/recommendations`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!idsRes.ok) return;
+      
       const ids: number[] = await idsRes.json();
 
       // Step 4: fetch full details for each ID in parallel
       const users = await Promise.all(ids.map(id => fetchUserDetails(id, token!, myBio)));
-      setMatches(users.filter((u): u is MatchUser => u !== null));
+      setMatches(users.filter(u => u !== null));
     } catch {
       console.log("Can't load matches. Server is unreachable!");
     } finally {
@@ -149,21 +167,25 @@ export default function MatcherSection() {
   // reload the recommendations so the mutual match moves to Connections automatically.
   useEffect(() => {
     if (!client) return;
+
     const subscription = client.subscribe("/user/queue/connections", () => {
       loadMatches();
     });
+
     return () => subscription.unsubscribe();
   }, [client]);
 
-  // Send a connection request, then refresh the list so the slot is filled
+  // After sending connection request, refresh the list so the empty slot is filled
   async function handleConnect(id: number) {
     // Remove immediately from UI so the user sees instant feedback
     setMatches(prev => prev.filter(item => item.id !== id));
+
     try {
       await fetch(`${API_URL}/api/connections/request/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+
     } catch {
       console.log("Can't connect to user. Server is unreachable!");
     }
@@ -171,10 +193,11 @@ export default function MatcherSection() {
     loadMatches();
   }
 
-  // Dismiss (block) the user, then refresh the list so the slot is filled
+  // After dismissing (blocking) the user, refresh the list so the empty slot is filled
   async function handleDismiss(id: number) {
     // Remove immediately from UI so the user sees instant feedback
     setMatches(prev => prev.filter(item => item.id !== id));
+
     try {
       await fetch(`${API_URL}/api/connections/block/${id}`, {
         method: "POST",
@@ -187,6 +210,7 @@ export default function MatcherSection() {
     loadMatches();
   }
 
+  // Draws spinning circle when loading
   if (loading) {
     return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -211,6 +235,7 @@ export default function MatcherSection() {
   if (matches.length === 0) {
     return <p className="text-amber-800">No matches found. Try updating your preferences.</p>;
   }
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {matches.map(user => (

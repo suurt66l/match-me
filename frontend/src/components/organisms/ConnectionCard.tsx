@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import DismissButton from "../atoms/DismissButton";
 import BlockButton from "../atoms/BlockButton";
+import ViewProfileButton from "../atoms/ViewProfileButton";
 import MinBioBlock from "../molecules/MinBioBlock";
 import CalculateAge from "../../utils/mini/CalculateAge";
 
@@ -35,12 +36,7 @@ export default function ConnectionCard({ user, onDismiss, onBlock }: Props) {
         gender={user.gender}
       />
       <div className="flex gap-2 sm:shrink-0">
-        <button
-          onClick={() => navigate(`/user/${user.id}`)}
-          className="flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm font-semibold bg-amber-700 text-white hover:bg-amber-600"
-        >
-          Profile
-        </button>
+        <ViewProfileButton onClick={() => navigate(`/user/${user.id}`)} />
         <DismissButton onDismiss={() => onDismiss(user.id)} />
         <BlockButton onBlock={() => onBlock(user.id)} />
       </div>
