@@ -11,9 +11,6 @@ type Query {
 }
 
 #Manipulate with data C*UD
-type Mutation {
-}
-
 
 type User {
     id: ID!,

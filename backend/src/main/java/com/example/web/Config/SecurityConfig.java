@@ -44,6 +44,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/lookup/**").permitAll()
                 .requestMatchers("/api/seed/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/graphiql/**").permitAll()
+                .requestMatchers("/graphql/**").permitAll()
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
