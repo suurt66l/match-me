@@ -1,0 +1,54 @@
+#Retrieve data
+type Query {
+    user(id: ID!): User,
+    bio(id: ID!): Bio,
+    profile(id: ID!): Profile,
+    me: User,
+    myBio: Bio,
+    myProfile: Profile,
+    recommendations: [User],
+    connections: [User]
+}
+
+#Manipulate with data C*UD
+type Mutation {
+}
+
+
+type User {
+    id: ID!,
+    nickname: String,
+    profilePicture: String,
+    email: String,
+    bio: Bio,
+    profile: Profile
+}
+
+type Bio {
+    dateOfBirth: String,
+    gender: String,
+    country: String,
+    city: String,
+    preferences: Preferences,
+    user: User
+}
+
+type Profile {
+    aboutMe: String,
+    user: User
+}
+
+type Preferences {
+    gameTimeFrom: String,
+    gameTimeTo: String,
+    timeZone: String,
+    games: String,
+    gameGenres: String,
+    lookingFor: String,
+    platforms: String,
+    intensity: String,
+    preferredGenders: String,
+    preferredAgeMin: Int,
+    preferredAgeMax: Int,
+    maxDistanceKm: Int,
+}
