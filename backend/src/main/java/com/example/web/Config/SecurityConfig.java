@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/seed/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/graphiql/**").permitAll()
-                .requestMatchers("/graphql/**").permitAll()
+                .requestMatchers("/graphql/**").permitAll() //WTF typo?
 
                 .anyRequest().authenticated()
             )

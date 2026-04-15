@@ -36,11 +36,10 @@ type Profile {
 }
 
 type Preferences {
-    gameTimeFrom: String,
-    gameTimeTo: String,
+    timeRange: String,
     timeZone: String,
-    games: String,
-    gameGenres: String,
+    gamePreference: String,
+    gameGenrePreference: String,
     lookingFor: String,
     platforms: String,
     intensity: String,
