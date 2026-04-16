@@ -7,12 +7,10 @@ import java.util.Optional;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
-import com.example.web.DTO.RecommendationItemDto;
 import com.example.web.DTO.GraphQL.UserBioDto;
 import com.example.web.DTO.GraphQL.UserPreferencesDto;
 import com.example.web.DTO.GraphQL.UserProfileDto;

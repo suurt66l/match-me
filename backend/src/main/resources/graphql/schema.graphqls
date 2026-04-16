@@ -10,7 +10,39 @@ type Query {
     connections: [User]
 }
 
-#Manipulate with data C*UD
+type Mutation {
+    updateAccount(input: UpdateAccountInput!): User,
+    updateBio(input: UpdateBioInput!): Bio,
+    updateProfile(aboutMe: String!): Profile
+}
+
+
+input UpdateAccountInput {
+    nickname: String,
+    email: String,
+    currentPassword: String,
+    newPassword: String
+}
+
+input UpdateBioInput {
+    dateOfBirth: String,
+    gender: String,
+    country: String,
+    city: String,
+    latitude: Float,
+    longitude: Float,
+    timeRange: String,
+    timeZone: String,
+    gamePreference: String,
+    gameGenrePreference: String,
+    lookingFor: String,
+    platforms: String,
+    intensity: String,
+    preferredGenders: String,
+    preferredAgeMin: Int,
+    preferredAgeMax: Int,
+    maxDistanceKm: Int,
+}
 
 type User {
     id: ID!,
