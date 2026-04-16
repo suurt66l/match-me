@@ -23,4 +23,5 @@ public class UserBioDto {
     private Integer preferredAgeMin;
     private Integer preferredAgeMax;
     private Integer maxDistanceKm;
+    private Long userId;
 }

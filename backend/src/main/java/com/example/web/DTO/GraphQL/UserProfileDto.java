@@ -7,4 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserProfileDto {
     private String aboutMe;
+    private Long userId;
 }
