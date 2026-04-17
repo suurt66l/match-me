@@ -5,12 +5,17 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
+import com.example.web.DTO.GraphQL.UpdateAccountDto;
+import com.example.web.DTO.GraphQL.UpdateBioDto;
 import com.example.web.DTO.GraphQL.UserBioDto;
 import com.example.web.DTO.GraphQL.UserPreferencesDto;
 import com.example.web.DTO.GraphQL.UserProfileDto;
@@ -26,12 +31,15 @@ public class GraphQLController {
     private final UserRepository userRepository;
     private final ConnectionService connectionService;
     private final MatchingService matchingService;
+    private final PasswordEncoder passwordEncoder;
+
 
     public GraphQLController(UserRepository userRepository, ConnectionService connectionService,
-            MatchingService matchingService) {
+            MatchingService matchingService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.connectionService = connectionService;
         this.matchingService = matchingService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     private User getCurrentUser() {
@@ -194,7 +202,7 @@ public class GraphQLController {
         return recomendations;
     }
 
-    // Connections(accepted)
+    // Connections(aceepted)
     @QueryMapping
     public List<User> connections() {
         User currentUser = getCurrentUser();
@@ -202,6 +210,40 @@ public class GraphQLController {
         
         // If requester is the curren user than write recipient User data
         List<User> connections = connectionService.getAcceptedConnections(currentUser)
+                                                    .stream()
+                                                    .map(c -> c.getRequester().getId().equals(currentUser.getId())
+                                                            ? c.getAddressee()
+                                                            : c.getRequester())
+                                                    .collect(java.util.stream.Collectors.toList());
+        
+        return connections;
+    }
+
+    // Connections(incoming)
+    @QueryMapping
+    public List<User> incomingConnections() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+        
+        // If requester is the curren user than write recipient User data
+        List<User> connections = connectionService.getPendingIncomingConnections(currentUser) 
+                                                    .stream()
+                                                    .map(c -> c.getRequester().getId().equals(currentUser.getId())
+                                                            ? c.getAddressee()
+                                                            : c.getRequester())
+                                                    .collect(java.util.stream.Collectors.toList());
+        
+        return connections;
+    }
+
+    // Connections(outgoing)
+    @QueryMapping
+    public List<User> outgoingConnections() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+        
+        // If requester is the curren user than write recipient User data
+        List<User> connections = connectionService.getPendingOutgoingConnections(currentUser) 
                                                     .stream()
                                                     .map(c -> c.getRequester().getId().equals(currentUser.getId())
                                                             ? c.getAddressee()
@@ -252,4 +294,150 @@ public class GraphQLController {
         return userRepository.findById(userProfileDto.getUserId()).orElse(null);
     }
 
+    /* Profile Mutations */
+    @MutationMapping
+    public User updateAccount(@Argument UpdateAccountDto input) {
+        User user = getCurrentUser();
+        if (user == null) throw new RuntimeException("Not authenticated");
+
+        if (input.getNickname() != null && !input.getNickname().isBlank()) user.setNickname(input.getNickname());
+        if (input.getEmail() != null && !input.getEmail().isBlank()) {
+            if (input.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(input.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            } else {
+                user.setEmail(input.getEmail());
+            }
+        }
+        if (input.getNewPassword() != null && !input.getNewPassword().isBlank()) {
+            if (input.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(input.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            } else {
+                user.setPassword(passwordEncoder.encode(input.getNewPassword()));
+            }
+        }
+
+        userRepository.save(user);
+
+        return user;
+    }
+
+    @MutationMapping
+    public UserBioDto updateBio(@Argument UpdateBioDto input) {
+        User user = getCurrentUser();
+        if (user == null) throw new RuntimeException("Not authenticated");
+
+        if (input.getGender() != null) user.setGender(input.getGender());
+        if (input.getDateOfBirth() != null) user.setDateOfBirth(java.time.LocalDate.parse(input.getDateOfBirth()));
+        if (input.getTimeZone() != null) user.setTimezone(input.getTimeZone());
+        if (input.getTimeRange() != null) user.setTimeRange(input.getTimeRange());
+        if (input.getCountry() != null) user.setCountry(input.getCountry());
+        if (input.getCity() != null) user.setCity(input.getCity());
+        if (input.getLatitude() != null) user.setLatitude(input.getLatitude());
+        if (input.getLongitude() != null) user.setLongitude(input.getLongitude());
+        if (input.getGamePreference() != null) user.setGamePreference(input.getGamePreference());
+        if (input.getGameGenrePreference() != null) user.setGameGenrePreference(input.getGameGenrePreference());
+        if (input.getLookingFor() != null) user.setLookingFor(input.getLookingFor());
+        if (input.getPlatforms() != null) user.setPlatforms(input.getPlatforms());
+        if (input.getIntensity() != null) user.setIntensity(input.getIntensity());
+        if (input.getMaxDistanceKm() != null) user.setMaxDistanceKm(input.getMaxDistanceKm());
+        if (input.getPreferredGenders() != null) user.setPreferredGenders(input.getPreferredGenders());
+        if (input.getPreferredAgeMin() != null) user.setPreferredAgeMin(input.getPreferredAgeMin());
+        if (input.getPreferredAgeMax() != null) user.setPreferredAgeMax(input.getPreferredAgeMax());
+
+        userRepository.save(user);
+        UserBioDto bio = getBio(user);
+        return bio;
+
+    }
+
+    @MutationMapping
+    public UserProfileDto updateProfile(@Argument String aboutMe) {
+        User user = getCurrentUser();
+
+        if (user == null) throw new RuntimeException("Not authenticated");
+        
+        user.setAboutMe(aboutMe);
+        userRepository.save(user);
+        
+        return new UserProfileDto(user.getAboutMe(), user.getId());
+    }
+
+    /* Connection Mutations */
+    @MutationMapping
+    public Boolean sendConnectionRequest(@Argument Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+
+        try{
+            connectionService.sendRequest(currentUser, userId);
+        } catch (org.springframework.web.server.ResponseStatusException e){
+            throw new RuntimeException(e.getReason());
+        }
+
+        return true;
+    }
+
+    @MutationMapping
+    public Boolean acceptConnection(@Argument Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+
+        User target = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Connection connection = connectionService.findBetweenUsers(currentUser, target)
+                .orElseThrow(() -> new RuntimeException("Connection not found"));
+
+        try{
+            connectionService.acceptRequest(currentUser, connection.getId());
+        } catch (org.springframework.web.server.ResponseStatusException e){
+            throw new RuntimeException(e.getReason());
+        }
+
+        return true;
+    }
+
+    @MutationMapping
+    public Boolean rejectConnection(@Argument Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+
+        User target = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Connection connection = connectionService.findBetweenUsers(currentUser, target)
+                .orElseThrow(() -> new RuntimeException("Connection not found"));
+        try{
+            connectionService.rejectOrCancel(currentUser, connection.getId());
+        } catch (org.springframework.web.server.ResponseStatusException e){
+            throw new RuntimeException(e.getReason());
+        }
+
+        return true;
+    }
+
+    @MutationMapping
+    public Boolean blockUser(@Argument Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+
+        try {
+            connectionService.blockUser(currentUser, userId);
+        } catch (org.springframework.web.server.ResponseStatusException e){
+            throw new RuntimeException(e.getReason());
+        }
+
+        return true;
+    }
+
+    @MutationMapping
+    public Boolean removeConnection(@Argument Long userId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+
+        try {
+            connectionService.dismissByUserId(currentUser, userId);
+        } catch (org.springframework.web.server.ResponseStatusException e){
+            throw new RuntimeException(e.getReason());
+        }
+        return true;
+    }
 }

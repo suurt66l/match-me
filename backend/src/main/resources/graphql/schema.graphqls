@@ -7,24 +7,32 @@ type Query {
     myBio: Bio,
     myProfile: Profile,
     recommendations: [User],
-    connections: [User]
+    connections: [User], 
+    incomingConnections: [User],
+    outgoingConnections: [User]
 }
 
 type Mutation {
-    updateAccount(input: UpdateAccountInput!): User,
-    updateBio(input: UpdateBioInput!): Bio,
+    updateAccount(input: UpdateAccount!): User,
+    updateBio(input: UpdateBio!): Bio,
     updateProfile(aboutMe: String!): Profile
+
+    sendConnectionRequest(userId: ID!): Boolean
+    acceptConnection(userId: ID!): Boolean
+    rejectConnection(userId: ID!): Boolean
+    blockUser(userId: ID!): Boolean
+    removeConnection(userId: ID!): Boolean
 }
 
 
-input UpdateAccountInput {
+input UpdateAccount {
     nickname: String,
     email: String,
     currentPassword: String,
     newPassword: String
 }
 
-input UpdateBioInput {
+input UpdateBio {
     dateOfBirth: String,
     gender: String,
     country: String,
