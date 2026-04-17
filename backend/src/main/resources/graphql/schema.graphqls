@@ -24,6 +24,14 @@ type Mutation {
     removeConnection(userId: ID!): Boolean
 }
 
+type Subscription {
+  onlineStatus: StatusUpdate
+}
+
+type StatusUpdate {
+    id: ID!,
+    isOnline: boolean!
+}
 
 input UpdateAccount {
     nickname: String,
