@@ -37,6 +37,7 @@ Once connected, users can chat in real time. The platform includes an online/off
 | Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4 |
 | Routing | React Router 7 |
 | Real-time | STOMP over SockJS (WebSocket) — no polling |
+| GraphQL | Spring for GraphQL 2.0.2, GraphiQL playground |
 
 ---
 
@@ -67,8 +68,12 @@ Hibernate creates all tables automatically on first start — no migration scrip
 
 ```bash
 cd backend
-npm install
 mvn spring-boot:run
+```
+
+To run in **developer mode** (enables GraphQL Playground):
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=-d
 ```
 
 The backend starts on **http://localhost:8080**.
@@ -80,7 +85,7 @@ Uploaded profile pictures are stored at `~/web/uploads/` and served at `/uploads
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
 The frontend starts on **http://localhost:5173** and proxies all `/api` requests to the backend automatically — no CORS configuration needed during development.
@@ -211,6 +216,87 @@ Users who pass all filters are scored. Higher score = better match. Sorted desce
 | Same timezone | +30 |
 
 Users scoring zero after all factors are excluded from results.
+
+---
+
+## GraphQL API
+
+The GraphQL API exposes all server functionality via a single `/graphql` endpoint.
+
+### Running the Playground
+
+Start the backend in developer mode to enable the GraphiQL playground:
+
+```bash
+cd backend
+mvn spring-boot:run -Dspring-boot.run.arguments=-d
+```
+
+Open **http://localhost:8080/graphiql** in your browser.
+
+Add your JWT token in the **Headers** tab:
+```json
+{ "Authorization": "Bearer YOUR_JWT_TOKEN" }
+```
+
+### Available Queries
+
+```graphql
+user(id: ID!): User
+bio(id: ID!): Bio
+profile(id: ID!): Profile
+me: User
+myBio: Bio
+myProfile: Profile
+recommendations: [User]
+connections: [User]
+incomingConnections: [User]
+outgoingConnections: [User]
+```
+
+### Available Mutations
+
+```graphql
+updateAccount(input: UpdateAccountInput!): User
+updateBio(input: UpdateBioInput!): Bio
+updateProfile(aboutMe: String!): Profile
+sendConnectionRequest(userId: ID!): Boolean
+acceptConnection(userId: ID!): Boolean
+rejectConnection(userId: ID!): Boolean
+blockUser(userId: ID!): Boolean
+removeConnection(userId: ID!): Boolean
+setOnline: Boolean
+setOffline: Boolean
+```
+
+### Subscription
+
+```graphql
+onlineStatus: OnlineStatus   # streams { userId, isOnline } when users go online/offline
+```
+
+### Example — Single Query for Recommendations
+
+```graphql
+{
+  recommendations {
+    id
+    nickname
+    profilePicture
+    bio {
+      country
+      city
+      preferences {
+        gamePreference
+        intensity
+      }
+    }
+    profile {
+      aboutMe
+    }
+  }
+}
+```
 
 ---
 
