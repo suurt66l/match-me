@@ -22,15 +22,18 @@ type Mutation {
     rejectConnection(userId: ID!): Boolean
     blockUser(userId: ID!): Boolean
     removeConnection(userId: ID!): Boolean
+
+    setOnline: Boolean!,
+    setOffline: Boolean!
 }
 
 type Subscription {
-  onlineStatus: StatusUpdate
+  onlineStatus: OnlineStatus
 }
 
-type StatusUpdate {
+type OnlineStatus {
     id: ID!,
-    isOnline: boolean!
+    isOnline: Boolean!
 }
 
 input UpdateAccount {

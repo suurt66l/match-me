@@ -2,6 +2,11 @@ package com.example.web.Service;
 
 import org.springframework.stereotype.Service;
 
+import com.example.web.DTO.GraphQL.OnlineStatusDto;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
+
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,13 +19,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OnlineStatusRegistry {
     private final Set<Long> onlineUserIds = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Sinks.Many<OnlineStatusDto> statusSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public void setOnline(Long userId) {
         onlineUserIds.add(userId);
+
+         // Emmiter for GraphQL subscriptions
+        statusSink.tryEmitNext(new OnlineStatusDto(userId, true));
     }
 
     public void setOffline(Long userId) {
         onlineUserIds.remove(userId);
+
+        // Emmiter for GraphQL subscriptions
+        statusSink.tryEmitNext(new OnlineStatusDto(userId, false));
     }
 
     public boolean isOnline(Long userId) {
@@ -29,5 +41,10 @@ public class OnlineStatusRegistry {
 
     public Set<Long> getOnlineUserIds() {
         return Collections.unmodifiableSet(onlineUserIds);
+    }
+
+    // Getter for GraphQL subscriptions
+    public Flux<OnlineStatusDto> getOnlineStatusStream(){
+        return statusSink.asFlux();
     }
 }

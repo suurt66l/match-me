@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class StatusUpdateDto {
-    private Long userId;
+public class OnlineStatusDto {
+    private Long id;
     private Boolean isOnline;
 }

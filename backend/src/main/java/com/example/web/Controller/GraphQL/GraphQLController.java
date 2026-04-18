@@ -8,12 +8,14 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.graphql.data.method.annotation.SubscriptionMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
+import com.example.web.DTO.GraphQL.OnlineStatusDto;
 import com.example.web.DTO.GraphQL.UpdateAccountDto;
 import com.example.web.DTO.GraphQL.UpdateBioDto;
 import com.example.web.DTO.GraphQL.UserBioDto;
@@ -25,6 +27,9 @@ import com.example.web.Entity.User;
 import com.example.web.Repository.UserRepository;
 import com.example.web.Service.ConnectionService;
 import com.example.web.Service.MatchingService;
+import com.example.web.Service.OnlineStatusRegistry;
+
+import reactor.core.publisher.Flux;
 
 @Controller
 public class GraphQLController {
@@ -32,14 +37,16 @@ public class GraphQLController {
     private final ConnectionService connectionService;
     private final MatchingService matchingService;
     private final PasswordEncoder passwordEncoder;
-
+    private final OnlineStatusRegistry onlineStatusRegistry;
 
     public GraphQLController(UserRepository userRepository, ConnectionService connectionService,
-            MatchingService matchingService, PasswordEncoder passwordEncoder) {
+            MatchingService matchingService, PasswordEncoder passwordEncoder,
+            OnlineStatusRegistry onlineStatusRegistry) {
         this.userRepository = userRepository;
         this.connectionService = connectionService;
         this.matchingService = matchingService;
         this.passwordEncoder = passwordEncoder;
+        this.onlineStatusRegistry = onlineStatusRegistry;
     }
 
     private User getCurrentUser() {
@@ -439,5 +446,28 @@ public class GraphQLController {
             throw new RuntimeException(e.getReason());
         }
         return true;
+    }
+
+    /* Online/Offline user status */
+    @MutationMapping
+    public Boolean setOffline() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+        onlineStatusRegistry.setOffline(currentUser.getId());
+        return true;
+    }
+    
+
+    @MutationMapping
+    public Boolean setOnline() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) throw new RuntimeException("Not authenticated");
+        onlineStatusRegistry.setOnline(currentUser.getId());
+        return true;
+    }
+
+    @SubscriptionMapping
+    public Flux<OnlineStatusDto> onlineStatus() { 
+        return onlineStatusRegistry.getOnlineStatusStream();
     }
 }
