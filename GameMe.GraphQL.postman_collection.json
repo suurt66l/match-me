@@ -519,24 +519,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "Subscription (GraphiQL only)",
-      "item": [
-        {
-          "name": "onlineStatus — README",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/graphiql",
-              "host": ["{{baseUrl}}"],
-              "path": ["graphiql"]
-            },
-            "description": "Postman does not support GraphQL subscriptions over WebSocket.\n\nTo test the onlineStatus subscription, use the GraphiQL playground at http://localhost:8080/graphiql\n\n1. Add header: { \"Authorization\": \"Bearer YOUR_TOKEN\" }\n2. Run in Tab 1:\n\nsubscription {\n  onlineStatus {\n    userId\n    isOnline\n  }\n}\n\n3. Run in Tab 2 (different token):\n\nmutation {\n  setOnline\n}\n\n4. Tab 1 receives the status update in real time."
-          }
-        }
-      ]
     }
   ]
 }

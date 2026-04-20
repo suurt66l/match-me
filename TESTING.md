@@ -26,6 +26,10 @@ Get a token by calling `POST http://localhost:8080/api/auth/login` with `{ "emai
 
 Test users: `test10@test.com` → `test129@test.com`, password: `1234`
 
+**Testing tools:**
+- **GraphiQL playground** — `http://localhost:8080/graphiql` (requires dev mode). Best for subscriptions and exploring the schema.
+- **Postman** — import `GameMe.GraphQL.postman_collection.json` from the project root. Run **Auth → Login** first — the token is saved automatically to all requests.
+
 ---
 
 ## Mandatory Criteria
