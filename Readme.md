@@ -13,8 +13,8 @@ A full-stack web application that matches gamers based on shared games, schedule
 - [Load Test Data](#load-test-data)
 - [Using the App](#using-the-app)
 - [Matching Algorithm](#matching-algorithm)
-- [API Reference](#api-reference)
-- [Known Limitations](#known-limitations)
+- [GraphQL API](#graphql-api)
+- [REST API](#rest-api)
 - [Testing Guide](#testing-guide)
 
 ---
@@ -300,7 +300,7 @@ onlineStatus: OnlineStatus   # streams { userId, isOnline } when users go online
 
 ---
 
-## API Reference
+## REST API
 
 All endpoints except auth and seed require a valid JWT in the `Authorization: Bearer {token}` header.
 
