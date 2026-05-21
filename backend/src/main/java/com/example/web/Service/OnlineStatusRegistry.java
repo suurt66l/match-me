@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OnlineStatusRegistry {
     private final Set<Long> onlineUserIds = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private final Sinks.Many<OnlineStatusDto> statusSink = Sinks.many().multicast().onBackpressureBuffer();
+    private final Sinks.Many<OnlineStatusDto> statusSink = Sinks.many().multicast().onBackpressureBuffer(reactor.util.concurrent.Queues.SMALL_BUFFER_SIZE, false);
 
     public void setOnline(Long userId) {
         onlineUserIds.add(userId);
