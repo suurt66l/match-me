@@ -333,15 +333,6 @@ Profile endpoints return **HTTP 404** for both "not found" and "not permitted" â
 
 ---
 
-## Testing Guide
-
-A dedicated guide for code reviewers is available in **[TESTING.md](TESTING.md)**.
-
-It covers every testing criterion in order, with a description of how each feature is implemented and step-by-step instructions for verifying it.
-
-
----
-
 ## License
 
 This project is created for educational purposes.
